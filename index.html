@@ -16,27 +16,32 @@
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
-        /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         
-        /* Glass effect for modal */
         .glass-bg { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
-        .disabled-field { background-color: #f1f5f9; cursor: not-allowed; opacity: 0.8; }
+        
+        /* Chart Animations */
+        .chart-circle {
+            transition: stroke-dasharray 1s ease-out, stroke-dashoffset 1s ease-out;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
     </style>
 </head>
 <body class="text-slate-800 h-screen flex flex-col overflow-hidden">
 
     <!-- Loader -->
-    <div id="globalLoader" class="fixed inset-0 bg-white z-[70] flex flex-col items-center justify-center transition-opacity duration-300">
+    <div id="globalLoader" class="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center transition-opacity duration-300">
         <div class="spinner mb-4 w-12 h-12 border-4"></div>
         <p class="text-slate-500 font-medium text-sm tracking-wide">Đang tải hệ thống...</p>
     </div>
 
-    <!-- App Container (Mặc định hiển thị cho tất cả Khách) -->
-    <div id="appContainer" class="flex flex-col h-screen w-full">
+    <!-- App Container -->
+    <div id="appContainer" class="flex-col h-screen w-full flex">
+        
         <!-- Header -->
         <header class="bg-white shadow-sm z-10 shrink-0 border-b border-slate-200">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
@@ -44,118 +49,141 @@
                     <div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg shadow-sm flex items-center justify-center text-white">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                     </div>
-                    <h1 class="text-xl font-bold text-slate-800 tracking-tight hidden sm:block">Bảo Trì NSG</h1>
+                    <h1 class="text-xl font-bold text-slate-800 tracking-tight">Bảo Trì NSG</h1>
                 </div>
                 
-                <!-- Auth Info Section -->
                 <div class="flex items-center space-x-4">
-                    <!-- Trạng thái Khách -->
-                    <div id="guestModeInfo" class="flex items-center">
-                        <span class="text-sm font-medium text-slate-500 mr-3">Chế độ Khách</span>
-                        <button onclick="openLoginModal()" class="bg-blue-50 text-blue-600 hover:bg-blue-100 px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
-                            Đăng nhập Quản lý
-                        </button>
+                    <div class="flex flex-col text-right">
+                        <span id="headerUserName" class="text-sm font-semibold text-slate-800">Khách Truy Cập</span>
+                        <span id="headerUserRole" class="text-xs text-slate-500 font-medium">Chỉ cập nhật tiến độ</span>
                     </div>
-                    
-                    <!-- Trạng thái đã đăng nhập -->
-                    <div id="loggedInInfo" class="hidden items-center space-x-4">
-                        <div class="flex flex-col text-right hidden sm:flex">
-                            <span id="headerUserName" class="text-sm font-semibold text-slate-800">Người dùng</span>
-                            <span id="headerUserRole" class="text-xs text-blue-600 font-medium">Vai trò</span>
-                        </div>
-                        <div class="h-8 w-px bg-slate-200 hidden sm:block"></div>
-                        <button onclick="handleLogout()" class="text-slate-500 hover:text-red-600 transition-colors bg-slate-50 hover:bg-red-50 p-2 rounded-lg flex items-center" title="Đăng xuất">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
-                            <span class="ml-2 text-sm font-medium sm:hidden">Đăng xuất</span>
-                        </button>
-                    </div>
+                    <div class="h-8 w-px bg-slate-200"></div>
+                    <!-- Login / Logout Button -->
+                    <button id="authBtn" onclick="openLoginModal()" class="text-slate-500 hover:text-blue-600 transition-colors p-2 rounded-full hover:bg-slate-100 flex items-center justify-center" title="Đăng nhập Quản lý">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path></svg>
+                    </button>
                 </div>
             </div>
             
             <!-- Navigation Tabs -->
-            <div class="px-4 sm:px-6 lg:px-8 border-t border-slate-100 bg-slate-50/50">
-                <div class="max-w-7xl mx-auto flex space-x-6 overflow-x-auto">
-                    <button onclick="switchTab('dashboard')" id="tab-dashboard" class="py-3 text-sm font-semibold text-blue-600 border-b-2 border-blue-600 focus:outline-none transition-colors flex items-center whitespace-nowrap">
+            <div class="px-4 sm:px-6 lg:px-8 border-t border-slate-100 bg-slate-50/50 overflow-x-auto">
+                <div class="max-w-7xl mx-auto flex space-x-6 min-w-max">
+                    <button onclick="switchTab('dashboard')" id="tab-dashboard" class="py-3 text-sm font-semibold text-blue-600 border-b-2 border-blue-600 focus:outline-none transition-colors flex items-center">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
                         Tổng quan
                     </button>
-                    <button onclick="switchTab('tasks')" id="tab-tasks" class="py-3 text-sm font-medium text-slate-500 hover:text-slate-800 border-b-2 border-transparent hover:border-slate-300 focus:outline-none transition-colors flex items-center whitespace-nowrap">
+                    <button onclick="switchTab('tasks')" id="tab-tasks" class="py-3 text-sm font-medium text-slate-500 hover:text-slate-800 border-b-2 border-transparent hover:border-slate-300 focus:outline-none transition-colors flex items-center">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
                         Danh sách công việc
                     </button>
-                    <button onclick="switchTab('users')" id="tab-users" class="hidden py-3 text-sm font-medium text-slate-500 hover:text-slate-800 border-b-2 border-transparent hover:border-slate-300 focus:outline-none transition-colors flex items-center whitespace-nowrap">
+                    <button onclick="switchTab('users')" id="tab-users" class="hidden py-3 text-sm font-medium text-slate-500 hover:text-slate-800 border-b-2 border-transparent hover:border-slate-300 focus:outline-none transition-colors flex items-center">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                        Phân quyền
+                        Phân quyền Quản trị
                     </button>
                 </div>
             </div>
         </header>
 
+        <!-- Main Content Area -->
         <main class="flex-1 overflow-auto p-4 sm:p-6 lg:p-8 relative">
-            <div class="max-w-7xl mx-auto h-full pb-20">
+            <div class="max-w-7xl mx-auto h-full flex flex-col space-y-6">
+                
+                <!-- Thanh Quản lý Thời gian (Chung cho toàn bộ hệ thống) -->
+                <div class="bg-white px-4 py-3 rounded-xl shadow-sm border border-slate-200 flex flex-col sm:flex-row justify-between items-center space-y-3 sm:space-y-0 shrink-0">
+                    <div class="flex items-center space-x-2">
+                        <button onclick="changeDate(-1)" class="p-2 hover:bg-slate-100 rounded-lg text-slate-500 transition-colors" title="Ngày hôm trước">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                        </button>
+                        <div class="flex flex-col items-center px-4 min-w-[200px]">
+                            <span class="text-xs font-medium text-blue-600 uppercase tracking-wider mb-0.5">Lịch Công Việc</span>
+                            <span id="currentDateDisplay" class="text-sm font-bold text-slate-800">Đang tải...</span>
+                        </div>
+                        <button onclick="changeDate(1)" class="p-2 hover:bg-slate-100 rounded-lg text-slate-500 transition-colors" title="Ngày hôm sau">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                        </button>
+                    </div>
+                    <div class="flex items-center">
+                        <label class="text-sm text-slate-500 mr-3 font-medium">Đến ngày khác:</label>
+                        <input type="date" id="globalDateInput" onchange="setDate(this.value)" class="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none text-slate-700 bg-slate-50">
+                    </div>
+                </div>
 
                 <!-- VIEW: DASHBOARD -->
-                <div id="view-dashboard" class="flex flex-col space-y-6">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                        <div>
-                            <h2 class="text-2xl font-bold text-slate-800 tracking-tight">Tổng quan công việc</h2>
-                            <p class="text-sm text-slate-500 mt-1">Theo dõi tiến độ bảo trì hằng ngày theo thời gian thực.</p>
-                        </div>
-                        <span id="currentDateDisplay" class="text-sm font-medium text-slate-600 bg-white px-4 py-2 rounded-full shadow-sm border border-slate-200 flex items-center">
-                            <svg class="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                            <span id="dateText"></span>
-                        </span>
-                    </div>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        <!-- Card 1 -->
-                        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex items-center space-x-4 hover:shadow-md transition-all duration-300 transform hover:-translate-y-1">
-                            <div class="p-3 bg-blue-50 text-blue-600 rounded-xl">
-                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-                            </div>
-                            <div>
-                                <p class="text-sm font-medium text-slate-500">Tổng công việc</p>
-                                <p id="stat-total" class="text-2xl font-bold text-slate-800">0</p>
-                            </div>
-                        </div>
-                        <!-- Card 2 -->
-                        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex items-center space-x-4 hover:shadow-md transition-all duration-300 transform hover:-translate-y-1">
-                            <div class="p-3 bg-slate-50 text-slate-500 rounded-xl">
-                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                            </div>
-                            <div>
-                                <p class="text-sm font-medium text-slate-500">Chưa thực hiện</p>
-                                <p id="stat-todo" class="text-2xl font-bold text-slate-700">0</p>
+                <div id="view-dashboard" class="flex flex-col space-y-6 animate-[fadeIn_0.3s_ease-in-out]">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        
+                        <!-- Biểu đồ tỷ lệ (Donut Chart) -->
+                        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col items-center justify-center relative lg:col-span-1 min-h-[300px]">
+                            <h3 class="text-base font-semibold text-slate-700 absolute top-6 left-6">Tiến độ trong ngày</h3>
+                            <div class="relative w-48 h-48 mt-8">
+                                <svg class="w-full h-full" viewBox="0 0 36 36">
+                                    <!-- Background Circle (Gray - Chưa thực hiện) -->
+                                    <circle cx="18" cy="18" r="15.915" fill="none" stroke="#f1f5f9" stroke-width="3" />
+                                    <!-- Todo (Gray) -->
+                                    <circle id="chart-todo" class="chart-circle" cx="18" cy="18" r="15.915" fill="none" stroke="#94a3b8" stroke-width="3" pathLength="100" />
+                                    <!-- In Progress (Yellow) -->
+                                    <circle id="chart-inprogress" class="chart-circle" cx="18" cy="18" r="15.915" fill="none" stroke="#eab308" stroke-width="3" pathLength="100" />
+                                    <!-- Done (Green) -->
+                                    <circle id="chart-done" class="chart-circle" cx="18" cy="18" r="15.915" fill="none" stroke="#22c55e" stroke-width="4" pathLength="100" />
+                                </svg>
+                                <!-- Phần trăm ở giữa -->
+                                <div class="absolute inset-0 flex flex-col items-center justify-center">
+                                    <span id="chart-percent" class="text-3xl font-bold text-slate-800">0%</span>
+                                    <span class="text-xs text-slate-500 font-medium">Hoàn thành</span>
+                                </div>
                             </div>
                         </div>
-                        <!-- Card 3 -->
-                        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex items-center space-x-4 hover:shadow-md transition-all duration-300 transform hover:-translate-y-1">
-                            <div class="p-3 bg-yellow-50 text-yellow-600 rounded-xl">
-                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+
+                        <!-- Thống kê Card -->
+                        <div class="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex items-center space-x-4 hover:shadow-md transition-shadow">
+                                <div class="p-4 bg-blue-50 text-blue-600 rounded-xl">
+                                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium text-slate-500">Tổng công việc (Trong ngày)</p>
+                                    <p id="stat-total" class="text-3xl font-bold text-slate-800">0</p>
+                                </div>
                             </div>
-                            <div>
-                                <p class="text-sm font-medium text-slate-500">Đang thực hiện</p>
-                                <p id="stat-inprogress" class="text-2xl font-bold text-yellow-600">0</p>
+                            
+                            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex items-center space-x-4 hover:shadow-md transition-shadow">
+                                <div class="p-4 bg-slate-50 text-slate-400 rounded-xl">
+                                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium text-slate-500">Chưa thực hiện</p>
+                                    <p id="stat-todo" class="text-2xl font-bold text-slate-600">0</p>
+                                </div>
                             </div>
-                        </div>
-                        <!-- Card 4 -->
-                        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex items-center space-x-4 hover:shadow-md transition-all duration-300 transform hover:-translate-y-1">
-                            <div class="p-3 bg-green-50 text-green-600 rounded-xl">
-                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            
+                            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex items-center space-x-4 hover:shadow-md transition-shadow">
+                                <div class="p-4 bg-yellow-50 text-yellow-600 rounded-xl">
+                                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium text-slate-500">Đang thực hiện</p>
+                                    <p id="stat-inprogress" class="text-2xl font-bold text-yellow-600">0</p>
+                                </div>
                             </div>
-                            <div>
-                                <p class="text-sm font-medium text-slate-500">Hoàn thành</p>
-                                <p id="stat-done" class="text-2xl font-bold text-green-600">0</p>
+                            
+                            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex items-center space-x-4 hover:shadow-md transition-shadow">
+                                <div class="p-4 bg-green-50 text-green-500 rounded-xl">
+                                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium text-slate-500">Hoàn thành</p>
+                                    <p id="stat-done" class="text-2xl font-bold text-green-600">0</p>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
                 
                 <!-- VIEW: TASKS -->
-                <div id="view-tasks" class="hidden h-full flex flex-col space-y-4">
+                <div id="view-tasks" class="hidden h-full flex flex-col space-y-4 animate-[fadeIn_0.3s_ease-in-out]">
                     <!-- Actions Row -->
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-                        <div class="flex items-center space-x-3 w-full sm:w-auto">
+                        <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto">
                             <div class="relative w-full sm:w-72">
                                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                     <svg class="h-5 w-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
@@ -169,7 +197,7 @@
                                 <option value="Hoàn Thành">Hoàn Thành</option>
                             </select>
                         </div>
-                        <button id="btnCreateTask" onclick="openTaskModal()" class="hidden w-full sm:w-auto bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 transition-all shadow-sm hover:shadow flex items-center justify-center font-medium">
+                        <button id="btnCreateTask" onclick="openTaskModal()" class="hidden w-full sm:w-auto bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 transition-all shadow-sm hover:shadow flex items-center justify-center font-medium shrink-0">
                             <svg class="w-5 h-5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
                             Giao Việc Mới
                         </button>
@@ -178,36 +206,35 @@
                     <!-- Table Container -->
                     <div class="flex-1 bg-white rounded-xl shadow-sm overflow-hidden border border-slate-200 flex flex-col">
                         <div class="overflow-x-auto flex-1">
-                            <table class="min-w-full divide-y divide-slate-200 text-sm">
-                                <thead class="bg-slate-50 sticky top-0 z-10 shadow-sm">
+                            <table class="min-w-full text-sm">
+                                <thead class="bg-slate-50 sticky top-0 z-10 shadow-sm border-b border-slate-200">
                                     <tr>
-                                        <th scope="col" class="px-4 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider w-16">STT</th>
-                                        <th scope="col" class="px-4 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Khu vực</th>
+                                        <th scope="col" class="px-4 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider w-12">STT</th>
                                         <th scope="col" class="px-4 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Đơn vị</th>
-                                        <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider min-w-[200px]">Nội dung công việc</th>
+                                        <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider min-w-[250px]">Nội dung công việc</th>
                                         <th scope="col" class="px-4 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Người PT</th>
                                         <th scope="col" class="px-4 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Ngày giao / Hạn</th>
                                         <th scope="col" class="px-4 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Trạng thái</th>
-                                        <th scope="col" class="px-4 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Ngày HT</th>
+                                        <th scope="col" class="px-4 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Kết quả</th>
                                         <th scope="col" class="px-4 py-3.5 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Thao tác</th>
                                     </tr>
                                 </thead>
-                                <tbody id="tasksTableBody" class="bg-white divide-y divide-slate-100">
-                                    <!-- Tasks rendered here -->
+                                <tbody id="tasksTableBody" class="bg-white">
+                                    <!-- Tasks rendered here by JS -->
                                 </tbody>
                             </table>
                         </div>
-                        <div id="emptyTasksMessage" class="hidden p-10 text-center text-slate-500 flex-col items-center justify-center h-full">
-                            <div class="bg-slate-50 p-4 rounded-full mb-3">
+                        <div id="emptyTasksMessage" class="hidden p-10 text-center text-slate-500 flex-col items-center justify-center h-full bg-slate-50">
+                            <div class="bg-white p-4 rounded-full shadow-sm border border-slate-100 mb-3">
                                 <svg class="w-10 h-10 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
                             </div>
-                            <p class="font-medium text-slate-600">Chưa có dữ liệu công việc</p>
+                            <p class="font-medium text-slate-600">Không có công việc nào trong ngày này.</p>
                         </div>
                     </div>
                 </div>
 
                 <!-- VIEW: USERS -->
-                <div id="view-users" class="hidden h-full flex flex-col space-y-4">
+                <div id="view-users" class="hidden h-full flex flex-col space-y-4 animate-[fadeIn_0.3s_ease-in-out]">
                     <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex justify-between items-center">
                         <h2 class="text-lg font-semibold text-slate-800">Danh sách người dùng & Phân quyền</h2>
                     </div>
@@ -234,46 +261,51 @@
         </main>
     </div>
 
-    <!-- LOGIN MODAL -->
+    <!-- Modal Login -->
     <div id="loginModal" class="fixed inset-0 z-[60] hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-        <div class="flex items-center justify-center min-h-screen p-4 text-center sm:p-0">
-            <div class="fixed inset-0 bg-slate-900 bg-opacity-50 transition-opacity backdrop-blur-sm" aria-hidden="true" onclick="closeLoginModal()"></div>
+        <div class="flex items-center justify-center min-h-screen p-4 text-center">
+            <div class="fixed inset-0 bg-slate-900 bg-opacity-60 transition-opacity backdrop-blur-sm" aria-hidden="true" onclick="closeLoginModal()"></div>
             <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-            
-            <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md w-full relative">
-                <button onclick="closeLoginModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+            <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md w-full border border-slate-200 relative">
+                
+                <button onclick="closeLoginModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
-                <div class="p-8">
-                    <div class="flex flex-col items-center mb-6">
-                        <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 mb-3">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4"></path></svg>
+
+                <div class="px-8 pt-8 pb-6">
+                    <div class="flex flex-col items-center">
+                        <div class="w-14 h-14 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-xl shadow-lg flex items-center justify-center text-white mb-4">
+                            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8V7z"></path></svg>
                         </div>
-                        <h2 class="text-2xl font-bold text-slate-800">Đăng Nhập Hệ Thống</h2>
-                        <p class="text-sm text-slate-500 mt-1">Dành riêng cho Quản trị viên</p>
+                        <h3 class="text-2xl font-bold text-slate-900 tracking-tight">Quản Trị Hệ Thống</h3>
+                        <p class="mt-1 text-sm text-slate-500 font-medium">Đăng nhập dành cho Admin/Manager</p>
                     </div>
-                    <form id="authForm" class="space-y-5" onsubmit="event.preventDefault(); handleAuth();">
-                        <div>
-                            <label for="username" class="block text-sm font-medium text-slate-700 mb-1">Tên đăng nhập</label>
-                            <input id="username" name="username" type="text" autocomplete="username" required class="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow sm:text-sm">
+                    <form id="authForm" class="mt-8 space-y-5" onsubmit="event.preventDefault(); handleAuth();">
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Tên đăng nhập</label>
+                                <input id="username" type="text" required class="appearance-none relative block w-full px-4 py-3 border border-slate-300 placeholder-slate-400 text-slate-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow text-sm" placeholder="Nhập tên đăng nhập...">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Mật khẩu</label>
+                                <input id="password" type="password" required class="appearance-none relative block w-full px-4 py-3 border border-slate-300 placeholder-slate-400 text-slate-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow text-sm" placeholder="Nhập mật khẩu...">
+                            </div>
                         </div>
                         <div>
-                            <label for="password" class="block text-sm font-medium text-slate-700 mb-1">Mật khẩu</label>
-                            <input id="password" name="password" type="password" autocomplete="current-password" required class="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow sm:text-sm">
+                            <button type="submit" id="authSubmitBtn" class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-semibold rounded-xl text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow-sm transition-all duration-200">
+                                Đăng nhập
+                            </button>
                         </div>
-                        <button type="submit" id="authSubmitBtn" class="w-full flex justify-center py-3 px-4 border border-transparent text-sm font-semibold rounded-xl text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow-md transition-all">
-                            Đăng nhập
-                        </button>
-                        <div id="authError" class="text-red-500 text-sm text-center font-medium hidden bg-red-50 py-2 rounded-lg border border-red-100"></div>
+                        <div id="authError" class="text-red-500 text-sm text-center font-medium hidden bg-red-50 py-2 rounded-lg border border-red-100 mt-2"></div>
                     </form>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- TASK MODAL -->
-    <div id="taskModal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-        <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+    <!-- Modal Form Giao Việc -->
+    <div id="taskModal" class="fixed inset-0 z-[50] hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-center justify-center min-h-screen p-4 text-center">
             <div class="fixed inset-0 bg-slate-900 bg-opacity-40 transition-opacity backdrop-blur-sm" aria-hidden="true" onclick="closeTaskModal()"></div>
             <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
             
@@ -282,89 +314,71 @@
                     <input type="hidden" id="taskId">
                     
                     <div class="px-6 pt-6 pb-6 sm:pb-6 border-b border-slate-100">
-                        <div class="sm:flex sm:items-start">
-                            <div class="mt-3 text-center sm:mt-0 sm:text-left w-full">
-                                <div class="flex justify-between items-center mb-6">
-                                    <h3 class="text-xl font-bold text-slate-800 flex items-center" id="modal-title">
-                                        <svg class="w-6 h-6 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                                        Chi Tiết Công Việc
-                                    </h3>
-                                    <!-- Cảnh báo nếu là Khách -->
-                                    <span id="guestEditNotice" class="hidden text-xs font-semibold bg-amber-100 text-amber-700 px-3 py-1 rounded-full">
-                                        Chỉ cập nhật Trạng thái & Kết quả
-                                    </span>
-                                </div>
-                                
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                    <!-- Các trường bị khóa nếu là Khách -->
-                                    <div>
-                                        <label class="block text-sm font-medium text-slate-700 mb-1">Khu vực</label>
-                                        <select id="taskKhuVuc" required class="block w-full pl-3 pr-10 py-2.5 text-base border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 sm:text-sm rounded-xl border bg-white shadow-sm transition-all">
-                                            <option value="">Chọn khu vực</option>
-                                            <option value="Khu A">Khu A</option>
-                                            <option value="Khu B">Khu B</option>
-                                            <option value="Khu C">Khu C</option>
-                                            <option value="Khu D">Khu D</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-slate-700 mb-1">Đơn vị</label>
-                                        <input type="text" id="taskDonVi" required class="focus:ring-2 focus:ring-blue-500 block w-full shadow-sm sm:text-sm border-slate-300 rounded-xl border px-4 py-2.5 bg-white transition-all">
-                                    </div>
+                        <h3 class="text-xl font-bold text-slate-800 mb-6 flex items-center" id="modal-title">
+                            <svg class="w-6 h-6 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                            Thêm Công Việc Mới
+                        </h3>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <!-- Các trường BỊ KHÓA nếu là Khách -->
+                            <div class="admin-only-field">
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Khu vực</label>
+                                <select id="taskKhuVuc" required class="block w-full pl-3 pr-10 py-2.5 text-sm border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent rounded-xl border bg-white shadow-sm transition-all disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed">
+                                    <option value="">Chọn khu vực</option>
+                                    <option value="Khu A">Khu A</option>
+                                    <option value="Khu B">Khu B</option>
+                                    <option value="Khu C">Khu C</option>
+                                    <option value="Khu D">Khu D</option>
+                                </select>
+                            </div>
+                            <div class="admin-only-field">
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Đơn vị</label>
+                                <input type="text" id="taskDonVi" required class="block w-full shadow-sm text-sm border-slate-300 rounded-xl border px-4 py-2.5 bg-white transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed">
+                            </div>
 
-                                    <div class="md:col-span-2">
-                                        <label class="block text-sm font-medium text-slate-700 mb-1">Nội dung công việc</label>
-                                        <textarea id="taskNoiDung" required rows="2" class="focus:ring-2 focus:ring-blue-500 block w-full shadow-sm sm:text-sm border-slate-300 rounded-xl border px-4 py-2.5 bg-white transition-all"></textarea>
-                                    </div>
+                            <div class="md:col-span-2 admin-only-field">
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Nội dung công việc</label>
+                                <textarea id="taskNoiDung" required rows="2" class="block w-full shadow-sm text-sm border-slate-300 rounded-xl border px-4 py-2.5 bg-white transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed"></textarea>
+                            </div>
 
-                                    <div>
-                                        <label class="block text-sm font-medium text-slate-700 mb-1">Người phụ trách</label>
-                                        <select id="taskNguoiPhuTrach" required class="block w-full pl-3 pr-10 py-2.5 text-base border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 sm:text-sm rounded-xl border bg-white shadow-sm transition-all">
-                                            <option value="">Chọn người</option>
-                                            <option value="Thanh">Thanh</option>
-                                            <option value="Hòa">Hòa</option>
-                                            <option value="Dương">Dương</option>
-                                            <option value="Nghĩa">Nghĩa</option>
-                                            <option value="Phát">Phát</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-slate-700 mb-1">Ngày giao</label>
-                                        <input type="date" id="taskNgayGiao" required class="focus:ring-2 focus:ring-blue-500 block w-full shadow-sm sm:text-sm border-slate-300 rounded-xl border px-4 py-2.5 bg-white transition-all">
-                                    </div>
+                            <div class="admin-only-field">
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Người phụ trách</label>
+                                <input type="text" id="taskNguoiPhuTrach" required class="block w-full shadow-sm text-sm border-slate-300 rounded-xl border px-4 py-2.5 bg-white transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed" placeholder="VD: Thanh, Hòa...">
+                            </div>
+                            
+                            <div class="admin-only-field">
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Ngày giao</label>
+                                <input type="date" id="taskNgayGiao" required class="block w-full shadow-sm text-sm border-slate-300 rounded-xl border px-4 py-2.5 bg-white transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed">
+                            </div>
 
-                                    <!-- Các trường Khách được phép sửa -->
-                                    <div class="md:col-span-2 border-t border-slate-200 pt-4 mt-2"></div>
+                            <!-- Các trường KHÁCH ĐƯỢC PHÉP SỬA -->
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Trạng thái</label>
+                                <select id="taskTrangThai" class="block w-full pl-3 pr-10 py-2.5 text-sm border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent rounded-xl border bg-white shadow-sm transition-all border-l-4 border-l-blue-500">
+                                    <option value="Chưa Thực Hiện">Chưa Thực Hiện</option>
+                                    <option value="Đang Thực Hiện">Đang Thực Hiện</option>
+                                    <option value="Hoàn Thành">Hoàn Thành</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Hạn hoàn thành</label>
+                                <input type="date" id="taskHanHoanThanh" required class="block w-full shadow-sm text-sm border-slate-300 rounded-xl border px-4 py-2.5 bg-white transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent border-l-4 border-l-blue-500">
+                            </div>
 
-                                    <div>
-                                        <label class="block text-sm font-medium text-slate-700 mb-1 text-blue-600">Trạng thái (Khách được sửa)</label>
-                                        <select id="taskTrangThai" class="block w-full pl-3 pr-10 py-2.5 text-base border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 sm:text-sm rounded-xl border bg-white shadow-sm transition-all border-blue-200 bg-blue-50/30">
-                                            <option value="Chưa Thực Hiện">Chưa Thực Hiện</option>
-                                            <option value="Đang Thực Hiện">Đang Thực Hiện</option>
-                                            <option value="Hoàn Thành">Hoàn Thành</option>
-                                        </select>
-                                    </div>
-                                    
-                                    <div>
-                                        <label class="block text-sm font-medium text-slate-700 mb-1 text-blue-600">Hạn hoàn thành (Khách được sửa)</label>
-                                        <input type="date" id="taskHanHoanThanh" required class="focus:ring-2 focus:ring-blue-500 block w-full shadow-sm sm:text-sm border-slate-300 rounded-xl border px-4 py-2.5 bg-white transition-all border-blue-200 bg-blue-50/30">
-                                    </div>
-
-                                    <div class="md:col-span-2">
-                                        <label class="block text-sm font-medium text-slate-700 mb-1 text-blue-600">Kết quả (Khách được sửa)</label>
-                                        <input type="text" id="taskKetQua" class="focus:ring-2 focus:ring-blue-500 block w-full shadow-sm sm:text-sm border-slate-300 rounded-xl border px-4 py-2.5 bg-white transition-all border-blue-200 bg-blue-50/30">
-                                    </div>
-                                    <div class="md:col-span-2">
-                                        <label class="block text-sm font-medium text-slate-700 mb-1 text-blue-600">Ghi chú (Khách được sửa)</label>
-                                        <input type="text" id="taskGhiChu" class="focus:ring-2 focus:ring-blue-500 block w-full shadow-sm sm:text-sm border-slate-300 rounded-xl border px-4 py-2.5 bg-white transition-all border-blue-200 bg-blue-50/30">
-                                    </div>
-                                </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Kết quả thực hiện</label>
+                                <input type="text" id="taskKetQua" class="block w-full shadow-sm text-sm border-slate-300 rounded-xl border px-4 py-2.5 bg-white transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent border-l-4 border-l-blue-500">
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Ghi chú</label>
+                                <input type="text" id="taskGhiChu" class="block w-full shadow-sm text-sm border-slate-300 rounded-xl border px-4 py-2.5 bg-white transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent border-l-4 border-l-blue-500">
                             </div>
                         </div>
                     </div>
                     <div class="bg-slate-50/80 px-6 py-4 sm:flex sm:flex-row-reverse rounded-b-2xl">
                         <button type="submit" id="btnSaveTask" class="w-full inline-flex justify-center rounded-xl border border-transparent shadow-sm px-6 py-2.5 bg-blue-600 text-base font-semibold text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm transition-all">
-                            Cập nhật hệ thống
+                            Lưu cấu hình
                         </button>
                         <button type="button" onclick="closeTaskModal()" class="mt-3 w-full inline-flex justify-center rounded-xl border border-slate-300 shadow-sm px-6 py-2.5 bg-white text-base font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-all">
                             Hủy bỏ
@@ -375,44 +389,40 @@
         </div>
     </div>
 
-    <!-- ALERT MODAL -->
-    <div id="alertModal" class="fixed inset-0 z-[80] hidden overflow-y-auto">
+    <!-- Alert Modal -->
+    <div id="alertModal" class="fixed inset-0 z-[70] hidden overflow-y-auto" aria-labelledby="alert-title" role="dialog" aria-modal="true">
         <div class="flex items-center justify-center min-h-screen p-4 text-center">
-            <div class="fixed inset-0 bg-slate-900 bg-opacity-40 backdrop-blur-sm" onclick="closeAlert()"></div>
+            <div class="fixed inset-0 bg-slate-900 bg-opacity-40 backdrop-blur-sm" aria-hidden="true"></div>
             <div class="inline-block bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:max-w-sm w-full relative z-10">
-                <div class="px-6 pt-6 pb-4">
-                    <div class="flex items-center justify-center w-12 h-12 mx-auto bg-blue-100 rounded-full mb-4">
-                        <svg class="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4 text-center">
+                    <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 mb-4">
+                        <svg class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                     </div>
-                    <div class="text-center">
-                        <h3 class="text-lg font-semibold text-slate-900">Thông báo</h3>
-                        <p class="text-sm text-slate-500 mt-2" id="alertMessage"></p>
-                    </div>
+                    <h3 class="text-lg leading-6 font-semibold text-slate-900" id="alert-title">Thông báo</h3>
+                    <p class="text-sm text-slate-500 mt-2" id="alertMessage"></p>
                 </div>
-                <div class="bg-slate-50 px-6 py-4">
-                    <button type="button" onclick="closeAlert()" class="w-full justify-center rounded-xl px-4 py-2.5 bg-blue-600 text-sm font-semibold text-white hover:bg-blue-700">Đã hiểu</button>
+                <div class="bg-slate-50 px-4 py-3 sm:px-6 flex justify-center">
+                    <button type="button" onclick="closeAlert()" class="w-full inline-flex justify-center rounded-xl border border-transparent shadow-sm px-6 py-2.5 bg-blue-600 text-base font-semibold text-white hover:bg-blue-700 focus:outline-none sm:text-sm transition-all">Đã hiểu</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- CONFIRM DELETE MODAL -->
-    <div id="confirmModal" class="fixed inset-0 z-[80] hidden overflow-y-auto">
+    <!-- Confirm Delete Modal -->
+    <div id="confirmModal" class="fixed inset-0 z-[70] hidden overflow-y-auto" aria-labelledby="confirm-title" role="dialog" aria-modal="true">
         <div class="flex items-center justify-center min-h-screen p-4 text-center">
-            <div class="fixed inset-0 bg-slate-900 bg-opacity-40 backdrop-blur-sm" onclick="closeConfirm()"></div>
+            <div class="fixed inset-0 bg-slate-900 bg-opacity-40 backdrop-blur-sm" aria-hidden="true"></div>
             <div class="inline-block bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:max-w-sm w-full relative z-10">
-                <div class="px-6 pt-6 pb-4">
-                    <div class="flex items-center justify-center w-12 h-12 mx-auto bg-red-100 rounded-full mb-4">
-                        <svg class="w-6 h-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4 text-center">
+                    <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                        <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
                     </div>
-                    <div class="text-center">
-                        <h3 class="text-lg font-semibold text-slate-900">Xác nhận xóa</h3>
-                        <p class="text-sm text-slate-500 mt-2">Bạn có chắc chắn muốn xóa công việc này không? Hành động này không thể hoàn tác.</p>
-                    </div>
+                    <h3 class="text-lg leading-6 font-semibold text-slate-900" id="confirm-title">Xác nhận xóa</h3>
+                    <p class="text-sm text-slate-500 mt-2">Bạn có chắc chắn muốn xóa công việc này không? Hành động này không thể hoàn tác.</p>
                 </div>
-                <div class="bg-slate-50 px-6 py-4 flex space-x-3">
-                    <button type="button" onclick="closeConfirm()" class="w-1/2 justify-center rounded-xl px-4 py-2.5 bg-white border border-slate-300 text-sm font-semibold text-slate-700 hover:bg-slate-50">Hủy</button>
-                    <button type="button" id="btnConfirmAction" class="w-1/2 justify-center rounded-xl px-4 py-2.5 bg-red-600 text-sm font-semibold text-white hover:bg-red-700">Xóa bỏ</button>
+                <div class="bg-slate-50 px-4 py-3 sm:px-6 flex space-x-3 justify-center">
+                    <button type="button" id="btnConfirmCancel" class="w-1/2 inline-flex justify-center rounded-xl border border-slate-300 shadow-sm px-4 py-2.5 bg-white text-base font-medium text-slate-700 hover:bg-slate-50 focus:outline-none sm:text-sm transition-all">Hủy</button>
+                    <button type="button" id="btnConfirmDelete" class="w-1/2 inline-flex justify-center rounded-xl border border-transparent shadow-sm px-4 py-2.5 bg-red-600 text-base font-semibold text-white hover:bg-red-700 focus:outline-none sm:text-sm transition-all">Xóa Bỏ</button>
                 </div>
             </div>
         </div>
@@ -424,7 +434,6 @@
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, collection, onSnapshot, query, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Config Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyDi5gsOdE9tGOR6JQzMgw_9QscD-XBRNwk",
             authDomain: "alook-26a1f.firebaseapp.com",
@@ -440,48 +449,87 @@
 
         // State variables
         let currentUser = null;
-        let currentUserData = { role: 'guest' }; // Mặc định là Khách
+        let currentUserData = null; // null có nghĩa là Khách (Guest)
         let tasks = [];
         let allUsersData = [];
         let tasksUnsubscribe = null;
         let usersUnsubscribe = null;
-        let deleteActionCallback = null;
+        
+        // Quản lý Ngày chọn lọc (Mặc định hôm nay)
+        let selectedDate = new Date();
 
         const getCollectionPath = (collName) => collection(db, collName);
         const getDocPath = (collName, docId) => doc(db, collName, docId);
 
-        // Date Display
-        const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-        document.getElementById('dateText').innerText = new Date().toLocaleDateString('vi-VN', dateOptions);
-
-        const showLoader = (show) => {
-            const el = document.getElementById('globalLoader');
-            if(show) { el.style.display = 'flex'; setTimeout(() => el.style.opacity = '1', 10); } 
-            else { el.style.opacity = '0'; setTimeout(() => el.style.display = 'none', 300); }
-        };
-
+        // Utilities UI
         window.showAlert = (msg) => {
             document.getElementById('alertMessage').innerText = msg;
             document.getElementById('alertModal').classList.remove('hidden');
         };
         window.closeAlert = () => document.getElementById('alertModal').classList.add('hidden');
         
-        window.showConfirm = (callback) => {
-            deleteActionCallback = callback;
-            document.getElementById('confirmModal').classList.remove('hidden');
-        };
-        window.closeConfirm = () => {
-            deleteActionCallback = null;
-            document.getElementById('confirmModal').classList.add('hidden');
-        };
-        document.getElementById('btnConfirmAction').addEventListener('click', () => {
-            if(deleteActionCallback) deleteActionCallback();
-            closeConfirm();
-        });
-
         window.openLoginModal = () => document.getElementById('loginModal').classList.remove('hidden');
         window.closeLoginModal = () => document.getElementById('loginModal').classList.add('hidden');
 
+        // Hàm confirm custom thay cho window.confirm()
+        window.confirmAction = (callback) => {
+            document.getElementById('confirmModal').classList.remove('hidden');
+            
+            document.getElementById('btnConfirmCancel').onclick = () => {
+                document.getElementById('confirmModal').classList.add('hidden');
+            };
+            document.getElementById('btnConfirmDelete').onclick = () => {
+                document.getElementById('confirmModal').classList.add('hidden');
+                callback();
+            };
+        };
+
+        const showLoader = (show) => {
+            const el = document.getElementById('globalLoader');
+            if(show) {
+                el.style.display = 'flex';
+                // Trigger reflow
+                void el.offsetWidth;
+                el.style.opacity = '1';
+            } else {
+                el.style.opacity = '0';
+                setTimeout(() => el.style.display = 'none', 300);
+            }
+        };
+
+        // Cập nhật hiển thị Ngày
+        const updateDateDisplay = () => {
+            const dateOptions = { weekday: 'long', year: 'numeric', month: 'numeric', day: 'numeric' };
+            document.getElementById('currentDateDisplay').innerText = selectedDate.toLocaleDateString('vi-VN', dateOptions);
+            
+            const dateStr = getSelectedDateString();
+            document.getElementById('globalDateInput').value = dateStr;
+            
+            // Re-render khi ngày thay đổi
+            renderTasks();
+            updateDashboardStats();
+        };
+
+        window.changeDate = (offsetDays) => {
+            selectedDate.setDate(selectedDate.getDate() + offsetDays);
+            updateDateDisplay();
+        };
+
+        window.setDate = (dateStr) => {
+            if(dateStr) {
+                selectedDate = new Date(dateStr);
+                updateDateDisplay();
+            }
+        };
+
+        const getSelectedDateString = () => {
+            const year = selectedDate.getFullYear();
+            const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+            const day = String(selectedDate.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        };
+
+        // Đăng nhập
         window.handleAuth = async () => {
             const rawUsername = document.getElementById('username').value.trim().toLowerCase();
             const password = document.getElementById('password').value;
@@ -496,7 +544,9 @@
 
             const email = rawUsername.includes('@') ? rawUsername : `${rawUsername}@nsg.com`;
             const btn = document.getElementById('authSubmitBtn');
-            btn.innerText = "Đang xử lý..."; btn.disabled = true;
+            const oldBtnText = btn.innerText;
+            btn.innerText = "Đang xử lý...";
+            btn.disabled = true;
 
             try {
                 try {
@@ -505,18 +555,28 @@
                     const isDefaultAccount = ['admin@nsg.com', 'lequangtrung@nsg.com', 'nguyenvanhanh@nsg.com'].includes(email);
                     if (isDefaultAccount && (signInErr.code === 'auth/invalid-credential' || signInErr.code === 'auth/user-not-found')) {
                          await createUserWithEmailAndPassword(auth, email, password);
-                    } else throw signInErr;
+                    } else {
+                        throw signInErr;
+                    }
                 }
                 closeLoginModal();
             } catch (error) {
-                errorEl.innerText = error.code === 'auth/invalid-credential' ? 'Sai tài khoản hoặc mật khẩu' : error.message;
+                console.error("Auth error:", error);
+                errorEl.innerText = error.code === 'auth/invalid-credential' ? 'Sai tài khoản hoặc mật khẩu' : 'Lỗi đăng nhập: ' + error.message;
                 errorEl.classList.remove('hidden');
             } finally {
-                btn.innerText = "Đăng nhập"; btn.disabled = false;
+                btn.innerText = oldBtnText;
+                btn.disabled = false;
             }
         };
 
-        window.handleLogout = () => signOut(auth);
+        window.handleLogout = () => {
+            signOut(auth);
+            // Reset về Khách
+            currentUserData = null;
+            currentUser = null;
+            setupRoleBasedUI();
+        };
 
         onAuthStateChanged(auth, async (user) => {
             if (user) {
@@ -528,63 +588,64 @@
 
                     const userDocRef = getDocPath('users', user.uid);
                     const userDoc = await getDoc(userDocRef);
-                    let shouldUpdate = false;
+                    let shouldUpdateFirestore = false;
 
                     if (userDoc.exists()) {
                         currentUserData = userDoc.data();
                         if ((targetRole === 'admin' && currentUserData.role !== 'admin') || 
                             (targetRole === 'manager' && currentUserData.role !== 'manager')) {
-                            currentUserData.role = targetRole; shouldUpdate = true;
+                            currentUserData.role = targetRole;
+                            shouldUpdateFirestore = true;
                         }
                     } else {
-                        currentUserData = { email: user.email, role: targetRole, displayName: user.email.split('@')[0], createdAt: serverTimestamp() };
-                        shouldUpdate = true;
+                        currentUserData = { 
+                            email: user.email, role: targetRole, displayName: user.email.split('@')[0], createdAt: serverTimestamp()
+                        };
+                        shouldUpdateFirestore = true;
                     }
-                    if (shouldUpdate) await setDoc(userDocRef, currentUserData, { merge: true });
 
-                    // Update UI for logged in user
-                    document.getElementById('guestModeInfo').classList.add('hidden');
-                    document.getElementById('loggedInInfo').classList.remove('hidden');
-                    document.getElementById('loggedInInfo').classList.add('flex');
+                    if (shouldUpdateFirestore) await setDoc(userDocRef, currentUserData, { merge: true });
+                    
                     document.getElementById('headerUserName').innerText = currentUserData.displayName;
-                    document.getElementById('headerUserRole').innerText = currentUserData.role === 'admin' ? "Quản trị viên" : "Quản lý";
-
-                    setupRoleBasedUI();
+                    document.getElementById('headerUserRole').innerText = currentUserData.role === 'admin' ? "Quản trị viên" : (currentUserData.role === 'manager' ? "Quản lý" : "Nhân viên");
+                    
+                    document.getElementById('authBtn').outerHTML = `
+                        <button id="authBtn" onclick="handleLogout()" class="text-slate-500 hover:text-red-600 transition-colors p-2 rounded-full hover:bg-red-50 flex items-center justify-center" title="Đăng xuất">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                        </button>
+                    `;
+                    
                     if(currentUserData.role === 'admin') loadUsersData();
                 } catch(e) {
-                    console.error(e);
-                    window.showAlert("Lỗi khi tải dữ liệu người dùng.");
+                    console.error("Lỗi tải user:", e);
                 }
             } else {
-                // GUEST MODE (Default)
-                currentUser = null;
-                currentUserData = { role: 'guest' };
-                if (usersUnsubscribe) usersUnsubscribe();
-                
-                document.getElementById('guestModeInfo').classList.remove('hidden');
-                document.getElementById('loggedInInfo').classList.add('hidden');
-                document.getElementById('loggedInInfo').classList.remove('flex');
-                
-                setupRoleBasedUI();
-                switchTab('dashboard'); // Force tab to dashboard
+                // Khách mode
+                document.getElementById('headerUserName').innerText = "Khách Truy Cập";
+                document.getElementById('headerUserRole').innerText = "Chỉ cập nhật tiến độ";
+                document.getElementById('authBtn').outerHTML = `
+                    <button id="authBtn" onclick="openLoginModal()" class="text-slate-500 hover:text-blue-600 transition-colors p-2 rounded-full hover:bg-slate-100 flex items-center justify-center" title="Đăng nhập Quản lý">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path></svg>
+                    </button>
+                `;
             }
+            setupRoleBasedUI();
         });
 
         const setupRoleBasedUI = () => {
-            const role = currentUserData.role;
+            const role = currentUserData?.role || 'guest';
             const btnCreate = document.getElementById('btnCreateTask');
             const tabUsers = document.getElementById('tab-users');
 
-            btnCreate.classList.add('hidden');
-            tabUsers.classList.add('hidden');
-
-            if (role === 'admin') {
+            if (role === 'admin' || role === 'manager') {
                 btnCreate.classList.remove('hidden');
-                tabUsers.classList.remove('hidden');
-            } else if (role === 'manager') {
-                btnCreate.classList.remove('hidden');
+                if(role === 'admin') tabUsers.classList.remove('hidden');
+                else tabUsers.classList.add('hidden');
+            } else {
+                // Khách hoặc Nhân viên thường ẩn giao việc và user
+                btnCreate.classList.add('hidden');
+                tabUsers.classList.add('hidden');
             }
-            // Guest & User will just see normal dashboard without create/users buttons
         };
 
         window.switchTab = (tabName) => {
@@ -604,42 +665,107 @@
             activeTab.classList.add('text-blue-600', 'border-blue-600');
         };
 
+        // Load Tasks cho TẤT CẢ mọi người (Guest + Admin)
         const loadTasksData = () => {
-            // LƯU Ý: Khách vẫn xem được dữ liệu nhờ xóa chặn if(!currentUser)
             const q = query(getCollectionPath('tasks'));
             tasksUnsubscribe = onSnapshot(q, (snapshot) => {
                 tasks = [];
                 snapshot.forEach((doc) => tasks.push({ id: doc.id, ...doc.data() }));
-                tasks.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
                 
-                renderTasks();
-                updateDashboardStats();
-                showLoader(false); // Ẩn loader khi data đã tải xong
+                if(document.getElementById('currentDateDisplay').innerText === 'Đang tải...') {
+                    updateDateDisplay();
+                } else {
+                    renderTasks();
+                    updateDashboardStats();
+                }
+                showLoader(false);
             }, (error) => {
-                console.error("Error fetching tasks:", error);
-                window.showAlert("Lỗi tải dữ liệu. Bạn đã cài đặt Firestore Rules thành 'allow read, update: if true;' chưa?");
+                console.error("Lỗi Firestore:", error);
+                if(error.code === 'permission-denied') {
+                    window.showAlert("Lỗi quyền Firebase: Hãy cập nhật Rules cho phép 'read' và 'update' cho if true.");
+                } else {
+                    window.showAlert("Không thể tải danh sách công việc.");
+                }
                 showLoader(false);
             });
         };
 
+        const loadUsersData = () => {
+            if (currentUserData?.role !== 'admin') return;
+            const q = query(getCollectionPath('users'));
+            usersUnsubscribe = onSnapshot(q, (snapshot) => {
+                allUsersData = [];
+                snapshot.forEach((doc) => allUsersData.push({ id: doc.id, ...doc.data() }));
+                renderUsers();
+            });
+        };
+
+        // Cập nhật Thống kê & Biểu đồ của CÁC TASK TRONG NGÀY ĐANG CHỌN
         const updateDashboardStats = () => {
-            document.getElementById('stat-total').innerText = tasks.length;
-            document.getElementById('stat-todo').innerText = tasks.filter(t => t.trangThai === 'Chưa Thực Hiện').length;
-            document.getElementById('stat-inprogress').innerText = tasks.filter(t => t.trangThai === 'Đang Thực Hiện').length;
-            document.getElementById('stat-done').innerText = tasks.filter(t => t.trangThai === 'Hoàn Thành').length;
+            const dateStr = getSelectedDateString();
+            const tasksToday = tasks.filter(t => t.ngayGiao === dateStr);
+            
+            const total = tasksToday.length;
+            const todo = tasksToday.filter(t => t.trangThai === 'Chưa Thực Hiện' || !t.trangThai).length;
+            const inProgress = tasksToday.filter(t => t.trangThai === 'Đang Thực Hiện').length;
+            const done = tasksToday.filter(t => t.trangThai === 'Hoàn Thành').length;
+
+            document.getElementById('stat-total').innerText = total;
+            document.getElementById('stat-todo').innerText = todo;
+            document.getElementById('stat-inprogress').innerText = inProgress;
+            document.getElementById('stat-done').innerText = done;
+
+            // Xử lý vẽ biểu đồ SVG
+            if (total === 0) {
+                document.getElementById('chart-todo').style.strokeDasharray = `0 100`;
+                document.getElementById('chart-inprogress').style.strokeDasharray = `0 100`;
+                document.getElementById('chart-done').style.strokeDasharray = `0 100`;
+                document.getElementById('chart-percent').innerText = `0%`;
+            } else {
+                const pDone = (done / total) * 100;
+                const pInProgress = (inProgress / total) * 100;
+                const pTodo = (todo / total) * 100;
+                
+                document.getElementById('chart-percent').innerText = `${Math.round(pDone)}%`;
+
+                // SVG circle có chu vi giả định là 100 (nhờ pathLength="100")
+                document.getElementById('chart-done').style.strokeDasharray = `${pDone} 100`;
+                document.getElementById('chart-done').style.strokeDashoffset = `0`;
+
+                document.getElementById('chart-inprogress').style.strokeDasharray = `${pInProgress} 100`;
+                document.getElementById('chart-inprogress').style.strokeDashoffset = `-${pDone}`;
+
+                document.getElementById('chart-todo').style.strokeDasharray = `${pTodo} 100`;
+                document.getElementById('chart-todo').style.strokeDashoffset = `-${pDone + pInProgress}`;
+            }
         };
 
         const renderTasks = () => {
             const tbody = document.getElementById('tasksTableBody');
             const searchVal = document.getElementById('searchInput').value.toLowerCase();
             const filterVal = document.getElementById('filterStatus').value;
+            const dateStr = getSelectedDateString();
             
             tbody.innerHTML = '';
             
+            // 1. Lọc theo NGÀY CHỌN, Search và Status
             let filteredTasks = tasks.filter(t => {
-                const matchSearch = (t.noiDung || '').toLowerCase().includes(searchVal) || (t.khuVuc || '').toLowerCase().includes(searchVal);
+                if (t.ngayGiao !== dateStr) return false; // CHỈ HIỂN THỊ VIỆC CỦA NGÀY TRÊN LỊCH
+                
+                const matchSearch = (t.noiDung || '').toLowerCase().includes(searchVal) || 
+                                    (t.nguoiPhuTrach || '').toLowerCase().includes(searchVal) ||
+                                    (t.khuVuc || '').toLowerCase().includes(searchVal) ||
+                                    (t.donVi || '').toLowerCase().includes(searchVal);
                 const matchStatus = filterVal === 'all' || t.trangThai === filterVal;
                 return matchSearch && matchStatus;
+            });
+
+            // 2. SẮP XẾP VÀ NHÓM THEO KHU VỰC
+            filteredTasks.sort((a, b) => {
+                const khuA = a.khuVuc || 'Khác';
+                const khuB = b.khuVuc || 'Khác';
+                if (khuA !== khuB) return khuA.localeCompare(khuB);
+                return new Date(b.createdAt || 0) - new Date(a.createdAt || 0); // Cùng khu vực thì sắp xếp thời gian tạo
             });
 
             if (filteredTasks.length === 0) {
@@ -653,92 +779,109 @@
                 tbody.parentElement.parentElement.classList.remove('hidden');
             }
 
-            filteredTasks.forEach((task, index) => {
+            let currentKhuVuc = null;
+            let counter = 1;
+
+            filteredTasks.forEach((task) => {
+                // Header Nhóm Khu Vực
+                if (task.khuVuc !== currentKhuVuc) {
+                    currentKhuVuc = task.khuVuc;
+                    counter = 1; // Reset số TT cho mỗi khu
+                    const groupTr = document.createElement('tr');
+                    groupTr.className = 'bg-slate-100 border-y border-slate-200';
+                    groupTr.innerHTML = `
+                        <td colspan="8" class="px-4 py-2.5 text-xs font-bold text-slate-700 uppercase tracking-wider">
+                            <div class="flex items-center">
+                                <svg class="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                                Nhóm: ${currentKhuVuc || 'Khác'}
+                            </div>
+                        </td>
+                    `;
+                    tbody.appendChild(groupTr);
+                }
+
+                // Dòng Công Việc
                 const tr = document.createElement('tr');
-                tr.className = 'hover:bg-slate-50 transition-colors duration-150';
+                tr.className = 'hover:bg-blue-50/30 border-b border-slate-100 transition-colors duration-150';
                 
                 let statusBadge = '';
-                if(task.trangThai === 'Hoàn Thành') statusBadge = '<span class="px-2.5 py-1 inline-flex text-xs font-semibold rounded-full bg-green-100 text-green-700">Hoàn Thành</span>';
-                else if(task.trangThai === 'Đang Thực Hiện') statusBadge = '<span class="px-2.5 py-1 inline-flex text-xs font-semibold rounded-full bg-yellow-100 text-yellow-700">Đang Thực hiện</span>';
-                else statusBadge = '<span class="px-2.5 py-1 inline-flex text-xs font-semibold rounded-full bg-slate-100 text-slate-700">Chưa Thực Hiện</span>';
+                if(task.trangThai === 'Hoàn Thành') statusBadge = '<span class="px-2.5 py-1 inline-flex text-xs leading-4 font-semibold rounded-full bg-green-100 text-green-700">Hoàn Thành</span>';
+                else if(task.trangThai === 'Đang Thực Hiện') statusBadge = '<span class="px-2.5 py-1 inline-flex text-xs leading-4 font-semibold rounded-full bg-yellow-100 text-yellow-700">Đang Thực hiện</span>';
+                else statusBadge = '<span class="px-2.5 py-1 inline-flex text-xs leading-4 font-semibold rounded-full bg-slate-100 text-slate-700">Chưa Thực Hiện</span>';
 
                 const actionsHtml = `
                     <div class="flex items-center justify-end space-x-2">
-                        <button onclick="editTask('${task.id}')" class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Cập nhật">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                        <button onclick="editTask('${task.id}')" class="px-3 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors border border-blue-100" title="Cập nhật">
+                            Cập nhật
                         </button>
-                        ${currentUserData.role === 'admin' ? `
-                        <button onclick="deleteTask('${task.id}')" class="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Xóa">
+                        ${currentUserData?.role === 'admin' ? `
+                        <button onclick="deleteTask('${task.id}')" class="p-1.5 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors" title="Xóa">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                         </button>` : ''}
                     </div>
                 `;
 
                 tr.innerHTML = `
-                    <td class="px-4 py-4 whitespace-nowrap text-sm text-slate-500 font-medium">${index + 1}</td>
-                    <td class="px-4 py-4 whitespace-nowrap text-sm text-slate-800 font-semibold">${task.khuVuc || ''}</td>
-                    <td class="px-4 py-4 whitespace-nowrap text-sm text-slate-600">${task.donVi || ''}</td>
-                    <td class="px-6 py-4 text-sm text-slate-800 break-words max-w-xs leading-relaxed">${task.noiDung || ''}</td>
-                    <td class="px-4 py-4 whitespace-nowrap text-sm text-slate-800 font-medium">${task.nguoiPhuTrach || ''}</td>
+                    <td class="px-4 py-4 whitespace-nowrap text-sm text-slate-500 font-medium text-center">${counter++}</td>
+                    <td class="px-4 py-4 whitespace-nowrap text-sm text-slate-700">${task.donVi || ''}</td>
+                    <td class="px-6 py-4 text-sm text-slate-800 break-words max-w-xs leading-relaxed font-medium">${task.noiDung || ''}</td>
+                    <td class="px-4 py-4 whitespace-nowrap text-sm text-slate-700">${task.nguoiPhuTrach || ''}</td>
                     <td class="px-4 py-4 whitespace-nowrap text-sm text-slate-600">
                         <div class="text-[13px] mb-1"><span class="text-slate-400">Giao:</span> ${task.ngayGiao || '-'}</div>
                         <div class="text-[13px] text-red-500 font-medium"><span class="text-red-300">Hạn:</span> ${task.hanHoanThanh || '-'}</div>
                     </td>
                     <td class="px-4 py-4 whitespace-nowrap">${statusBadge}</td>
-                    <td class="px-4 py-4 whitespace-nowrap text-sm text-emerald-600 font-medium">${task.ngayHoanThanh || '-'}</td>
-                    <td class="px-4 py-4 whitespace-nowrap text-right text-sm">${actionsHtml}</td>
+                    <td class="px-4 py-4 text-sm text-slate-600 max-w-[150px] truncate" title="${task.ketQua || ''}">${task.ketQua || '-'}</td>
+                    <td class="px-4 py-4 whitespace-nowrap text-right">${actionsHtml}</td>
                 `;
                 tbody.appendChild(tr);
             });
         };
 
-        const loadUsersData = () => {
-            const q = query(getCollectionPath('users'));
-            usersUnsubscribe = onSnapshot(q, (snapshot) => {
-                allUsersData = [];
-                snapshot.forEach((doc) => allUsersData.push({ id: doc.id, ...doc.data() }));
-                
-                const tbody = document.getElementById('usersTableBody');
-                tbody.innerHTML = '';
-                allUsersData.forEach(u => {
-                    const tr = document.createElement('tr');
-                    let roleName = u.role === 'admin' ? 'Quản trị viên' : (u.role === 'manager' ? 'Trưởng/Phó phòng' : 'Nhân viên');
-                    tr.className = 'hover:bg-slate-50';
-                    tr.innerHTML = `
-                        <td class="px-6 py-4 text-sm text-slate-800 font-medium">${u.email}</td>
-                        <td class="px-6 py-4 text-sm text-slate-600">${u.displayName || '-'}</td>
-                        <td class="px-6 py-4 text-sm text-slate-800">${roleName}</td>
-                        <td class="px-6 py-4 text-sm">
-                            ${u.id !== currentUser?.uid ? `
-                            <select onchange="updateUserRole('${u.id}', this.value)" class="block w-full pl-3 pr-10 py-1.5 border-slate-300 rounded-lg">
-                                <option value="user" ${u.role === 'user' ? 'selected' : ''}>Nhân viên</option>
-                                <option value="manager" ${u.role === 'manager' ? 'selected' : ''}>Quản lý</option>
-                                <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Quản trị viên</option>
-                            </select>
-                            ` : '<span class="text-slate-400 italic">Tài khoản của bạn</span>'}
-                        </td>
-                    `;
-                    tbody.appendChild(tr);
-                });
+        const renderUsers = () => {
+            const tbody = document.getElementById('usersTableBody');
+            tbody.innerHTML = '';
+            
+            allUsersData.forEach(u => {
+                const tr = document.createElement('tr');
+                let roleName = u.role === 'admin' ? 'Quản trị viên' : (u.role === 'manager' ? 'Quản lý' : 'Nhân viên');
+                tr.className = 'hover:bg-slate-50 transition-colors duration-150';
+
+                tr.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-800 font-medium">${u.email}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600">${u.displayName || '-'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-800">${roleName}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        ${u.id !== currentUser?.uid ? `
+                        <select onchange="updateUserRole('${u.id}', this.value)" class="block w-full pl-3 pr-10 py-1.5 text-sm border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg border bg-white cursor-pointer">
+                            <option value="user" ${u.role === 'user' ? 'selected' : ''}>Nhân viên</option>
+                            <option value="manager" ${u.role === 'manager' ? 'selected' : ''}>Quản lý</option>
+                            <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Quản trị viên</option>
+                        </select>
+                        ` : '<span class="text-slate-400 italic text-sm">Tài khoản của bạn</span>'}
+                    </td>
+                `;
+                tbody.appendChild(tr);
             });
-        };
+        }
 
         document.getElementById('searchInput').addEventListener('input', renderTasks);
         document.getElementById('filterStatus').addEventListener('change', renderTasks);
 
         window.openTaskModal = () => {
-            if(currentUserData.role === 'guest') return; // Khách không thể bấm nút Giao việc
-            
             document.getElementById('taskForm').reset();
             document.getElementById('taskId').value = '';
-            document.getElementById('taskNgayGiao').value = new Date().toISOString().split('T')[0];
-            document.getElementById('modal-title').innerHTML = '<svg class="w-6 h-6 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg> Thêm Công Việc Mới';
-            document.getElementById('guestEditNotice').classList.add('hidden');
             
-            const fields = ['taskKhuVuc', 'taskDonVi', 'taskNoiDung', 'taskNguoiPhuTrach', 'taskNgayGiao'];
-            fields.forEach(f => {
-                document.getElementById(f).disabled = false;
-                document.getElementById(f).classList.remove('disabled-field');
+            // Giao việc mới mặc định lấy Ngày Đang Chọn Trên Lịch
+            document.getElementById('taskNgayGiao').value = getSelectedDateString();
+            document.getElementById('taskHanHoanThanh').value = getSelectedDateString();
+            
+            document.getElementById('modal-title').innerHTML = '<svg class="w-6 h-6 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg> Thêm Công Việc Mới';
+            
+            // Admin có quyền hết
+            const adminFields = document.querySelectorAll('.admin-only-field input, .admin-only-field select, .admin-only-field textarea');
+            adminFields.forEach(el => {
+                el.disabled = false;
             });
             
             document.getElementById('taskModal').classList.remove('hidden');
@@ -757,28 +900,22 @@
             document.getElementById('taskNguoiPhuTrach').value = task.nguoiPhuTrach || '';
             document.getElementById('taskNgayGiao').value = task.ngayGiao || '';
             
-            // Các trường Khách được sửa
             document.getElementById('taskHanHoanThanh').value = task.hanHoanThanh || '';
             document.getElementById('taskTrangThai').value = task.trangThai || 'Chưa Thực Hiện';
             document.getElementById('taskKetQua').value = task.ketQua || '';
             document.getElementById('taskGhiChu').value = task.ghiChu || '';
 
-            document.getElementById('modal-title').innerHTML = '<svg class="w-6 h-6 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg> Cập Nhật Công Việc';
+            document.getElementById('modal-title').innerHTML = '<svg class="w-6 h-6 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg> Cập Nhật Tiến Độ';
 
-            // PHÂN QUYỀN KHÓA TRƯỜNG DỮ LIỆU CỐT LÕI (NẾU LÀ KHÁCH HOẶC USER)
-            const coreFields = ['taskKhuVuc', 'taskDonVi', 'taskNoiDung', 'taskNguoiPhuTrach', 'taskNgayGiao'];
-            if (currentUserData.role === 'guest' || currentUserData.role === 'user') {
-                document.getElementById('guestEditNotice').classList.remove('hidden'); // Hiện cảnh báo
-                coreFields.forEach(f => {
-                    document.getElementById(f).disabled = true;
-                    document.getElementById(f).classList.add('disabled-field');
-                });
+            // Phân quyền trên Modal
+            const adminFields = document.querySelectorAll('.admin-only-field input, .admin-only-field select, .admin-only-field textarea');
+            const role = currentUserData?.role || 'guest';
+            
+            if (role === 'admin' || role === 'manager') {
+                adminFields.forEach(el => el.disabled = false);
             } else {
-                document.getElementById('guestEditNotice').classList.add('hidden');
-                coreFields.forEach(f => {
-                    document.getElementById(f).disabled = false;
-                    document.getElementById(f).classList.remove('disabled-field');
-                });
+                // Khách chỉ xem được thông tin gốc
+                adminFields.forEach(el => el.disabled = true);
             }
 
             document.getElementById('taskModal').classList.remove('hidden');
@@ -787,10 +924,12 @@
         window.saveTask = async () => {
             const btn = document.getElementById('btnSaveTask');
             const originalText = btn.innerText;
-            btn.innerText = 'Đang lưu...'; btn.disabled = true;
+            btn.innerText = 'Đang lưu...';
+            btn.disabled = true;
 
             const id = document.getElementById('taskId').value;
             const trangThai = document.getElementById('taskTrangThai').value;
+            const role = currentUserData?.role || 'guest';
             
             let ngayHoanThanh = '';
             if (trangThai === 'Hoàn Thành') {
@@ -798,13 +937,8 @@
                 ngayHoanThanh = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
             }
 
-            // Thu thập dữ liệu (Trường bị disabled vẫn lấy được value bằng JS)
-            const taskData = {
-                khuVuc: document.getElementById('taskKhuVuc').value,
-                donVi: document.getElementById('taskDonVi').value,
-                noiDung: document.getElementById('taskNoiDung').value,
-                nguoiPhuTrach: document.getElementById('taskNguoiPhuTrach').value,
-                ngayGiao: document.getElementById('taskNgayGiao').value,
+            // Object chứa các trường mà Khách được phép cập nhật
+            let taskData = {
                 hanHoanThanh: document.getElementById('taskHanHoanThanh').value,
                 trangThai: trangThai,
                 ketQua: document.getElementById('taskKetQua').value,
@@ -813,44 +947,67 @@
                 updatedAt: serverTimestamp()
             };
 
+            // Nếu là Admin/Manager thì lưu thêm các trường cốt lõi
+            if (role === 'admin' || role === 'manager') {
+                taskData = {
+                    ...taskData,
+                    khuVuc: document.getElementById('taskKhuVuc').value,
+                    donVi: document.getElementById('taskDonVi').value,
+                    noiDung: document.getElementById('taskNoiDung').value,
+                    nguoiPhuTrach: document.getElementById('taskNguoiPhuTrach').value,
+                    ngayGiao: document.getElementById('taskNgayGiao').value,
+                };
+            }
+
             try {
                 if (id) {
                     await updateDoc(getDocPath('tasks', id), taskData);
                 } else {
-                    if (currentUserData.role === 'guest' || currentUserData.role === 'user') {
-                        throw new Error("Khách không có quyền tạo công việc mới!");
-                    }
+                    if (role !== 'admin' && role !== 'manager') throw new Error("Chỉ quản lý mới được Giao Việc Mới.");
                     taskData.createdAt = serverTimestamp();
-                    taskData.createdBy = currentUser.uid;
                     await setDoc(doc(getCollectionPath('tasks')), taskData);
                 }
                 closeTaskModal();
             } catch (error) {
-                console.error(error);
-                window.showAlert("Lỗi lưu dữ liệu: " + (error.code === 'permission-denied' ? 'Bạn chưa mở quyền Rules trên Firebase (allow update: if true)' : error.message));
+                console.error("Lỗi khi lưu:", error);
+                window.showAlert("Lỗi khi lưu: " + error.message);
             } finally {
-                btn.innerText = originalText; btn.disabled = false;
+                btn.innerText = originalText;
+                btn.disabled = false;
             }
         };
 
         window.deleteTask = (id) => {
-            showConfirm(async () => {
+            if (currentUserData?.role !== 'admin') {
+                window.showAlert("Chỉ Quản trị viên mới được xóa.");
+                return;
+            }
+            
+            window.confirmAction(async () => {
                 try {
                     await deleteDoc(getDocPath('tasks', id));
-                } catch(e) { console.error(e); window.showAlert("Lỗi khi xóa."); }
+                } catch(e) {
+                    console.error(e);
+                    window.showAlert("Lỗi khi xóa.");
+                }
             });
         };
 
         window.updateUserRole = async (uid, newRole) => {
-            try { await updateDoc(getDocPath('users', uid), { role: newRole }); } 
-            catch (error) { window.showAlert("Lỗi phân quyền."); }
-        };
-        
-        // Init - Khởi động load data trực tiếp (Vì Guest mode cho phép)
-        window.onload = () => {
-            loadTasksData();
+            if (currentUserData?.role !== 'admin') return;
+            try {
+                await updateDoc(getDocPath('users', uid), { role: newRole });
+            } catch (error) {
+                console.error("Error updating role:", error);
+                window.showAlert("Lỗi khi cập nhật quyền.");
+            }
         };
 
+        // Kích hoạt load dữ liệu khi vào trang (Guest Mode)
+        window.onload = () => {
+            showLoader(true);
+            loadTasksData();
+        }
     </script>
 </body>
 </html>
