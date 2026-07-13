@@ -76,6 +76,10 @@
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
                         Danh sách công việc
                     </button>
+                    <button onclick="switchTab('quarterly')" id="tab-quarterly" class="py-3 text-sm font-medium text-slate-500 hover:text-slate-800 border-b-2 border-transparent hover:border-slate-300 focus:outline-none transition-colors flex items-center">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"></path></svg>
+                        Thống kê Quý
+                    </button>
                     <button onclick="switchTab('users')" id="tab-users" class="hidden py-3 text-sm font-medium text-slate-500 hover:text-slate-800 border-b-2 border-transparent hover:border-slate-300 focus:outline-none transition-colors flex items-center">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                         Phân quyền Quản trị
@@ -86,10 +90,10 @@
 
         <!-- Main Content Area -->
         <main class="flex-1 overflow-auto p-4 sm:p-6 lg:p-8 relative">
-            <div class="max-w-7xl mx-auto h-full flex flex-col space-y-6">
+            <div class="max-w-7xl mx-auto min-h-full flex flex-col space-y-6">
                 
-                <!-- Thanh Quản lý Thời gian (Chung cho toàn bộ hệ thống) -->
-                <div class="bg-white px-4 py-3 rounded-xl shadow-sm border border-slate-200 flex flex-col sm:flex-row justify-between items-center space-y-3 sm:space-y-0 shrink-0">
+                <!-- Thanh Quản lý Thời gian -->
+                <div id="globalTimeBar" class="bg-white px-4 py-3 rounded-xl shadow-sm border border-slate-200 flex flex-col sm:flex-row justify-between items-center space-y-3 sm:space-y-0 shrink-0">
                     <div class="flex items-center space-x-2">
                         <button onclick="changeDate(-1)" class="p-2 hover:bg-slate-100 rounded-lg text-slate-500 transition-colors" title="Ngày hôm trước">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
@@ -117,16 +121,11 @@
                             <h3 class="text-base font-semibold text-slate-700 absolute top-6 left-6">Tiến độ trong ngày</h3>
                             <div class="relative w-48 h-48 mt-8">
                                 <svg class="w-full h-full" viewBox="0 0 36 36">
-                                    <!-- Background Circle (Gray - Chưa thực hiện) -->
                                     <circle cx="18" cy="18" r="15.915" fill="none" stroke="#f1f5f9" stroke-width="3" />
-                                    <!-- Todo (Gray) -->
                                     <circle id="chart-todo" class="chart-circle" cx="18" cy="18" r="15.915" fill="none" stroke="#94a3b8" stroke-width="3" pathLength="100" />
-                                    <!-- In Progress (Yellow) -->
                                     <circle id="chart-inprogress" class="chart-circle" cx="18" cy="18" r="15.915" fill="none" stroke="#eab308" stroke-width="3" pathLength="100" />
-                                    <!-- Done (Green) -->
                                     <circle id="chart-done" class="chart-circle" cx="18" cy="18" r="15.915" fill="none" stroke="#22c55e" stroke-width="4" pathLength="100" />
                                 </svg>
-                                <!-- Phần trăm ở giữa -->
                                 <div class="absolute inset-0 flex flex-col items-center justify-center">
                                     <span id="chart-percent" class="text-3xl font-bold text-slate-800">0%</span>
                                     <span class="text-xs text-slate-500 font-medium">Hoàn thành</span>
@@ -180,7 +179,7 @@
                 </div>
                 
                 <!-- VIEW: TASKS -->
-                <div id="view-tasks" class="hidden h-full flex flex-col space-y-4 animate-[fadeIn_0.3s_ease-in-out]">
+                <div id="view-tasks" class="hidden flex-1 flex flex-col space-y-4 animate-[fadeIn_0.3s_ease-in-out]">
                     <!-- Actions Row -->
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-xl shadow-sm border border-slate-200">
                         <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto">
@@ -204,7 +203,7 @@
                     </div>
 
                     <!-- Table Container -->
-                    <div class="flex-1 bg-white rounded-xl shadow-sm overflow-hidden border border-slate-200 flex flex-col">
+                    <div class="flex-1 bg-white rounded-xl shadow-sm overflow-hidden border border-slate-200 flex flex-col min-h-[350px] md:min-h-[450px]">
                         <div class="overflow-x-auto flex-1">
                             <table class="min-w-full text-sm">
                                 <thead class="bg-slate-50 sticky top-0 z-10 shadow-sm border-b border-slate-200">
@@ -233,8 +232,115 @@
                     </div>
                 </div>
 
+                <!-- VIEW: QUARTERLY STATISTICS -->
+                <div id="view-quarterly" class="hidden flex-1 flex flex-col space-y-6 animate-[fadeIn_0.3s_ease-in-out]">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 shrink-0">
+                        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between space-y-4">
+                            <div>
+                                <h3 class="text-lg font-bold text-slate-800 mb-1">Thống kê theo Quý</h3>
+                                <p class="text-slate-500 text-xs">Vui lòng chọn Quý và Năm cần kết xuất dữ liệu</p>
+                            </div>
+                            
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Chọn Quý</label>
+                                    <select id="quarterSelector" onchange="onQuarterFilterChange()" class="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm bg-white font-medium">
+                                        <option value="1">Quý I (T1 - T3)</option>
+                                        <option value="2">Quý II (T4 - T6)</option>
+                                        <option value="3">Quý III (T7 - T9)</option>
+                                        <option value="4">Quý IV (T10 - T12)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Chọn Năm</label>
+                                    <select id="yearSelector" onchange="onQuarterFilterChange()" class="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm bg-white font-medium">
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-blue-50 rounded-xl p-3 border border-blue-100 flex items-center space-x-3">
+                                <div class="p-2 bg-blue-600 text-white rounded-lg">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 12v-6m-9-3H9m12 0h-3L12 3 9 12H6"></path></svg>
+                                </div>
+                                <div>
+                                    <span class="text-xs text-slate-500 font-semibold block uppercase">Tổng số công việc</span>
+                                    <span id="quarterly-stat-total" class="text-xl font-extrabold text-blue-700">0</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col sm:flex-row items-center justify-around min-h-[180px] lg:col-span-2">
+                            <div class="relative w-36 h-36 shrink-0 mb-4 sm:mb-0">
+                                <svg class="w-full h-full" viewBox="0 0 36 36">
+                                    <circle cx="18" cy="18" r="15.915" fill="none" stroke="#f1f5f9" stroke-width="3" />
+                                    <circle id="quarter-chart-todo" class="chart-circle" cx="18" cy="18" r="15.915" fill="none" stroke="#94a3b8" stroke-width="3" pathLength="100" />
+                                    <circle id="quarter-chart-inprogress" class="chart-circle" cx="18" cy="18" r="15.915" fill="none" stroke="#eab308" stroke-width="3" pathLength="100" />
+                                    <circle id="quarter-chart-done" class="chart-circle" cx="18" cy="18" r="15.915" fill="none" stroke="#22c55e" stroke-width="4" pathLength="100" />
+                                </svg>
+                                <div class="absolute inset-0 flex flex-col items-center justify-center">
+                                    <span id="quarter-chart-percent" class="text-2xl font-bold text-slate-800">0%</span>
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase">Xong</span>
+                                </div>
+                            </div>
+                            
+                            <div class="flex flex-col space-y-2.5 w-full max-w-xs px-4">
+                                <div class="flex justify-between items-center bg-green-50/50 px-3 py-1.5 rounded-lg border border-green-100">
+                                    <span class="text-xs font-semibold text-green-700 flex items-center">
+                                        <span class="w-2.5 h-2.5 rounded-full bg-green-500 mr-2"></span>Hoàn thành
+                                    </span>
+                                    <span id="quarterly-stat-done" class="text-sm font-bold text-green-800">0</span>
+                                </div>
+                                <div class="flex justify-between items-center bg-yellow-50/50 px-3 py-1.5 rounded-lg border border-yellow-100">
+                                    <span class="text-xs font-semibold text-yellow-700 flex items-center">
+                                        <span class="w-2.5 h-2.5 rounded-full bg-yellow-500 mr-2"></span>Đang tiến hành
+                                    </span>
+                                    <span id="quarterly-stat-inprogress" class="text-sm font-bold text-yellow-800">0</span>
+                                </div>
+                                <div class="flex justify-between items-center bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200">
+                                    <span class="text-xs font-semibold text-slate-600 flex items-center">
+                                        <span class="w-2.5 h-2.5 rounded-full bg-slate-400 mr-2"></span>Chưa thực hiện
+                                    </span>
+                                    <span id="quarterly-stat-todo" class="text-sm font-bold text-slate-700">0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bảng Danh Sách Công Việc trong Quý -->
+                    <div class="flex-1 bg-white rounded-xl shadow-sm overflow-hidden border border-slate-200 flex flex-col min-h-[350px] md:min-h-[450px]">
+                        <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                            <h3 class="font-bold text-slate-800 text-base">Chi tiết công việc trong Quý</h3>
+                            <span class="text-xs font-medium text-slate-500 bg-slate-100 px-3 py-1 rounded-full" id="quarterlyRangeDisplay">Tải thông tin...</span>
+                        </div>
+                        <div class="overflow-x-auto flex-1">
+                            <table class="min-w-full text-sm">
+                                <thead class="bg-slate-50 sticky top-0 z-10 shadow-sm border-b border-slate-200">
+                                    <tr>
+                                        <th scope="col" class="px-4 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider w-12">STT</th>
+                                        <th scope="col" class="px-4 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Đơn vị</th>
+                                        <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider min-w-[250px]">Nội dung công việc</th>
+                                        <th scope="col" class="px-4 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Người PT</th>
+                                        <th scope="col" class="px-4 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Ngày giao / Hạn</th>
+                                        <th scope="col" class="px-4 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Trạng thái</th>
+                                        <th scope="col" class="px-4 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Kết quả</th>
+                                        <th scope="col" class="px-4 py-3.5 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="quarterlyTableBody" class="bg-white">
+                                </tbody>
+                            </table>
+                        </div>
+                        <div id="emptyQuarterlyMessage" class="hidden p-12 text-center text-slate-500 flex-col items-center justify-center h-full bg-slate-50">
+                            <div class="bg-white p-4 rounded-full shadow-sm border border-slate-100 mb-3">
+                                <svg class="w-10 h-10 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                            </div>
+                            <p class="font-medium text-slate-600">Không tìm thấy công việc nào được giao trong quý này.</p>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- VIEW: USERS -->
-                <div id="view-users" class="hidden h-full flex flex-col space-y-4 animate-[fadeIn_0.3s_ease-in-out]">
+                <div id="view-users" class="hidden flex-1 flex flex-col space-y-4 animate-[fadeIn_0.3s_ease-in-out]">
                     <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex justify-between items-center">
                         <h2 class="text-lg font-semibold text-slate-800">Danh sách người dùng & Phân quyền</h2>
                     </div>
@@ -250,7 +356,6 @@
                                     </tr>
                                 </thead>
                                 <tbody id="usersTableBody" class="bg-white divide-y divide-slate-100">
-                                    <!-- Users rendered here -->
                                 </tbody>
                             </table>
                         </div>
@@ -267,11 +372,9 @@
             <div class="fixed inset-0 bg-slate-900 bg-opacity-60 transition-opacity backdrop-blur-sm" aria-hidden="true" onclick="closeLoginModal()"></div>
             <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
             <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md w-full border border-slate-200 relative">
-                
                 <button onclick="closeLoginModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
-
                 <div class="px-8 pt-8 pb-6">
                     <div class="flex flex-col items-center">
                         <div class="w-14 h-14 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-xl shadow-lg flex items-center justify-center text-white mb-4">
@@ -312,15 +415,12 @@
             <div class="inline-block align-bottom glass-bg rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl w-full border border-white/40">
                 <form id="taskForm" onsubmit="event.preventDefault(); saveTask();">
                     <input type="hidden" id="taskId">
-                    
                     <div class="px-6 pt-6 pb-6 sm:pb-6 border-b border-slate-100">
                         <h3 class="text-xl font-bold text-slate-800 mb-6 flex items-center" id="modal-title">
                             <svg class="w-6 h-6 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                             Thêm Công Việc Mới
                         </h3>
-                        
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                            <!-- Các trường BỊ KHÓA nếu là Khách -->
                             <div class="admin-only-field">
                                 <label class="block text-sm font-medium text-slate-700 mb-1">Khu vực</label>
                                 <select id="taskKhuVuc" required class="block w-full pl-3 pr-10 py-2.5 text-sm border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent rounded-xl border bg-white shadow-sm transition-all disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed">
@@ -336,23 +436,18 @@
                                 <label class="block text-sm font-medium text-slate-700 mb-1">Đơn vị</label>
                                 <input type="text" id="taskDonVi" required class="block w-full shadow-sm text-sm border-slate-300 rounded-xl border px-4 py-2.5 bg-white transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed">
                             </div>
-
                             <div class="md:col-span-2 admin-only-field">
                                 <label class="block text-sm font-medium text-slate-700 mb-1">Nội dung công việc</label>
                                 <textarea id="taskNoiDung" required rows="2" class="block w-full shadow-sm text-sm border-slate-300 rounded-xl border px-4 py-2.5 bg-white transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed"></textarea>
                             </div>
-
                             <div class="admin-only-field">
                                 <label class="block text-sm font-medium text-slate-700 mb-1">Người phụ trách</label>
                                 <input type="text" id="taskNguoiPhuTrach" required class="block w-full shadow-sm text-sm border-slate-300 rounded-xl border px-4 py-2.5 bg-white transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed" placeholder="VD: Thanh, Hòa...">
                             </div>
-                            
                             <div class="admin-only-field">
                                 <label class="block text-sm font-medium text-slate-700 mb-1">Ngày giao</label>
                                 <input type="date" id="taskNgayGiao" required class="block w-full shadow-sm text-sm border-slate-300 rounded-xl border px-4 py-2.5 bg-white transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed">
                             </div>
-
-                            <!-- Các trường KHÁCH ĐƯỢC PHÉP SỬA -->
                             <div>
                                 <label class="block text-sm font-medium text-slate-700 mb-1">Trạng thái</label>
                                 <select id="taskTrangThai" class="block w-full pl-3 pr-10 py-2.5 text-sm border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent rounded-xl border bg-white shadow-sm transition-all border-l-4 border-l-blue-500">
@@ -361,12 +456,10 @@
                                     <option value="Hoàn Thành">Hoàn Thành</option>
                                 </select>
                             </div>
-                            
                             <div>
                                 <label class="block text-sm font-medium text-slate-700 mb-1">Hạn hoàn thành</label>
                                 <input type="date" id="taskHanHoanThanh" required class="block w-full shadow-sm text-sm border-slate-300 rounded-xl border px-4 py-2.5 bg-white transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent border-l-4 border-l-blue-500">
                             </div>
-
                             <div class="md:col-span-2">
                                 <label class="block text-sm font-medium text-slate-700 mb-1">Kết quả thực hiện</label>
                                 <input type="text" id="taskKetQua" class="block w-full shadow-sm text-sm border-slate-300 rounded-xl border px-4 py-2.5 bg-white transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent border-l-4 border-l-blue-500">
@@ -416,10 +509,10 @@
             <div class="inline-block bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:max-w-sm w-full relative z-10">
                 <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4 text-center">
                     <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
-                        <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                        <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
                     </div>
                     <h3 class="text-lg leading-6 font-semibold text-slate-900" id="confirm-title">Xác nhận xóa</h3>
-                    <p class="text-sm text-slate-500 mt-2">Bạn có chắc chắn muốn xóa công việc này không? Hành động này không thể hoàn tác.</p>
+                    <p class="text-sm text-slate-500 mt-2" id="confirmMessage">Bạn có chắc chắn muốn xóa không? Hành động này không thể hoàn tác.</p>
                 </div>
                 <div class="bg-slate-50 px-4 py-3 sm:px-6 flex space-x-3 justify-center">
                     <button type="button" id="btnConfirmCancel" class="w-1/2 inline-flex justify-center rounded-xl border border-slate-300 shadow-sm px-4 py-2.5 bg-white text-base font-medium text-slate-700 hover:bg-slate-50 focus:outline-none sm:text-sm transition-all">Hủy</button>
@@ -450,13 +543,12 @@
 
         // State variables
         let currentUser = null;
-        let currentUserData = null; // null có nghĩa là Khách (Guest)
+        let currentUserData = null; 
         let tasks = [];
         let allUsersData = [];
         let tasksUnsubscribe = null;
         let usersUnsubscribe = null;
         
-        // Quản lý Ngày chọn lọc (Mặc định hôm nay)
         let selectedDate = new Date();
 
         const getCollectionPath = (collName) => collection(db, collName);
@@ -472,8 +564,12 @@
         window.openLoginModal = () => document.getElementById('loginModal').classList.remove('hidden');
         window.closeLoginModal = () => document.getElementById('loginModal').classList.add('hidden');
 
-        // Hàm confirm custom thay cho window.confirm()
-        window.confirmAction = (callback) => {
+        window.confirmAction = (callback, msg = null) => {
+            if(msg) {
+                document.getElementById('confirmMessage').innerText = msg;
+            } else {
+                document.getElementById('confirmMessage').innerText = "Bạn có chắc chắn muốn xóa không? Hành động này không thể hoàn tác.";
+            }
             document.getElementById('confirmModal').classList.remove('hidden');
             
             document.getElementById('btnConfirmCancel').onclick = () => {
@@ -489,7 +585,6 @@
             const el = document.getElementById('globalLoader');
             if(show) {
                 el.style.display = 'flex';
-                // Trigger reflow
                 void el.offsetWidth;
                 el.style.opacity = '1';
             } else {
@@ -498,7 +593,6 @@
             }
         };
 
-        // Cập nhật hiển thị Ngày
         const updateDateDisplay = () => {
             const dateOptions = { weekday: 'long', year: 'numeric', month: 'numeric', day: 'numeric' };
             document.getElementById('currentDateDisplay').innerText = selectedDate.toLocaleDateString('vi-VN', dateOptions);
@@ -506,7 +600,6 @@
             const dateStr = getSelectedDateString();
             document.getElementById('globalDateInput').value = dateStr;
             
-            // Re-render khi ngày thay đổi
             renderTasks();
             updateDashboardStats();
         };
@@ -530,7 +623,6 @@
             return `${year}-${month}-${day}`;
         };
 
-        // Đăng nhập
         window.handleAuth = async () => {
             const rawUsername = document.getElementById('username').value.trim().toLowerCase();
             const password = document.getElementById('password').value;
@@ -573,7 +665,6 @@
 
         window.handleLogout = () => {
             signOut(auth);
-            // Reset về Khách
             currentUserData = null;
             currentUser = null;
             setupRoleBasedUI();
@@ -621,7 +712,6 @@
                     console.error("Lỗi tải user:", e);
                 }
             } else {
-                // Khách mode
                 document.getElementById('headerUserName').innerText = "Khách Truy Cập";
                 document.getElementById('headerUserRole').innerText = "Chỉ cập nhật tiến độ";
                 document.getElementById('authBtn').outerHTML = `
@@ -631,6 +721,9 @@
                 `;
             }
             setupRoleBasedUI();
+            
+            renderTasks();
+            renderQuarterlyTasks();
         });
 
         const setupRoleBasedUI = () => {
@@ -643,50 +736,58 @@
                 if(role === 'admin') tabUsers.classList.remove('hidden');
                 else tabUsers.classList.add('hidden');
             } else {
-                // Khách hoặc Nhân viên thường ẩn giao việc và user
                 btnCreate.classList.add('hidden');
                 tabUsers.classList.add('hidden');
             }
         };
 
         window.switchTab = (tabName) => {
-            const views = ['dashboard', 'tasks', 'users'];
+            const views = ['dashboard', 'tasks', 'quarterly', 'users'];
             views.forEach(v => {
                 document.getElementById(`view-${v}`)?.classList.add('hidden');
                 const tab = document.getElementById(`tab-${v}`);
                 if(tab) {
-                    tab.classList.remove('text-blue-600', 'border-blue-600');
-                    tab.classList.add('text-slate-500', 'border-transparent');
+                    tab.classList.remove('text-blue-600', 'border-blue-600', 'font-semibold');
+                    tab.classList.add('text-slate-500', 'border-transparent', 'font-medium');
                 }
             });
 
             document.getElementById(`view-${tabName}`).classList.remove('hidden');
             const activeTab = document.getElementById(`tab-${tabName}`);
-            activeTab.classList.remove('text-slate-500', 'border-transparent');
-            activeTab.classList.add('text-blue-600', 'border-blue-600');
+            if (activeTab) {
+                activeTab.classList.remove('text-slate-500', 'border-transparent', 'font-medium');
+                activeTab.classList.add('text-blue-600', 'border-blue-600', 'font-semibold');
+            }
+            
+            const timeBar = document.getElementById('globalTimeBar');
+            if (tabName === 'dashboard' || tabName === 'tasks') {
+                timeBar.classList.remove('hidden');
+            } else {
+                timeBar.classList.add('hidden');
+            }
+            
+            if (tabName === 'quarterly') renderQuarterlyTasks();
         };
 
-        // Load Tasks cho TẤT CẢ mọi người (Guest + Admin)
         const loadTasksData = () => {
             const q = query(getCollectionPath('tasks'));
             tasksUnsubscribe = onSnapshot(q, (snapshot) => {
                 tasks = [];
                 snapshot.forEach((doc) => tasks.push({ id: doc.id, ...doc.data() }));
                 
+                setupYearSelector();
+                
                 if(document.getElementById('currentDateDisplay').innerText === 'Đang tải...') {
                     updateDateDisplay();
                 } else {
                     renderTasks();
                     updateDashboardStats();
+                    renderQuarterlyTasks();
                 }
                 showLoader(false);
             }, (error) => {
-                console.error("Lỗi Firestore:", error);
-                if(error.code === 'permission-denied') {
-                    window.showAlert("Lỗi quyền Firebase: Hãy cập nhật Rules cho phép 'read' và 'update' cho if true.");
-                } else {
-                    window.showAlert("Không thể tải danh sách công việc.");
-                }
+                console.error("Lỗi Firestore tasks:", error);
+                window.showAlert("Không thể tải danh sách công việc.");
                 showLoader(false);
             });
         };
@@ -701,7 +802,6 @@
             });
         };
 
-        // Cập nhật Thống kê & Biểu đồ của CÁC TASK TRONG NGÀY ĐANG CHỌN
         const updateDashboardStats = () => {
             const dateStr = getSelectedDateString();
             const tasksToday = tasks.filter(t => t.ngayGiao === dateStr);
@@ -716,7 +816,6 @@
             document.getElementById('stat-inprogress').innerText = inProgress;
             document.getElementById('stat-done').innerText = done;
 
-            // Xử lý vẽ biểu đồ SVG
             if (total === 0) {
                 document.getElementById('chart-todo').style.strokeDasharray = `0 100`;
                 document.getElementById('chart-inprogress').style.strokeDasharray = `0 100`;
@@ -729,7 +828,6 @@
                 
                 document.getElementById('chart-percent').innerText = `${Math.round(pDone)}%`;
 
-                // SVG circle có chu vi giả định là 100 (nhờ pathLength="100")
                 document.getElementById('chart-done').style.strokeDasharray = `${pDone} 100`;
                 document.getElementById('chart-done').style.strokeDashoffset = `0`;
 
@@ -747,11 +845,11 @@
             const filterVal = document.getElementById('filterStatus').value;
             const dateStr = getSelectedDateString();
             
+            if(!tbody) return;
             tbody.innerHTML = '';
             
-            // 1. Lọc theo NGÀY CHỌN, Search và Status
             let filteredTasks = tasks.filter(t => {
-                if (t.ngayGiao !== dateStr) return false; // CHỈ HIỂN THỊ VIỆC CỦA NGÀY TRÊN LỊCH
+                if (t.ngayGiao !== dateStr) return false;
                 
                 const matchSearch = (t.noiDung || '').toLowerCase().includes(searchVal) || 
                                     (t.nguoiPhuTrach || '').toLowerCase().includes(searchVal) ||
@@ -761,12 +859,11 @@
                 return matchSearch && matchStatus;
             });
 
-            // 2. SẮP XẾP VÀ NHÓM THEO KHU VỰC
             filteredTasks.sort((a, b) => {
                 const khuA = a.khuVuc || 'Khác';
                 const khuB = b.khuVuc || 'Khác';
                 if (khuA !== khuB) return khuA.localeCompare(khuB);
-                return new Date(b.createdAt || 0) - new Date(a.createdAt || 0); // Cùng khu vực thì sắp xếp thời gian tạo
+                return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
             });
 
             if (filteredTasks.length === 0) {
@@ -784,10 +881,9 @@
             let counter = 1;
 
             filteredTasks.forEach((task) => {
-                // Header Nhóm Khu Vực
                 if (task.khuVuc !== currentKhuVuc) {
                     currentKhuVuc = task.khuVuc;
-                    counter = 1; // Reset số TT cho mỗi khu
+                    counter = 1; 
                     const groupTr = document.createElement('tr');
                     groupTr.className = 'bg-slate-100 border-y border-slate-200';
                     groupTr.innerHTML = `
@@ -801,7 +897,6 @@
                     tbody.appendChild(groupTr);
                 }
 
-                // Dòng Công Việc
                 const tr = document.createElement('tr');
                 tr.className = 'hover:bg-blue-50/30 border-b border-slate-100 transition-colors duration-150';
                 
@@ -839,8 +934,167 @@
             });
         };
 
+        const setupYearSelector = () => {
+            const yearSelector = document.getElementById('yearSelector');
+            if (!yearSelector) return;
+            
+            let yearsSet = new Set();
+            yearsSet.add(new Date().getFullYear());
+            
+            tasks.forEach(task => {
+                if (task.ngayGiao) {
+                    const year = parseInt(task.ngayGiao.split('-')[0]);
+                    if (!isNaN(year)) yearsSet.add(year);
+                }
+            });
+            
+            const sortedYears = Array.from(yearsSet).sort((a, b) => b - a);
+            yearSelector.innerHTML = '';
+            sortedYears.forEach(year => {
+                const opt = document.createElement('option');
+                opt.value = year;
+                opt.innerText = `Năm ${year}`;
+                yearSelector.appendChild(opt);
+            });
+        };
+
+        window.onQuarterFilterChange = () => {
+            renderQuarterlyTasks();
+        };
+
+        const renderQuarterlyTasks = () => {
+            const tbody = document.getElementById('quarterlyTableBody');
+            const quarter = parseInt(document.getElementById('quarterSelector').value) || 1;
+            const year = parseInt(document.getElementById('yearSelector').value) || new Date().getFullYear();
+            
+            if(!tbody) return;
+            tbody.innerHTML = '';
+
+            let startMonth, endMonth;
+            if (quarter === 1) { startMonth = 1; endMonth = 3; }
+            else if (quarter === 2) { startMonth = 4; endMonth = 6; }
+            else if (quarter === 3) { startMonth = 7; endMonth = 9; }
+            else { startMonth = 10; endMonth = 12; }
+
+            document.getElementById('quarterlyRangeDisplay').innerText = `Tháng ${startMonth} - Tháng ${endMonth} / ${year}`;
+
+            let quarterlyTasks = tasks.filter(t => {
+                if (!t.ngayGiao) return false;
+                const parts = t.ngayGiao.split('-');
+                const tYear = parseInt(parts[0]);
+                const tMonth = parseInt(parts[1]);
+                return tYear === year && tMonth >= startMonth && tMonth <= endMonth;
+            });
+
+            quarterlyTasks.sort((a, b) => {
+                const khuA = a.khuVuc || 'Khác';
+                const khuB = b.khuVuc || 'Khác';
+                if (khuA !== khuB) return khuA.localeCompare(khuB);
+                return new Date(a.ngayGiao) - new Date(b.ngayGiao);
+            });
+
+            const total = quarterlyTasks.length;
+            const todo = quarterlyTasks.filter(t => t.trangThai === 'Chưa Thực Hiện' || !t.trangThai).length;
+            const inProgress = quarterlyTasks.filter(t => t.trangThai === 'Đang Thực Hiện').length;
+            const done = quarterlyTasks.filter(t => t.trangThai === 'Hoàn Thành').length;
+
+            document.getElementById('quarterly-stat-total').innerText = total;
+            document.getElementById('quarterly-stat-done').innerText = done;
+            document.getElementById('quarterly-stat-inprogress').innerText = inProgress;
+            document.getElementById('quarterly-stat-todo').innerText = todo;
+
+            if (total === 0) {
+                document.getElementById('quarter-chart-todo').style.strokeDasharray = `0 100`;
+                document.getElementById('quarter-chart-inprogress').style.strokeDasharray = `0 100`;
+                document.getElementById('quarter-chart-done').style.strokeDasharray = `0 100`;
+                document.getElementById('quarter-chart-percent').innerText = `0%`;
+                
+                document.getElementById('emptyQuarterlyMessage').classList.remove('hidden');
+                document.getElementById('emptyQuarterlyMessage').classList.add('flex');
+                tbody.parentElement.parentElement.classList.add('hidden');
+                return;
+            } else {
+                document.getElementById('emptyQuarterlyMessage').classList.add('hidden');
+                document.getElementById('emptyQuarterlyMessage').classList.remove('flex');
+                tbody.parentElement.parentElement.classList.remove('hidden');
+
+                const pDone = (done / total) * 100;
+                const pInProgress = (inProgress / total) * 100;
+                const pTodo = (todo / total) * 100;
+                
+                document.getElementById('quarter-chart-percent').innerText = `${Math.round(pDone)}%`;
+
+                document.getElementById('quarter-chart-done').style.strokeDasharray = `${pDone} 100`;
+                document.getElementById('quarter-chart-done').style.strokeDashoffset = `0`;
+
+                document.getElementById('quarter-chart-inprogress').style.strokeDasharray = `${pInProgress} 100`;
+                document.getElementById('quarter-chart-inprogress').style.strokeDashoffset = `-${pDone}`;
+
+                document.getElementById('quarter-chart-todo').style.strokeDasharray = `${pTodo} 100`;
+                document.getElementById('quarter-chart-todo').style.strokeDashoffset = `-${pDone + pInProgress}`;
+            }
+
+            let currentKhuVuc = null;
+            let counter = 1;
+
+            quarterlyTasks.forEach((task) => {
+                if (task.khuVuc !== currentKhuVuc) {
+                    currentKhuVuc = task.khuVuc;
+                    counter = 1;
+                    const groupTr = document.createElement('tr');
+                    groupTr.className = 'bg-slate-100 border-y border-slate-200';
+                    groupTr.innerHTML = `
+                        <td colspan="8" class="px-4 py-2.5 text-xs font-bold text-slate-700 uppercase tracking-wider">
+                            <div class="flex items-center">
+                                <svg class="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                                Nhóm: ${currentKhuVuc || 'Khác'}
+                            </div>
+                        </td>
+                    `;
+                    tbody.appendChild(groupTr);
+                }
+
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-blue-50/30 border-b border-slate-100 transition-colors duration-150';
+
+                let statusBadge = '';
+                if(task.trangThai === 'Hoàn Thành') statusBadge = '<span class="px-2.5 py-1 inline-flex text-xs leading-4 font-semibold rounded-full bg-green-100 text-green-700">Hoàn Thành</span>';
+                else if(task.trangThai === 'Đang Thực Hiện') statusBadge = '<span class="px-2.5 py-1 inline-flex text-xs leading-4 font-semibold rounded-full bg-yellow-100 text-yellow-700">Đang Thực hiện</span>';
+                else statusBadge = '<span class="px-2.5 py-1 inline-flex text-xs leading-4 font-semibold rounded-full bg-slate-100 text-slate-700">Chưa Thực Hiện</span>';
+
+                const actionsHtml = `
+                    <div class="flex items-center justify-end space-x-2">
+                        <button onclick="editTask('${task.id}')" class="px-3 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors border border-blue-100" title="Cập nhật">
+                            Cập nhật
+                        </button>
+                        ${currentUserData?.role === 'admin' ? `
+                        <button onclick="deleteTask('${task.id}')" class="p-1.5 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors" title="Xóa">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>` : ''}
+                    </div>
+                `;
+
+                tr.innerHTML = `
+                    <td class="px-4 py-4 whitespace-nowrap text-sm text-slate-500 font-medium text-center">${counter++}</td>
+                    <td class="px-4 py-4 whitespace-nowrap text-sm text-slate-700">${task.donVi || ''}</td>
+                    <td class="px-6 py-4 text-sm text-slate-800 break-words max-w-xs leading-relaxed font-medium">${task.noiDung || ''}</td>
+                    <td class="px-4 py-4 whitespace-nowrap text-sm text-slate-700">${task.nguoiPhuTrach || ''}</td>
+                    <td class="px-4 py-4 whitespace-nowrap text-sm text-slate-600">
+                        <div class="text-[13px] mb-1"><span class="text-slate-400">Giao:</span> ${task.ngayGiao || '-'}</div>
+                        <div class="text-[13px] text-red-500 font-medium"><span class="text-red-300">Hạn:</span> ${task.hanHoanThanh || '-'}</div>
+                    </td>
+                    <td class="px-4 py-4 whitespace-nowrap">${statusBadge}</td>
+                    <td class="px-4 py-4 text-sm text-slate-600 max-w-[150px] truncate" title="${task.ketQua || ''}">${task.ketQua || '-'}</td>
+                    <td class="px-4 py-4 whitespace-nowrap text-right">${actionsHtml}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        };
+
+        // --- PHẦN PHÂN QUYỀN VAI TRÒ ---
         const renderUsers = () => {
             const tbody = document.getElementById('usersTableBody');
+            if(!tbody) return;
             tbody.innerHTML = '';
             
             allUsersData.forEach(u => {
@@ -873,17 +1127,13 @@
             document.getElementById('taskForm').reset();
             document.getElementById('taskId').value = '';
             
-            // Giao việc mới mặc định lấy Ngày Đang Chọn Trên Lịch
             document.getElementById('taskNgayGiao').value = getSelectedDateString();
             document.getElementById('taskHanHoanThanh').value = getSelectedDateString();
             
             document.getElementById('modal-title').innerHTML = '<svg class="w-6 h-6 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg> Thêm Công Việc Mới';
             
-            // Admin có quyền hết
             const adminFields = document.querySelectorAll('.admin-only-field input, .admin-only-field select, .admin-only-field textarea');
-            adminFields.forEach(el => {
-                el.disabled = false;
-            });
+            adminFields.forEach(el => el.disabled = false);
             
             document.getElementById('taskModal').classList.remove('hidden');
         };
@@ -908,14 +1158,12 @@
 
             document.getElementById('modal-title').innerHTML = '<svg class="w-6 h-6 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg> Cập Nhật Tiến Độ';
 
-            // Phân quyền trên Modal
             const adminFields = document.querySelectorAll('.admin-only-field input, .admin-only-field select, .admin-only-field textarea');
             const role = currentUserData?.role || 'guest';
             
             if (role === 'admin' || role === 'manager') {
                 adminFields.forEach(el => el.disabled = false);
             } else {
-                // Khách chỉ xem được thông tin gốc
                 adminFields.forEach(el => el.disabled = true);
             }
 
@@ -938,7 +1186,6 @@
                 ngayHoanThanh = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
             }
 
-            // Object chứa các trường mà Khách được phép cập nhật
             let taskData = {
                 hanHoanThanh: document.getElementById('taskHanHoanThanh').value,
                 trangThai: trangThai,
@@ -948,7 +1195,6 @@
                 updatedAt: serverTimestamp()
             };
 
-            // Nếu là Admin/Manager thì lưu thêm các trường cốt lõi
             if (role === 'admin' || role === 'manager') {
                 taskData = {
                     ...taskData,
@@ -1004,7 +1250,6 @@
             }
         };
 
-        // Kích hoạt load dữ liệu khi vào trang (Guest Mode)
         window.onload = () => {
             showLoader(true);
             loadTasksData();
