@@ -653,7 +653,7 @@
                 try {
                     await signInWithEmailAndPassword(auth, email, password);
                 } catch (signInErr) {
-                    const isDefaultAccount = ['admin@nsg.com', 'lequangtrung@nsg.com', 'nguyenvanhanh@nsg.com'].includes(email);
+                    const isDefaultAccount = ['admin@nsg.com', 'lequangtrung@nsg.com', 'nguyenvanhanh@nsg.com', 'nguyenthanhbinh@nsg.com'].includes(email);
                     if (isDefaultAccount && (signInErr.code === 'auth/invalid-credential' || signInErr.code === 'auth/user-not-found')) {
                          await createUserWithEmailAndPassword(auth, email, password);
                     } else {
@@ -684,7 +684,7 @@
                 try {
                     let targetRole = 'user';
                     if (user.email === 'admin@nsg.com') targetRole = 'admin';
-                    else if (user.email === 'lequangtrung@nsg.com' || user.email === 'nguyenvanhanh@nsg.com') targetRole = 'manager';
+                    else if (['lequangtrung@nsg.com', 'nguyenvanhanh@nsg.com', 'nguyenthanhbinh@nsg.com'].includes(user.email)) targetRole = 'manager';
 
                     const userDocRef = getDocPath('users', user.uid);
                     const userDoc = await getDoc(userDocRef);
