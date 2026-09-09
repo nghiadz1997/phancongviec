@@ -11,9 +11,8 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Bảo Trì NSG">
-    <link rel="apple-touch-icon" href="./icons/icon-192.png">
-    <link rel="icon" type="image/svg+xml" href="./icons/icon.svg">
-    <link rel="icon" type="image/png" href="./icons/icon-192.png">
+    <link rel="apple-touch-icon" href="./icons/logo.png">
+    <link rel="icon" type="image/png" href="./icons/logo.png">
 
     <!-- Fonts & Tailwind CSS -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -105,13 +104,11 @@
 <body class="text-slate-800 h-screen flex flex-col overflow-hidden select-none sm:select-auto">
 
     <!-- Global Loading Screen -->
-    <div id="globalLoader" class="fixed inset-0 bg-slate-900/40 backdrop-blur-md z-[100] flex flex-col items-center justify-center transition-all duration-300">
-        <div class="relative w-16 h-16">
-            <div class="absolute inset-0 rounded-full border-4 border-blue-200"></div>
-            <div class="absolute inset-0 rounded-full border-4 border-blue-600 border-t-transparent animate-spin"></div>
-            <div class="absolute inset-2 flex items-center justify-center">
-                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path></svg>
-            </div>
+    <div id="globalLoader" class="fixed inset-0 bg-slate-900/50 backdrop-blur-md z-[100] flex flex-col items-center justify-center transition-all duration-300">
+        <div class="relative w-20 h-20 flex items-center justify-center">
+            <div class="absolute inset-0 rounded-full border-4 border-blue-200/50"></div>
+            <div class="absolute inset-0 rounded-full border-4 border-blue-500 border-t-transparent animate-spin"></div>
+            <img src="./icons/logo.png" alt="NSG Logo" class="w-12 h-12 rounded-full object-contain bg-white p-0.5 shadow-sm">
         </div>
         <p class="text-white font-semibold text-sm mt-4 tracking-wide">Đang đồng bộ dữ liệu NSG...</p>
     </div>
@@ -128,15 +125,13 @@
                 
                 <!-- Logo & Brand -->
                 <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('dashboard')">
-                    <div class="w-10 h-10 bg-gradient-to-tr from-blue-700 via-blue-600 to-indigo-600 rounded-xl shadow-md shadow-blue-500/20 flex items-center justify-center text-white ring-2 ring-blue-100">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                    </div>
+                    <img src="./icons/logo.png" alt="Logo Trường CĐ Bách Khoa Nam Sài Gòn" class="w-11 h-11 object-contain drop-shadow-sm rounded-full bg-white p-0.5 border border-slate-200">
                     <div>
                         <div class="flex items-center space-x-1.5">
                             <h1 class="text-base sm:text-lg font-extrabold text-slate-900 tracking-tight">Bảo Trì NSG</h1>
                             <span class="bg-blue-100 text-blue-800 text-[10px] font-bold px-1.5 py-0.5 rounded uppercase">v2.0 PWA</span>
                         </div>
-                        <p class="text-[11px] text-slate-500 font-medium hidden sm:block">Phòng Quản Trị Thiết Bị & Cơ Sở Vật Chất</p>
+                        <p class="text-[11px] text-slate-500 font-medium hidden sm:block">Trường CĐ Bách Khoa Nam Sài Gòn</p>
                     </div>
                 </div>
                 
@@ -329,8 +324,8 @@
                     <!-- Quick Summary Banner & Shortcuts -->
                     <div class="bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-700 rounded-2xl p-5 text-white shadow-md flex flex-col sm:flex-row justify-between items-center gap-4">
                         <div class="flex items-center gap-4">
-                            <div class="w-12 h-12 rounded-xl bg-white/10 backdrop-blur flex items-center justify-center shrink-0">
-                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                            <div class="w-12 h-12 rounded-2xl bg-white p-1 shadow-sm flex items-center justify-center shrink-0">
+                                <img src="./icons/logo.png" alt="Logo Nam Sài Gòn" class="w-full h-full object-contain">
                             </div>
                             <div>
                                 <h4 class="font-bold text-base">Hệ Thống Phân Công Bảo Trì Điện Tử</h4>
@@ -564,11 +559,11 @@
                 </button>
 
                 <div class="flex flex-col items-center text-center">
-                    <div class="w-14 h-14 bg-gradient-to-tr from-blue-700 to-indigo-600 rounded-2xl shadow-lg flex items-center justify-center text-white mb-4">
-                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8V7z"></path></svg>
+                    <div class="w-20 h-20 rounded-full bg-white p-1 border-2 border-blue-100 shadow-md mb-3 flex items-center justify-center">
+                        <img src="./icons/logo.png" alt="Logo Nam Sài Gòn" class="w-full h-full object-contain">
                     </div>
-                    <h3 class="text-xl font-extrabold text-slate-900">Đăng Nhập Quản Trị</h3>
-                    <p class="text-xs text-slate-500 mt-1 font-medium">Dành cho Trưởng/Phó Phòng & Quản Trị Viên NSG</p>
+                    <h3 class="text-lg font-extrabold text-slate-900">Đăng Nhập Quản Trị</h3>
+                    <p class="text-xs text-slate-500 mt-0.5 font-medium">Trường Cao Đẳng Bách Khoa Nam Sài Gòn</p>
                 </div>
 
                 <form id="authForm" class="mt-6 space-y-4" onsubmit="event.preventDefault(); handleAuth();">
