@@ -388,13 +388,15 @@
                         <!-- Right Actions (Create, Export Excel, View Mode Toggle) -->
                         <div class="flex items-center gap-2 justify-end shrink-0">
                             
-                            <!-- View Mode Toggle (Table / Card Grid) -->
+                            <!-- View Mode Toggle (Card Grid / Table) -->
                             <div class="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
-                                <button onclick="setViewMode('table')" id="viewModeTableBtn" class="p-1.5 rounded-lg bg-white shadow-sm text-blue-600" title="Dạng Bảng">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-                                </button>
-                                <button onclick="setViewMode('card')" id="viewModeCardBtn" class="p-1.5 rounded-lg text-slate-500 hover:text-slate-900" title="Dạng Thẻ">
+                                <button onclick="setViewMode('card')" id="viewModeCardBtn" class="p-1.5 rounded-lg bg-white shadow-sm text-blue-600 flex items-center gap-1.5 px-2.5 transition-all" title="Dạng Thẻ (Mặc định)">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                                    <span class="text-xs font-bold hidden sm:inline">Dạng Thẻ</span>
+                                </button>
+                                <button onclick="setViewMode('table')" id="viewModeTableBtn" class="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 flex items-center gap-1.5 px-2.5 transition-all" title="Dạng Bảng">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                                    <span class="text-xs font-bold hidden sm:inline">Dạng Bảng</span>
                                 </button>
                             </div>
 
@@ -418,7 +420,7 @@
                     </div>
 
                     <!-- Tasks Presentation: TABLE VIEW -->
-                    <div id="tasksTableView" class="bg-white rounded-2xl shadow-sm overflow-hidden border border-slate-200/80 flex flex-col">
+                    <div id="tasksTableView" class="hidden bg-white rounded-2xl shadow-sm overflow-hidden border border-slate-200/80 flex flex-col">
                         <div class="overflow-x-auto">
                             <table class="min-w-full text-xs sm:text-sm">
                                 <thead class="bg-slate-50 border-b border-slate-200 sticky top-0 z-10">
@@ -441,8 +443,8 @@
                         </div>
                     </div>
 
-                    <!-- Tasks Presentation: CARD GRID VIEW (Great for mobile & tablets) -->
-                    <div id="tasksCardView" class="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- Tasks Presentation: CARD GRID VIEW (Primary for desktop & mobile) -->
+                    <div id="tasksCardView" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
                         <!-- Rendered by JS -->
                     </div>
 
@@ -909,7 +911,7 @@
         let allUsersData = [];
         let selectedDate = new Date();
         let dateScope = 'day'; // 'day' | 'week' | 'all'
-        let currentViewMode = 'table'; // 'table' | 'card'
+        let currentViewMode = 'card'; // 'card' (mặc định) | 'table'
         let deferredPrompt = null;
 
         // Register Service Worker for PWA
@@ -1107,7 +1109,7 @@
             }
         };
 
-        // View Mode: Table vs Card
+        // View Mode: Table vs Card (Default: Card)
         window.setViewMode = (mode) => {
             currentViewMode = mode;
             const tableEl = document.getElementById('tasksTableView');
@@ -1116,15 +1118,15 @@
             const btnCard = document.getElementById('viewModeCardBtn');
 
             if (mode === 'table') {
-                tableEl.classList.remove('hidden');
-                cardEl.classList.add('hidden');
-                btnTable.className = "p-1.5 rounded-lg bg-white shadow-sm text-blue-600";
-                btnCard.className = "p-1.5 rounded-lg text-slate-500 hover:text-slate-900";
+                if (tableEl) tableEl.classList.remove('hidden');
+                if (cardEl) cardEl.classList.add('hidden');
+                if (btnTable) btnTable.className = "p-1.5 rounded-lg bg-white shadow-sm text-blue-600 flex items-center gap-1.5 px-2.5 transition-all";
+                if (btnCard) btnCard.className = "p-1.5 rounded-lg text-slate-500 hover:text-slate-900 flex items-center gap-1.5 px-2.5 transition-all";
             } else {
-                tableEl.classList.add('hidden');
-                cardEl.classList.remove('hidden');
-                btnCard.className = "p-1.5 rounded-lg bg-white shadow-sm text-blue-600";
-                btnTable.className = "p-1.5 rounded-lg text-slate-500 hover:text-slate-900";
+                if (tableEl) tableEl.classList.add('hidden');
+                if (cardEl) cardEl.classList.remove('hidden');
+                if (btnCard) btnCard.className = "p-1.5 rounded-lg bg-white shadow-sm text-blue-600 flex items-center gap-1.5 px-2.5 transition-all";
+                if (btnTable) btnTable.className = "p-1.5 rounded-lg text-slate-500 hover:text-slate-900 flex items-center gap-1.5 px-2.5 transition-all";
             }
             renderTasks();
         };
@@ -1427,7 +1429,9 @@
                 emptyEl.classList.remove('flex');
                 if (currentViewMode === 'table') {
                     document.getElementById('tasksTableView').classList.remove('hidden');
+                    document.getElementById('tasksCardView').classList.add('hidden');
                 } else {
+                    document.getElementById('tasksTableView').classList.add('hidden');
                     document.getElementById('tasksCardView').classList.remove('hidden');
                 }
             }
@@ -1461,17 +1465,17 @@
                 }
 
                 // Status Badge
-                let statusBadge = '<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-slate-100 text-slate-600">Chưa Thực Hiện</span>';
-                if (task.trangThai === 'Hoàn Thành') {
-                    statusBadge = '<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center gap-1"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>Hoàn Thành</span>';
-                } else if (task.trangThai === 'Đang Thực Hiện') {
-                    statusBadge = '<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-amber-100 text-amber-800">Đang Thực Hiện</span>';
+                let statusBadge = '<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600">Chưa Thực Hiện</span>';
+                if (task.trangThai === 'Đang Thực Hiện') {
+                    statusBadge = '<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800">Đang Thực Hiện</span>';
+                } else if (task.trangThai === 'Hoàn Thành') {
+                    statusBadge = '<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 flex items-center gap-1"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>Hoàn Thành</span>';
                 }
 
                 // Image button
-                const imageBtn = task.anhNghiemThu ? `
-                    <button onclick="previewImage('${task.anhNghiemThu}', '${task.noiDung?.replace(/'/g, "\\'")}')" class="text-xs font-bold text-blue-600 hover:text-blue-800 underline flex items-center gap-1 mt-1">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                const imageBtn = task.anhMinhChung ? `
+                    <button onclick="viewImage('${task.anhMinhChung}')" class="mt-2 text-xs text-blue-600 hover:text-blue-800 font-semibold flex items-center gap-1 bg-blue-50/80 hover:bg-blue-100 px-2.5 py-1 rounded-lg w-fit transition-colors border border-blue-200/60">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                         Xem ảnh minh chứng
                     </button>
                 ` : '';
@@ -1493,6 +1497,16 @@
                     tbody.appendChild(groupTr);
                 }
 
+                // Table Real-Time string (clean formatting without ??)
+                let tableRealTimeStr = '';
+                if (task.gioBatDauThucTe && task.gioKetThucThucTe) {
+                    tableRealTimeStr = `${task.gioBatDauThucTe} ➔ ${task.gioKetThucThucTe}`;
+                } else if (task.gioBatDauThucTe) {
+                    tableRealTimeStr = `Từ ${task.gioBatDauThucTe}`;
+                } else if (task.gioKetThucThucTe) {
+                    tableRealTimeStr = `Xong ${task.gioKetThucThucTe}`;
+                }
+
                 // 1. RENDER TABLE ROW
                 const tr = document.createElement('tr');
                 tr.className = 'hover:bg-blue-50/40 transition-colors';
@@ -1511,10 +1525,10 @@
                     <td class="px-3 py-3 whitespace-nowrap">
                         <div class="text-[11px] text-slate-500">Giao: <span class="font-semibold text-slate-700">${task.ngayGiao || '-'}${task.gioGiao ? ` (${task.gioGiao})` : ''}</span></div>
                         <div class="text-[11px] text-slate-700 font-medium">Hạn: <span>${task.hanHoanThanh || '-'}${task.gioHan ? ` (${task.gioHan})` : ''}</span></div>
-                        ${(task.gioBatDauThucTe || task.gioKetThucThucTe) ? `
+                        ${tableRealTimeStr ? `
                             <div class="text-[10px] text-emerald-800 font-semibold bg-emerald-50 px-1.5 py-0.5 rounded mt-1 inline-flex items-center gap-1 border border-emerald-200">
                                 <span>⏱ Làm:</span>
-                                <span>${task.gioBatDauThucTe || '??'} ➔ ${task.gioKetThucThucTe || '??'}</span>
+                                <span>${tableRealTimeStr}</span>
                             </div>
                         ` : ''}
                     </td>
@@ -1542,59 +1556,89 @@
                 `;
                 tbody.appendChild(tr);
 
-                // 2. RENDER CARD (MOBILE FIRST)
+                // 2. RENDER CARD (PRIMARY FOR BOTH DESKTOP & MOBILE)
+                let cardRealTimeHtml = '';
+                if (task.gioBatDauThucTe || task.gioKetThucThucTe || task.ngayHoanThanh) {
+                    let timeText = '';
+                    if (task.gioBatDauThucTe && task.gioKetThucThucTe) {
+                        timeText = `${task.gioBatDauThucTe} ➔ ${task.gioKetThucThucTe}`;
+                    } else if (task.gioBatDauThucTe) {
+                        timeText = `Từ ${task.gioBatDauThucTe}`;
+                    } else if (task.gioKetThucThucTe) {
+                        timeText = `Xong ${task.gioKetThucThucTe}`;
+                    }
+                    const dateText = task.ngayHoanThanh ? ` (${task.ngayHoanThanh})` : '';
+                    const fullContent = timeText ? `${timeText}${dateText}` : (task.ngayHoanThanh ? `${task.ngayHoanThanh}` : '');
+
+                    if (fullContent) {
+                        cardRealTimeHtml = `
+                        <div class="pt-2 mt-1.5 border-t border-slate-200/80 flex items-center justify-between text-[11px] sm:text-xs">
+                            <span class="text-emerald-700 font-bold flex items-center gap-1">
+                                <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                Thực tế làm:
+                            </span>
+                            <span class="font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                                ${fullContent}
+                            </span>
+                        </div>`;
+                    }
+                }
+
                 const card = document.createElement('div');
-                card.className = 'bg-white rounded-2xl p-4 shadow-sm border border-slate-200 flex flex-col justify-between hover:shadow-md transition-all';
+                card.className = 'bg-white rounded-2xl p-4 sm:p-5 shadow-sm hover:shadow-md border border-slate-200/90 hover:border-blue-300 flex flex-col justify-between transition-all duration-200 group';
                 card.innerHTML = `
                     <div>
-                        <div class="flex items-start justify-between gap-2 mb-2">
+                        <!-- Header: Priority, Area, Status -->
+                        <div class="flex items-start justify-between gap-2 mb-2.5">
                             <div class="flex flex-wrap items-center gap-1.5">
                                 ${priorityBadge}
-                                <span class="bg-slate-100 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-md">${task.khuVuc || 'Khác'}</span>
+                                <span class="bg-blue-50 text-blue-700 text-[11px] font-bold px-2 py-0.5 rounded-md border border-blue-100">${task.khuVuc || 'Khác'}</span>
                             </div>
-                            <div onclick="quickToggleStatus('${task.id}', '${task.trangThai}')" class="cursor-pointer">
+                            <div onclick="quickToggleStatus('${task.id}', '${task.trangThai}')" class="cursor-pointer hover:opacity-80 transition-opacity" title="Click để chuyển nhanh trạng thái">
                                 ${statusBadge}
                             </div>
                         </div>
 
-                        <h4 class="text-xs font-extrabold text-blue-600 uppercase mb-0.5">${task.donVi || 'Đơn vị'} • <span class="text-slate-500 font-medium lowercase">${task.hangMuc || 'thiết bị'}</span></h4>
-                        <p class="text-sm font-bold text-slate-800 leading-snug my-2">${task.noiDung || ''}</p>
+                        <!-- Department & Category -->
+                        <h4 class="text-xs font-extrabold text-blue-600 uppercase tracking-wide mb-1">
+                            ${task.donVi || 'Đơn vị'} <span class="text-slate-300 font-normal">•</span> <span class="text-slate-500 font-medium lowercase">${task.hangMuc || 'thiết bị'}</span>
+                        </h4>
 
-                        <div class="bg-slate-50 p-2.5 rounded-xl text-xs space-y-1.5 my-2 border border-slate-100">
-                            <div class="flex justify-between">
+                        <!-- Task Description -->
+                        <p class="text-sm sm:text-[15px] font-bold text-slate-800 leading-snug my-2">${task.noiDung || ''}</p>
+
+                        <!-- Info Metadata Box -->
+                        <div class="bg-slate-50/90 rounded-xl p-3 text-xs space-y-1.5 my-2.5 border border-slate-100">
+                            <div class="flex justify-between items-center">
                                 <span class="text-slate-500">Phụ trách:</span>
                                 <span class="font-bold text-slate-800">${task.nguoiPhuTrach || '-'}</span>
                             </div>
-                            <div class="flex justify-between">
+                            <div class="flex justify-between items-center">
                                 <span class="text-slate-500">Kế hoạch giao:</span>
                                 <span class="font-semibold text-slate-700">${task.ngayGiao || '-'}${task.gioGiao ? ` (${task.gioGiao})` : ''}</span>
                             </div>
-                            <div class="flex justify-between">
+                            <div class="flex justify-between items-center">
                                 <span class="text-slate-500">Hạn hoàn thành:</span>
                                 <span class="font-bold text-slate-800">${task.hanHoanThanh || '-'}${task.gioHan ? ` (${task.gioHan})` : ''}</span>
                             </div>
-                            ${(task.gioBatDauThucTe || task.gioKetThucThucTe || task.ngayHoanThanh) ? `
-                            <div class="pt-1.5 mt-1 border-t border-slate-200/80 flex justify-between items-center text-[11px]">
-                                <span class="text-emerald-700 font-bold">Thực tế làm:</span>
-                                <span class="font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
-                                    ${task.gioBatDauThucTe ? task.gioBatDauThucTe : '??'}${task.gioKetThucThucTe ? ` ➔ ${task.gioKetThucThucTe}` : ''}${task.ngayHoanThanh ? ` (${task.ngayHoanThanh})` : ''}
-                                </span>
-                            </div>
-                            ` : ''}
+                            ${cardRealTimeHtml}
                         </div>
 
-                        ${task.ketQua ? `<p class="text-xs text-slate-600 mt-2 font-medium"><strong>KQ:</strong> ${task.ketQua}</p>` : ''}
+                        <!-- Note / Result -->
+                        ${task.ghiChu ? `<p class="text-xs text-slate-500 italic mb-1.5"><strong>Ghi chú:</strong> ${task.ghiChu}</p>` : ''}
+                        ${task.ketQua ? `<div class="bg-slate-100/70 p-2 rounded-lg text-xs text-slate-700 font-medium my-1.5"><strong>KQ:</strong> ${task.ketQua}</div>` : ''}
                         ${imageBtn}
                     </div>
 
+                    <!-- Footer: Assigned Time & Actions -->
                     <div class="pt-3 mt-3 border-t border-slate-100 flex items-center justify-between">
                         <span class="text-[11px] text-slate-400">Giao lúc: ${task.gioGiao ? task.gioGiao + ' ' : ''}${task.ngayGiao || '-'}</span>
                         <div class="flex items-center gap-2">
-                            <button onclick="editTask('${task.id}')" class="px-3 py-1.5 bg-blue-600 text-white rounded-xl text-xs font-bold hover:bg-blue-700 transition-all shadow-sm">
+                            <button onclick="editTask('${task.id}')" class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm">
                                 Cập nhật
                             </button>
                             ${currentUserData?.role === 'admin' ? `
-                            <button onclick="deleteTask('${task.id}')" class="p-1.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl transition-all" title="Xóa">
+                            <button onclick="deleteTask('${task.id}')" class="p-1.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl transition-all border border-red-100" title="Xóa">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                             </button>` : ''}
                         </div>
