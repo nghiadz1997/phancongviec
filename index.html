@@ -2,254 +2,524 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hệ Thống Phân Công Bảo Trì NSG</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bảo Trì NSG - Quản Trị Thiết Bị & CSVC</title>
+    
+    <!-- PWA & Mobile Web App Meta -->
+    <link rel="manifest" href="./manifest.webmanifest">
+    <meta name="theme-color" content="#2563eb">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Bảo Trì NSG">
+    <link rel="apple-touch-icon" href="./icons/icon-192.png">
+    <link rel="icon" type="image/svg+xml" href="./icons/icon.svg">
+    <link rel="icon" type="image/png" href="./icons/icon-192.png">
+
+    <!-- Fonts & Tailwind CSS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
-        .spinner {
-            border: 3px solid rgba(59, 130, 246, 0.1);
-            width: 32px; height: 32px; border-radius: 50%;
-            border-left-color: #2563eb;
-            animation: spin 1s linear infinite;
+    
+    <!-- SheetJS (XLSX) for Exporting Excel Reports -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            200: '#bfdbfe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            800: '#1e40af',
+                            900: '#1e3a8a',
+                        }
+                    }
+                }
+            }
         }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        
+    </script>
+
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f1f5f9;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        
-        .glass-bg { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
-        
-        /* Chart Animations */
+
+        /* Chart circle animations */
         .chart-circle {
-            transition: stroke-dasharray 1s ease-out, stroke-dashoffset 1s ease-out;
+            transition: stroke-dasharray 0.8s cubic-bezier(0.4, 0, 0.2, 1), stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1);
             transform: rotate(-90deg);
             transform-origin: 50% 50%;
         }
+
+        /* Glassmorphism */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(12px);
+        }
+
+        /* Pulse badge for urgent/overdue */
+        @keyframes subtle-pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.85; transform: scale(1.04); }
+        }
+        .urgent-pulse {
+            animation: subtle-pulse 2s infinite ease-in-out;
+        }
+
+        /* Print formatting */
+        @media print {
+            header, .no-print, #bottomNav, #globalActionButtons {
+                display: none !important;
+            }
+            main {
+                padding: 0 !important;
+                overflow: visible !important;
+            }
+            body {
+                background: #ffffff !important;
+                color: #000000 !important;
+            }
+            .print-only {
+                display: block !important;
+            }
+        }
     </style>
 </head>
-<body class="text-slate-800 h-screen flex flex-col overflow-hidden">
+<body class="text-slate-800 h-screen flex flex-col overflow-hidden select-none sm:select-auto">
 
-    <!-- Loader -->
-    <div id="globalLoader" class="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center transition-opacity duration-300">
-        <div class="spinner mb-4 w-12 h-12 border-4"></div>
-        <p class="text-slate-500 font-medium text-sm tracking-wide">Đang tải hệ thống...</p>
+    <!-- Global Loading Screen -->
+    <div id="globalLoader" class="fixed inset-0 bg-slate-900/40 backdrop-blur-md z-[100] flex flex-col items-center justify-center transition-all duration-300">
+        <div class="relative w-16 h-16">
+            <div class="absolute inset-0 rounded-full border-4 border-blue-200"></div>
+            <div class="absolute inset-0 rounded-full border-4 border-blue-600 border-t-transparent animate-spin"></div>
+            <div class="absolute inset-2 flex items-center justify-center">
+                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path></svg>
+            </div>
+        </div>
+        <p class="text-white font-semibold text-sm mt-4 tracking-wide">Đang đồng bộ dữ liệu NSG...</p>
     </div>
 
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="fixed top-4 right-4 z-[90] flex flex-col gap-2 pointer-events-none max-w-sm w-full px-3"></div>
+
     <!-- App Container -->
-    <div id="appContainer" class="flex-col h-screen w-full flex">
+    <div id="appContainer" class="flex-col h-screen w-full flex bg-slate-100">
         
         <!-- Header -->
-        <header class="bg-white shadow-sm z-10 shrink-0 border-b border-slate-200">
+        <header class="bg-white/95 backdrop-blur-md shadow-sm z-30 shrink-0 border-b border-slate-200 sticky top-0">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-                <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg shadow-sm flex items-center justify-center text-white">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                
+                <!-- Logo & Brand -->
+                <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('dashboard')">
+                    <div class="w-10 h-10 bg-gradient-to-tr from-blue-700 via-blue-600 to-indigo-600 rounded-xl shadow-md shadow-blue-500/20 flex items-center justify-center text-white ring-2 ring-blue-100">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                     </div>
-                    <h1 class="text-xl font-bold text-slate-800 tracking-tight">Bảo Trì NSG</h1>
+                    <div>
+                        <div class="flex items-center space-x-1.5">
+                            <h1 class="text-base sm:text-lg font-extrabold text-slate-900 tracking-tight">Bảo Trì NSG</h1>
+                            <span class="bg-blue-100 text-blue-800 text-[10px] font-bold px-1.5 py-0.5 rounded uppercase">v2.0 PWA</span>
+                        </div>
+                        <p class="text-[11px] text-slate-500 font-medium hidden sm:block">Phòng Quản Trị Thiết Bị & Cơ Sở Vật Chất</p>
+                    </div>
                 </div>
                 
-                <div class="flex items-center space-x-4">
-                    <div class="flex flex-col text-right">
-                        <span id="headerUserName" class="text-sm font-semibold text-slate-800">Khách Truy Cập</span>
-                        <span id="headerUserRole" class="text-xs text-slate-500 font-medium">Chỉ cập nhật tiến độ</span>
-                    </div>
-                    <div class="h-8 w-px bg-slate-200"></div>
-                    <!-- Login / Logout Button -->
-                    <button id="authBtn" onclick="openLoginModal()" class="text-slate-500 hover:text-blue-600 transition-colors p-2 rounded-full hover:bg-slate-100 flex items-center justify-center" title="Đăng nhập Quản lý">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path></svg>
+                <!-- Center Actions: Install PWA button -->
+                <div class="flex items-center space-x-2">
+                    <button id="pwaInstallBtn" onclick="triggerPwaInstall()" class="hidden bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow-sm hover:shadow transition-all items-center gap-1.5 animate-bounce sm:flex">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                        <span>Cài đặt App</span>
                     </button>
+
+                    <!-- User Account / Role Badge -->
+                    <div class="flex items-center space-x-2 pl-2 border-l border-slate-200">
+                        <div class="flex flex-col text-right">
+                            <span id="headerUserName" class="text-xs sm:text-sm font-bold text-slate-800 leading-tight">Khách Truy Cập</span>
+                            <span id="headerUserRole" class="text-[10px] sm:text-[11px] text-slate-500 font-semibold flex items-center justify-end gap-1">
+                                <span class="w-1.5 h-1.5 rounded-full bg-slate-400 inline-block"></span>
+                                Chỉ xem & báo cáo
+                            </span>
+                        </div>
+                        
+                        <!-- Login / Logout Trigger -->
+                        <div id="authBtnWrapper">
+                            <button id="authBtn" onclick="openLoginModal()" class="text-slate-600 hover:text-blue-600 p-2 rounded-xl hover:bg-slate-100 transition-colors flex items-center justify-center ring-1 ring-slate-200" title="Đăng nhập Ban Quản Lý">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path></svg>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
             
-            <!-- Navigation Tabs -->
-            <div class="px-4 sm:px-6 lg:px-8 border-t border-slate-100 bg-slate-50/50 overflow-x-auto">
-                <div class="max-w-7xl mx-auto flex space-x-6 min-w-max">
-                    <button onclick="switchTab('dashboard')" id="tab-dashboard" class="py-3 text-sm font-semibold text-blue-600 border-b-2 border-blue-600 focus:outline-none transition-colors flex items-center">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
-                        Tổng quan
+            <!-- Desktop Top Navigation Tabs (Hidden on mobile, mobile uses bottom nav) -->
+            <div class="hidden sm:block px-4 sm:px-6 lg:px-8 border-t border-slate-200/80 bg-slate-50/80">
+                <div class="max-w-7xl mx-auto flex space-x-8">
+                    <button onclick="switchTab('dashboard')" id="tab-dashboard" class="py-3 text-sm font-semibold text-blue-600 border-b-2 border-blue-600 focus:outline-none transition-colors flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                        Tổng Quan & Tiến Độ
                     </button>
-                    <button onclick="switchTab('tasks')" id="tab-tasks" class="py-3 text-sm font-medium text-slate-500 hover:text-slate-800 border-b-2 border-transparent hover:border-slate-300 focus:outline-none transition-colors flex items-center">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
-                        Danh sách công việc
+                    <button onclick="switchTab('tasks')" id="tab-tasks" class="py-3 text-sm font-medium text-slate-600 hover:text-slate-900 border-b-2 border-transparent hover:border-slate-300 focus:outline-none transition-colors flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+                        Danh Sách Công Việc
+                        <span id="taskCountBadge" class="bg-blue-100 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded-full">0</span>
                     </button>
-                    <button onclick="switchTab('users')" id="tab-users" class="hidden py-3 text-sm font-medium text-slate-500 hover:text-slate-800 border-b-2 border-transparent hover:border-slate-300 focus:outline-none transition-colors flex items-center">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                        Phân quyền Quản trị
+                    <button onclick="switchTab('analytics')" id="tab-analytics" class="py-3 text-sm font-medium text-slate-600 hover:text-slate-900 border-b-2 border-transparent hover:border-slate-300 focus:outline-none transition-colors flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                        Thống Kê Khu Vực
+                    </button>
+                    <button onclick="switchTab('users')" id="tab-users" class="hidden py-3 text-sm font-medium text-slate-600 hover:text-slate-900 border-b-2 border-transparent hover:border-slate-300 focus:outline-none transition-colors flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                        Quản Lý Người Dùng
                     </button>
                 </div>
             </div>
         </header>
 
-        <!-- Main Content Area -->
-        <main class="flex-1 overflow-auto p-4 sm:p-6 lg:p-8 relative">
-            <div class="max-w-7xl mx-auto h-full flex flex-col space-y-6">
+        <!-- Main Workspace -->
+        <main class="flex-1 overflow-auto p-3 sm:p-6 lg:p-8 relative pb-20 sm:pb-8">
+            <div class="max-w-7xl mx-auto flex flex-col space-y-5">
                 
-                <!-- Thanh Quản lý Thời gian -->
-                <div class="bg-white px-4 py-3 rounded-xl shadow-sm border border-slate-200 flex flex-col sm:flex-row justify-between items-center space-y-3 sm:space-y-0 shrink-0">
-                    <div class="flex items-center space-x-2">
-                        <button onclick="changeDate(-1)" class="p-2 hover:bg-slate-100 rounded-lg text-slate-500 transition-colors" title="Ngày hôm trước">
+                <!-- Thanh Quản Lý Thời Gian & Bộ Lọc Nhanh -->
+                <div class="bg-white p-3 sm:p-4 rounded-2xl shadow-sm border border-slate-200/80 flex flex-col md:flex-row justify-between items-center gap-3 shrink-0">
+                    
+                    <!-- Date Switcher -->
+                    <div class="flex items-center justify-between w-full md:w-auto space-x-2">
+                        <button onclick="changeDate(-1)" class="p-2 hover:bg-slate-100 rounded-xl text-slate-600 transition-colors border border-slate-200 shadow-sm" title="Ngày hôm trước">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
                         </button>
-                        <div class="flex flex-col items-center px-4 min-w-[200px]">
-                            <span class="text-xs font-medium text-blue-600 uppercase tracking-wider mb-0.5">Lịch Công Việc</span>
-                            <span id="currentDateDisplay" class="text-sm font-bold text-slate-800">Đang tải...</span>
+                        
+                        <div class="flex flex-col items-center px-3 min-w-[190px] text-center">
+                            <span class="text-[11px] font-bold text-blue-600 uppercase tracking-wider">Lịch Phân Công</span>
+                            <span id="currentDateDisplay" class="text-sm sm:text-base font-extrabold text-slate-800">Đang tải...</span>
                         </div>
-                        <button onclick="changeDate(1)" class="p-2 hover:bg-slate-100 rounded-lg text-slate-500 transition-colors" title="Ngày hôm sau">
+                        
+                        <button onclick="changeDate(1)" class="p-2 hover:bg-slate-100 rounded-xl text-slate-600 transition-colors border border-slate-200 shadow-sm" title="Ngày hôm sau">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                         </button>
+
+                        <button onclick="setToday()" class="text-xs font-semibold px-2.5 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-xl border border-blue-200 transition-all">
+                            Hôm nay
+                        </button>
                     </div>
-                    <div class="flex items-center">
-                        <label class="text-sm text-slate-500 mr-3 font-medium">Đến ngày khác:</label>
-                        <input type="date" id="globalDateInput" onchange="setDate(this.value)" class="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none text-slate-700 bg-slate-50">
+
+                    <!-- Filter Modes (Theo ngày / Cả tuần / Tất cả) -->
+                    <div class="flex flex-wrap items-center gap-2 w-full md:w-auto justify-end">
+                        <div class="flex bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs font-semibold">
+                            <button onclick="setDateScope('day')" id="scope-day" class="px-3 py-1.5 rounded-lg bg-white shadow-sm text-blue-600">Ngày này</button>
+                            <button onclick="setDateScope('week')" id="scope-week" class="px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900">Tuần này</button>
+                            <button onclick="setDateScope('all')" id="scope-all" class="px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900">Tất cả</button>
+                        </div>
+                        
+                        <div class="relative">
+                            <input type="date" id="globalDateInput" onchange="setDate(this.value)" class="border border-slate-200 rounded-xl px-3 py-1.5 text-xs sm:text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none text-slate-700 bg-slate-50 cursor-pointer shadow-sm">
+                        </div>
                     </div>
                 </div>
 
-                <!-- VIEW: DASHBOARD -->
-                <div id="view-dashboard" class="flex flex-col space-y-6 animate-[fadeIn_0.3s_ease-in-out]">
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- VIEW 1: DASHBOARD (TỔNG QUAN) -->
+                <div id="view-dashboard" class="flex flex-col space-y-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
                         
-                        <!-- Biểu đồ tỷ lệ (Donut Chart) -->
-                        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col items-center justify-center relative lg:col-span-1 min-h-[300px]">
-                            <h3 class="text-base font-semibold text-slate-700 absolute top-6 left-6">Tiến độ trong ngày</h3>
-                            <div class="relative w-48 h-48 mt-8">
+                        <!-- Biểu đồ Donut Tiến Độ -->
+                        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/80 flex flex-col items-center justify-center relative lg:col-span-1 min-h-[310px]">
+                            <div class="w-full flex justify-between items-center mb-2">
+                                <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wide">Tiến độ công việc</h3>
+                                <span id="dashboardScopeLabel" class="text-[11px] font-semibold bg-blue-50 text-blue-700 px-2.5 py-0.5 rounded-full border border-blue-100">Trong ngày</span>
+                            </div>
+
+                            <div class="relative w-48 h-48 my-2">
                                 <svg class="w-full h-full" viewBox="0 0 36 36">
-                                    <circle cx="18" cy="18" r="15.915" fill="none" stroke="#f1f5f9" stroke-width="3" />
-                                    <circle id="chart-todo" class="chart-circle" cx="18" cy="18" r="15.915" fill="none" stroke="#94a3b8" stroke-width="3" pathLength="100" />
-                                    <circle id="chart-inprogress" class="chart-circle" cx="18" cy="18" r="15.915" fill="none" stroke="#eab308" stroke-width="3" pathLength="100" />
-                                    <circle id="chart-done" class="chart-circle" cx="18" cy="18" r="15.915" fill="none" stroke="#22c55e" stroke-width="4" pathLength="100" />
+                                    <circle cx="18" cy="18" r="15.915" fill="none" stroke="#f1f5f9" stroke-width="3.2" />
+                                    <circle id="chart-todo" class="chart-circle" cx="18" cy="18" r="15.915" fill="none" stroke="#94a3b8" stroke-width="3.2" pathLength="100" />
+                                    <circle id="chart-inprogress" class="chart-circle" cx="18" cy="18" r="15.915" fill="none" stroke="#f59e0b" stroke-width="3.5" pathLength="100" />
+                                    <circle id="chart-done" class="chart-circle" cx="18" cy="18" r="15.915" fill="none" stroke="#10b981" stroke-width="4" pathLength="100" />
                                 </svg>
-                                <div class="absolute inset-0 flex flex-col items-center justify-center">
-                                    <span id="chart-percent" class="text-3xl font-bold text-slate-800">0%</span>
-                                    <span class="text-xs text-slate-500 font-medium">Hoàn thành</span>
+                                <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+                                    <span id="chart-percent" class="text-3xl font-extrabold text-slate-800 tracking-tight">0%</span>
+                                    <span class="text-xs text-slate-500 font-semibold mt-0.5">Tỷ lệ hoàn thành</span>
                                 </div>
+                            </div>
+
+                            <!-- Chú thích màu sắc biểu đồ -->
+                            <div class="flex items-center justify-around mt-2 text-xs font-medium text-slate-600 w-full pt-3 border-t border-slate-100">
+                                <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Hoàn thành</div>
+                                <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> Đang làm</div>
+                                <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-slate-400"></span> Chưa làm</div>
                             </div>
                         </div>
 
-                        <!-- Thống kê Card -->
-                        <div class="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex items-center space-x-4 hover:shadow-md transition-shadow">
-                                <div class="p-4 bg-blue-50 text-blue-600 rounded-xl">
-                                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-                                </div>
-                                <div>
-                                    <p class="text-sm font-medium text-slate-500">Tổng công việc</p>
-                                    <p id="stat-total" class="text-3xl font-bold text-slate-800">0</p>
-                                </div>
-                            </div>
+                        <!-- Thống kê Card KPI (4 Thẻ Chuẩn Gọn Gàng) -->
+                        <div class="lg:col-span-2 grid grid-cols-2 gap-3 sm:gap-4">
                             
-                            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex items-center space-x-4 hover:shadow-md transition-shadow">
-                                <div class="p-4 bg-slate-50 text-slate-400 rounded-xl">
-                                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            <!-- Tổng việc -->
+                            <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80 flex flex-col justify-between hover:shadow-md transition-all">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-bold text-slate-500 uppercase">Tổng việc</span>
+                                    <div class="p-2.5 bg-blue-50 text-blue-600 rounded-xl">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p class="text-sm font-medium text-slate-500">Chưa thực hiện</p>
-                                    <p id="stat-todo" class="text-2xl font-bold text-slate-600">0</p>
-                                </div>
-                            </div>
-                            
-                            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex items-center space-x-4 hover:shadow-md transition-shadow">
-                                <div class="p-4 bg-yellow-50 text-yellow-600 rounded-xl">
-                                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                                </div>
-                                <div>
-                                    <p class="text-sm font-medium text-slate-500">Đang thực hiện</p>
-                                    <p id="stat-inprogress" class="text-2xl font-bold text-yellow-600">0</p>
+                                <div class="mt-3">
+                                    <p id="stat-total" class="text-2xl sm:text-3xl font-extrabold text-slate-800">0</p>
+                                    <p class="text-[11px] text-slate-400 font-medium">Hạng mục bảo trì</p>
                                 </div>
                             </div>
-                            
-                            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex items-center space-x-4 hover:shadow-md transition-shadow">
-                                <div class="p-4 bg-green-50 text-green-500 rounded-xl">
-                                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+
+                            <!-- Hoàn thành -->
+                            <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80 flex flex-col justify-between hover:shadow-md transition-all">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-bold text-emerald-600 uppercase">Đã xong</span>
+                                    <div class="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p class="text-sm font-medium text-slate-500">Hoàn thành</p>
-                                    <p id="stat-done" class="text-2xl font-bold text-green-600">0</p>
+                                <div class="mt-3">
+                                    <p id="stat-done" class="text-2xl sm:text-3xl font-extrabold text-emerald-600">0</p>
+                                    <p class="text-[11px] text-slate-400 font-medium">Đã nghiệm thu</p>
                                 </div>
                             </div>
+
+                            <!-- Đang thực hiện -->
+                            <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80 flex flex-col justify-between hover:shadow-md transition-all">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-bold text-amber-600 uppercase">Đang làm</span>
+                                    <div class="p-2.5 bg-amber-50 text-amber-600 rounded-xl">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <p id="stat-inprogress" class="text-2xl sm:text-3xl font-extrabold text-amber-600">0</p>
+                                    <p class="text-[11px] text-slate-400 font-medium">Đang xử lý</p>
+                                </div>
+                            </div>
+
+                            <!-- Chưa thực hiện -->
+                            <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80 flex flex-col justify-between hover:shadow-md transition-all">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-bold text-slate-600 uppercase">Chờ xử lý</span>
+                                    <div class="p-2.5 bg-slate-100 text-slate-600 rounded-xl">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <p id="stat-todo" class="text-2xl sm:text-3xl font-extrabold text-slate-700">0</p>
+                                    <p class="text-[11px] text-slate-400 font-medium">Chưa bắt đầu</p>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- Quick Summary Banner & Shortcuts -->
+                    <div class="bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-700 rounded-2xl p-5 text-white shadow-md flex flex-col sm:flex-row justify-between items-center gap-4">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-xl bg-white/10 backdrop-blur flex items-center justify-center shrink-0">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-base">Hệ Thống Phân Công Bảo Trì Điện Tử</h4>
+                                <p class="text-xs text-blue-100 mt-0.5">Cập nhật kết quả sửa chữa, đính kèm hình ảnh nghiệm thu trực tuyến trên điện thoại và máy tính.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 w-full sm:w-auto">
+                            <button onclick="switchTab('tasks')" class="w-full sm:w-auto bg-white text-blue-700 hover:bg-blue-50 px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm">
+                                Xem danh sách việc
+                            </button>
+                            <button id="btnCreateTaskQuick" onclick="openTaskModal()" class="hidden w-full sm:w-auto bg-blue-500 hover:bg-blue-400 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm">
+                                + Giao việc mới
+                            </button>
                         </div>
                     </div>
                 </div>
                 
-                <!-- VIEW: TASKS -->
-                <div id="view-tasks" class="hidden h-full flex flex-col space-y-4 animate-[fadeIn_0.3s_ease-in-out]">
-                    <!-- Actions Row -->
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-                        <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto">
-                            <div class="relative w-full sm:w-72">
-                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <svg class="h-5 w-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                <!-- VIEW 2: TASKS (DANH SÁCH CÔNG VIỆC) -->
+                <div id="view-tasks" class="hidden flex flex-col space-y-4">
+                    
+                    <!-- Search, Filters & Action Tools -->
+                    <div class="bg-white p-3 sm:p-4 rounded-2xl shadow-sm border border-slate-200/80 flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-3">
+                        
+                        <!-- Search & Status Filter -->
+                        <div class="flex flex-wrap items-center gap-2.5 flex-1">
+                            
+                            <!-- Search box -->
+                            <div class="relative flex-1 min-w-[220px]">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                                 </div>
-                                <input type="text" id="searchInput" placeholder="Tìm kiếm công việc..." class="block w-full pl-10 pr-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-shadow">
+                                <input type="text" id="searchInput" placeholder="Tìm nội dung, người phụ trách, đơn vị..." class="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xs sm:text-sm bg-slate-50 transition-all outline-none">
                             </div>
-                            <select id="filterStatus" class="px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm bg-white text-slate-700 font-medium cursor-pointer">
+
+                            <!-- Filter: Status -->
+                            <select id="filterStatus" class="px-3 py-2 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold bg-white text-slate-700 cursor-pointer outline-none focus:ring-2 focus:ring-blue-500">
                                 <option value="all">Tất cả trạng thái</option>
                                 <option value="Chưa Thực Hiện">Chưa Thực Hiện</option>
                                 <option value="Đang Thực Hiện">Đang Thực Hiện</option>
                                 <option value="Hoàn Thành">Hoàn Thành</option>
                             </select>
+
+                            <!-- Filter: Area (Khu vực) -->
+                            <select id="filterArea" class="px-3 py-2 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold bg-white text-slate-700 cursor-pointer outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="all">Tất cả khu vực</option>
+                                <option value="Khu A">Khu A</option>
+                                <option value="Khu B">Khu B</option>
+                                <option value="Khu C">Khu C</option>
+                                <option value="Khu D">Khu D</option>
+                                <option value="PHÂN HIỆU">PHÂN HIỆU</option>
+                            </select>
+
+                            <!-- Filter: Priority -->
+                            <select id="filterPriority" class="px-3 py-2 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold bg-white text-slate-700 cursor-pointer outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="all">Mọi ưu tiên</option>
+                                <option value="Khẩn cấp">Khẩn cấp 🔴</option>
+                                <option value="Cao">Ưu tiên Cao 🟠</option>
+                                <option value="Bình thường">Bình thường 🟢</option>
+                            </select>
                         </div>
-                        <button id="btnCreateTask" onclick="openTaskModal()" class="hidden w-full sm:w-auto bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 transition-all shadow-sm hover:shadow flex items-center justify-center font-medium shrink-0">
-                            <svg class="w-5 h-5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-                            Giao Việc Mới
-                        </button>
+
+                        <!-- Right Actions (Create, Export Excel, View Mode Toggle) -->
+                        <div class="flex items-center gap-2 justify-end shrink-0">
+                            
+                            <!-- View Mode Toggle (Table / Card Grid) -->
+                            <div class="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
+                                <button onclick="setViewMode('table')" id="viewModeTableBtn" class="p-1.5 rounded-lg bg-white shadow-sm text-blue-600" title="Dạng Bảng">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                                </button>
+                                <button onclick="setViewMode('card')" id="viewModeCardBtn" class="p-1.5 rounded-lg text-slate-500 hover:text-slate-900" title="Dạng Thẻ">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                                </button>
+                            </div>
+
+                            <!-- Export to Excel -->
+                            <button onclick="exportToExcel()" class="bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm" title="Xuất báo cáo Excel">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                <span class="hidden sm:inline">Xuất Excel</span>
+                            </button>
+
+                            <!-- In phiếu -->
+                            <button onclick="window.print()" class="bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200 px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm" title="In danh sách">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                            </button>
+
+                            <!-- Button Giao Việc (Manager / Admin only) -->
+                            <button id="btnCreateTask" onclick="openTaskModal()" class="hidden bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm hover:shadow">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                                <span>Giao Việc</span>
+                            </button>
+                        </div>
                     </div>
 
-                    <!-- Table Container -->
-                    <div class="flex-1 bg-white rounded-xl shadow-sm overflow-hidden border border-slate-200 flex flex-col">
-                        <div class="overflow-x-auto flex-1">
-                            <table class="min-w-full text-sm">
-                                <thead class="bg-slate-50 sticky top-0 z-10 shadow-sm border-b border-slate-200">
+                    <!-- Tasks Presentation: TABLE VIEW -->
+                    <div id="tasksTableView" class="bg-white rounded-2xl shadow-sm overflow-hidden border border-slate-200/80 flex flex-col">
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full text-xs sm:text-sm">
+                                <thead class="bg-slate-50 border-b border-slate-200 sticky top-0 z-10">
                                     <tr>
-                                        <th scope="col" class="px-4 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider w-12">STT</th>
-                                        <th scope="col" class="px-4 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Đơn vị</th>
-                                        <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider min-w-[250px]">Nội dung công việc</th>
-                                        <th scope="col" class="px-4 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Người PT</th>
-                                        <th scope="col" class="px-4 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Ngày giao / Hạn</th>
-                                        <th scope="col" class="px-4 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Trạng thái</th>
-                                        <th scope="col" class="px-4 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Kết quả</th>
-                                        <th scope="col" class="px-4 py-3.5 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Thao tác</th>
+                                        <th scope="col" class="px-3 py-3 text-center font-bold text-slate-500 uppercase tracking-wider w-10">STT</th>
+                                        <th scope="col" class="px-3 py-3 text-left font-bold text-slate-500 uppercase tracking-wider">Ưu tiên</th>
+                                        <th scope="col" class="px-3 py-3 text-left font-bold text-slate-500 uppercase tracking-wider">Hạng mục & Đơn vị</th>
+                                        <th scope="col" class="px-4 py-3 text-left font-bold text-slate-500 uppercase tracking-wider min-w-[220px]">Nội dung công việc</th>
+                                        <th scope="col" class="px-3 py-3 text-left font-bold text-slate-500 uppercase tracking-wider">Phụ trách</th>
+                                        <th scope="col" class="px-3 py-3 text-left font-bold text-slate-500 uppercase tracking-wider">Thời hạn</th>
+                                        <th scope="col" class="px-3 py-3 text-center font-bold text-slate-500 uppercase tracking-wider">Trạng thái</th>
+                                        <th scope="col" class="px-3 py-3 text-left font-bold text-slate-500 uppercase tracking-wider">Kết quả / Ảnh</th>
+                                        <th scope="col" class="px-3 py-3 text-right font-bold text-slate-500 uppercase tracking-wider w-24">Thao tác</th>
                                     </tr>
                                 </thead>
-                                <tbody id="tasksTableBody" class="bg-white">
-                                    <!-- Tasks rendered here by JS -->
+                                <tbody id="tasksTableBody" class="divide-y divide-slate-100 bg-white">
+                                    <!-- Rendered by JS -->
                                 </tbody>
                             </table>
                         </div>
-                        <div id="emptyTasksMessage" class="hidden p-10 text-center text-slate-500 flex-col items-center justify-center h-full bg-slate-50">
-                            <div class="bg-white p-4 rounded-full shadow-sm border border-slate-100 mb-3">
-                                <svg class="w-10 h-10 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
-                            </div>
-                            <p class="font-medium text-slate-600">Không có công việc nào trong ngày này.</p>
+                    </div>
+
+                    <!-- Tasks Presentation: CARD GRID VIEW (Great for mobile & tablets) -->
+                    <div id="tasksCardView" class="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <!-- Rendered by JS -->
+                    </div>
+
+                    <!-- Empty State -->
+                    <div id="emptyTasksMessage" class="hidden bg-white rounded-2xl p-12 text-center border border-slate-200/80 flex-col items-center justify-center">
+                        <div class="w-16 h-16 bg-blue-50 text-blue-500 rounded-2xl flex items-center justify-center mb-3">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
                         </div>
+                        <h4 class="text-base font-bold text-slate-800">Không tìm thấy công việc nào</h4>
+                        <p class="text-xs text-slate-500 mt-1 max-w-sm">Không có dữ liệu phù hợp với ngày được chọn hoặc bộ lọc hiện tại. Thử chọn ngày khác hoặc chuyển sang chế độ "Tất cả".</p>
                     </div>
                 </div>
 
-                <!-- VIEW: USERS -->
-                <div id="view-users" class="hidden h-full flex flex-col space-y-4 animate-[fadeIn_0.3s_ease-in-out]">
-                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex justify-between items-center">
-                        <h2 class="text-lg font-semibold text-slate-800">Danh sách người dùng & Phân quyền</h2>
-                        <button onclick="openCreateUserModal()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all shadow-sm text-sm font-medium flex items-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-                            Tạo tài khoản
+                <!-- VIEW 3: ANALYTICS (THỐNG KÊ CHI TIẾT THEO KHU VỰC & HẠNG MỤC) -->
+                <div id="view-analytics" class="hidden flex flex-col space-y-5">
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        
+                        <!-- Tiến độ theo từng Khu Vực -->
+                        <div class="bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-slate-200/80">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="font-bold text-slate-800 text-sm uppercase tracking-wide">Tiến độ theo Khu vực</h3>
+                                <span class="text-xs text-slate-500 font-medium">Toàn hệ thống</span>
+                            </div>
+                            <div id="areaStatsList" class="space-y-4">
+                                <!-- Rendered by JS -->
+                            </div>
+                        </div>
+
+                        <!-- Thống kê theo Hạng Mục Thiết Bị -->
+                        <div class="bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-slate-200/80">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="font-bold text-slate-800 text-sm uppercase tracking-wide">Phân loại theo Thiết bị</h3>
+                                <span class="text-xs text-slate-500 font-medium">Hạng mục chính</span>
+                            </div>
+                            <div id="categoryStatsList" class="space-y-4">
+                                <!-- Rendered by JS -->
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- VIEW 4: USERS (QUẢN TRỊ NGƯỜI DÙNG - ADMIN ONLY) -->
+                <div id="view-users" class="hidden flex flex-col space-y-4">
+                    <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200/80 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                        <div>
+                            <h2 class="text-base font-bold text-slate-800">Quản Trị Người Dùng & Phân Quyền</h2>
+                            <p class="text-xs text-slate-500 mt-0.5">Chỉ Quản trị viên (Admin) mới có quyền truy cập và chỉ định vai trò tài khoản.</p>
+                        </div>
+                        <button onclick="openCreateUserModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1.5">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
+                            Tạo Tài Khoản Mới
                         </button>
                     </div>
-                    <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-slate-200">
+
+                    <div class="bg-white rounded-2xl shadow-sm overflow-hidden border border-slate-200/80">
                         <div class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-slate-200 text-sm">
+                            <table class="min-w-full text-xs sm:text-sm divide-y divide-slate-200">
                                 <thead class="bg-slate-50">
                                     <tr>
-                                        <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Email</th>
-                                        <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Tên (Hiển thị)</th>
-                                        <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Vai trò hiện tại</th>
-                                        <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Phân quyền / Thao tác</th>
+                                        <th scope="col" class="px-5 py-3 text-left font-bold text-slate-500 uppercase">Tài khoản (Email)</th>
+                                        <th scope="col" class="px-5 py-3 text-left font-bold text-slate-500 uppercase">Họ & Tên</th>
+                                        <th scope="col" class="px-5 py-3 text-left font-bold text-slate-500 uppercase">Chức vụ hiện tại</th>
+                                        <th scope="col" class="px-5 py-3 text-right font-bold text-slate-500 uppercase">Cập nhật quyền / Thao tác</th>
                                     </tr>
                                 </thead>
-                                <tbody id="usersTableBody" class="bg-white divide-y divide-slate-100">
-                                    <!-- Users rendered here -->
+                                <tbody id="usersTableBody" class="divide-y divide-slate-100 bg-white">
+                                    <!-- Rendered by JS -->
                                 </tbody>
                             </table>
                         </div>
@@ -258,226 +528,370 @@
 
             </div>
         </main>
+
+        <!-- Mobile Bottom Navigation Bar -->
+        <nav id="bottomNav" class="sm:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200 z-40 px-2 py-1 flex justify-around items-center">
+            <button onclick="switchTab('dashboard')" id="mTab-dashboard" class="flex flex-col items-center py-1.5 px-3 text-blue-600 font-bold transition-all">
+                <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                <span class="text-[10px]">Tổng quan</span>
+            </button>
+            <button onclick="switchTab('tasks')" id="mTab-tasks" class="flex flex-col items-center py-1.5 px-3 text-slate-500 font-medium transition-all relative">
+                <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+                <span class="text-[10px]">Công việc</span>
+                <span id="mTaskBadge" class="hidden absolute top-1 right-2 w-2 h-2 rounded-full bg-blue-600"></span>
+            </button>
+            <button onclick="switchTab('analytics')" id="mTab-analytics" class="flex flex-col items-center py-1.5 px-3 text-slate-500 font-medium transition-all">
+                <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                <span class="text-[10px]">Khu vực</span>
+            </button>
+            <button onclick="switchTab('users')" id="mTab-users" class="hidden flex flex-col items-center py-1.5 px-3 text-slate-500 font-medium transition-all">
+                <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                <span class="text-[10px]">Tài khoản</span>
+            </button>
+        </nav>
+
     </div>
 
-    <!-- Modal Login -->
-    <div id="loginModal" class="fixed inset-0 z-[60] hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <!-- ==================== MODALS ==================== -->
+
+    <!-- Modal 1: Đăng nhập -->
+    <div id="loginModal" class="fixed inset-0 z-[80] hidden overflow-y-auto">
         <div class="flex items-center justify-center min-h-screen p-4 text-center">
-            <div class="fixed inset-0 bg-slate-900 bg-opacity-60 transition-opacity backdrop-blur-sm" aria-hidden="true" onclick="closeLoginModal()"></div>
-            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-            <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md w-full border border-slate-200 relative">
-                
-                <button onclick="closeLoginModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors">
+            <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="closeLoginModal()"></div>
+            <div class="inline-block bg-white rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:max-w-md w-full border border-slate-200 relative z-10 p-6 sm:p-8">
+                <button onclick="closeLoginModal()" class="absolute top-5 right-5 text-slate-400 hover:text-slate-600 p-1 rounded-full hover:bg-slate-100">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
 
-                <div class="px-8 pt-8 pb-6">
-                    <div class="flex flex-col items-center">
-                        <div class="w-14 h-14 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-xl shadow-lg flex items-center justify-center text-white mb-4">
-                            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8V7z"></path></svg>
-                        </div>
-                        <h3 class="text-2xl font-bold text-slate-900 tracking-tight">Quản Trị Hệ Thống</h3>
-                        <p class="mt-1 text-sm text-slate-500 font-medium">Đăng nhập dành cho Admin / Ban Quản lý</p>
+                <div class="flex flex-col items-center text-center">
+                    <div class="w-14 h-14 bg-gradient-to-tr from-blue-700 to-indigo-600 rounded-2xl shadow-lg flex items-center justify-center text-white mb-4">
+                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8V7z"></path></svg>
                     </div>
-                    <form id="authForm" class="mt-8 space-y-5" onsubmit="event.preventDefault(); handleAuth();">
-                        <div class="space-y-4">
-                            <div>
-                                <label class="block text-sm font-medium text-slate-700 mb-1">Tên đăng nhập</label>
-                                <input id="username" type="text" required class="appearance-none relative block w-full px-4 py-3 border border-slate-300 placeholder-slate-400 text-slate-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow text-sm" placeholder="Nhập tên đăng nhập...">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-slate-700 mb-1">Mật khẩu</label>
-                                <input id="password" type="password" required class="appearance-none relative block w-full px-4 py-3 border border-slate-300 placeholder-slate-400 text-slate-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow text-sm" placeholder="Nhập mật khẩu...">
-                            </div>
-                        </div>
-                        <div>
-                            <button type="submit" id="authSubmitBtn" class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-semibold rounded-xl text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow-sm transition-all duration-200">
-                                Đăng nhập
-                            </button>
-                        </div>
-                        <div id="authError" class="text-red-500 text-sm text-center font-medium hidden bg-red-50 py-2 rounded-lg border border-red-100 mt-2"></div>
-                    </form>
+                    <h3 class="text-xl font-extrabold text-slate-900">Đăng Nhập Quản Trị</h3>
+                    <p class="text-xs text-slate-500 mt-1 font-medium">Dành cho Trưởng/Phó Phòng & Quản Trị Viên NSG</p>
                 </div>
+
+                <form id="authForm" class="mt-6 space-y-4" onsubmit="event.preventDefault(); handleAuth();">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wider">Tên đăng nhập hoặc Email</label>
+                        <input id="username" type="text" required class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm bg-slate-50 outline-none" placeholder="VD: admin hoặc tên_nv">
+                        <span class="text-[11px] text-slate-400 mt-0.5 block">(Tự động thêm đuôi @nsg.edu.vn nếu không nhập domain)</span>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wider">Mật khẩu</label>
+                        <input id="password" type="password" required class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm bg-slate-50 outline-none" placeholder="••••••••">
+                    </div>
+
+                    <div id="authError" class="hidden text-red-600 text-xs font-semibold bg-red-50 p-2.5 rounded-xl border border-red-100"></div>
+
+                    <button type="submit" id="authSubmitBtn" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-sm transition-all shadow-md shadow-blue-500/20">
+                        Đăng Nhập
+                    </button>
+                </form>
             </div>
         </div>
     </div>
 
-    <!-- Modal Form Giao Việc -->
-    <div id="taskModal" class="fixed inset-0 z-[50] hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-        <div class="flex items-center justify-center min-h-screen p-4 text-center">
-            <div class="fixed inset-0 bg-slate-900 bg-opacity-40 transition-opacity backdrop-blur-sm" aria-hidden="true" onclick="closeTaskModal()"></div>
-            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-            
-            <div class="inline-block align-bottom glass-bg rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl w-full border border-white/40">
+    <!-- Modal 2: Form Giao Việc & Cập Nhật Tiến Độ -->
+    <div id="taskModal" class="fixed inset-0 z-[70] hidden overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen p-3 sm:p-4 text-center">
+            <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="closeTaskModal()"></div>
+            <div class="inline-block glass-panel rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:max-w-2xl w-full border border-slate-200 relative z-10">
+                
                 <form id="taskForm" onsubmit="event.preventDefault(); saveTask();">
                     <input type="hidden" id="taskId">
                     
-                    <div class="px-6 pt-6 pb-6 sm:pb-6 border-b border-slate-100">
-                        <h3 class="text-xl font-bold text-slate-800 mb-6 flex items-center" id="modal-title">
-                            <svg class="w-6 h-6 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                            Thêm Công Việc Mới
+                    <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
+                        <h3 class="text-base sm:text-lg font-bold text-slate-800 flex items-center gap-2" id="taskModalTitle">
+                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                            <span>Thêm Công Việc Mới</span>
                         </h3>
+                        <button type="button" onclick="closeTaskModal()" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-xl hover:bg-slate-100 transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </button>
+                    </div>
+                    
+                    <div class="px-6 py-5 max-h-[75vh] overflow-y-auto space-y-4">
                         
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                            <!-- Các trường BỊ KHÓA nếu là Khách -->
-                            <div class="admin-only-field">
-                                <label class="block text-sm font-medium text-slate-700 mb-1">Khu vực</label>
-                                <select id="taskKhuVuc" required class="block w-full pl-3 pr-10 py-2.5 text-sm border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent rounded-xl border bg-white shadow-sm transition-all disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed">
-                                    <option value="">Chọn khu vực</option>
-                                    <option value="Khu A">Khu A</option>
-                                    <option value="Khu B">Khu B</option>
-                                    <option value="Khu C">Khu C</option>
-                                    <option value="Khu D">Khu D</option>
-                                    <option value="PHÂN HIỆU">PHÂN HIỆU</option>
-                                </select>
-                            </div>
-                            <div class="admin-only-field">
-                                <label class="block text-sm font-medium text-slate-700 mb-1">Đơn vị</label>
-                                <input type="text" id="taskDonVi" required class="block w-full shadow-sm text-sm border-slate-300 rounded-xl border px-4 py-2.5 bg-white transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed">
+                        <!-- Block 1: Thông tin phân công (Chỉ Manager/Admin sửa) -->
+                        <div class="bg-slate-50/70 p-4 rounded-2xl border border-slate-200 space-y-4">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-bold text-blue-800 uppercase tracking-wider flex items-center gap-1.5">
+                                    <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                    Nội dung Giao Việc
+                                </span>
+                                <span class="text-[10px] text-slate-500 font-medium admin-badge">Quyền: Trưởng / Phó Phòng</span>
                             </div>
 
-                            <div class="md:col-span-2 admin-only-field">
-                                <label class="block text-sm font-medium text-slate-700 mb-1">Nội dung công việc</label>
-                                <textarea id="taskNoiDung" required rows="2" class="block w-full shadow-sm text-sm border-slate-300 rounded-xl border px-4 py-2.5 bg-white transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed"></textarea>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                <div class="admin-only-field">
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Khu vực *</label>
+                                    <select id="taskKhuVuc" required class="w-full px-3 py-2 text-xs sm:text-sm border border-slate-200 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 outline-none disabled:bg-slate-100 disabled:text-slate-500">
+                                        <option value="">Chọn khu vực</option>
+                                        <option value="Khu A">Khu A</option>
+                                        <option value="Khu B">Khu B</option>
+                                        <option value="Khu C">Khu C</option>
+                                        <option value="Khu D">Khu D</option>
+                                        <option value="PHÂN HIỆU">PHÂN HIỆU</option>
+                                    </select>
+                                </div>
+                                <div class="admin-only-field">
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Đơn vị / Phòng *</label>
+                                    <input type="text" id="taskDonVi" required placeholder="VD: Phòng Đào tạo, P.302..." class="w-full px-3 py-2 text-xs sm:text-sm border border-slate-200 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 outline-none disabled:bg-slate-100 disabled:text-slate-500">
+                                </div>
+                                <div class="admin-only-field">
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Mức độ ưu tiên</label>
+                                    <select id="taskMucDoUuTien" class="w-full px-3 py-2 text-xs sm:text-sm border border-slate-200 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 outline-none disabled:bg-slate-100 disabled:text-slate-500">
+                                        <option value="Bình thường">Bình thường</option>
+                                        <option value="Cao">Ưu tiên Cao</option>
+                                        <option value="Khẩn cấp">Khẩn cấp 🔴</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div class="admin-only-field">
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Hạng mục thiết bị</label>
+                                    <select id="taskHangMuc" class="w-full px-3 py-2 text-xs sm:text-sm border border-slate-200 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 outline-none disabled:bg-slate-100 disabled:text-slate-500">
+                                        <option value="Điện - Chiếu sáng">Điện - Chiếu sáng</option>
+                                        <option value="Nước - Vệ sinh">Nước - Vệ sinh</option>
+                                        <option value="Bàn ghế - CSVC">Bàn ghế - CSVC</option>
+                                        <option value="CNTT - Thiết bị dạy học">CNTT - Thiết bị dạy học</option>
+                                        <option value="Khác">Khác</option>
+                                    </select>
+                                </div>
+                                <div class="admin-only-field">
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Người phụ trách *</label>
+                                    <input type="text" id="taskNguoiPhuTrach" required placeholder="VD: Tuấn, Bình, Hòa..." class="w-full px-3 py-2 text-xs sm:text-sm border border-slate-200 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 outline-none disabled:bg-slate-100 disabled:text-slate-500">
+                                </div>
                             </div>
 
                             <div class="admin-only-field">
-                                <label class="block text-sm font-medium text-slate-700 mb-1">Người phụ trách</label>
-                                <input type="text" id="taskNguoiPhuTrach" required class="block w-full shadow-sm text-sm border-slate-300 rounded-xl border px-4 py-2.5 bg-white transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed" placeholder="VD: Thanh, Hòa...">
-                            </div>
-                            
-                            <div class="admin-only-field">
-                                <label class="block text-sm font-medium text-slate-700 mb-1">Ngày giao</label>
-                                <input type="date" id="taskNgayGiao" required class="block w-full shadow-sm text-sm border-slate-300 rounded-xl border px-4 py-2.5 bg-white transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed">
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Nội dung công việc chi tiết *</label>
+                                <textarea id="taskNoiDung" required rows="2" placeholder="Mô tả cụ thể sự cố cần kiểm tra, thay thế hoặc sửa chữa..." class="w-full px-3 py-2 text-xs sm:text-sm border border-slate-200 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 outline-none disabled:bg-slate-100 disabled:text-slate-500"></textarea>
                             </div>
 
-                            <!-- Các trường KHÁCH ĐƯỢC PHÉP SỬA -->
-                            <div>
-                                <label class="block text-sm font-medium text-slate-700 mb-1">Trạng thái</label>
-                                <select id="taskTrangThai" class="block w-full pl-3 pr-10 py-2.5 text-sm border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent rounded-xl border bg-white shadow-sm transition-all border-l-4 border-l-blue-500">
-                                    <option value="Chưa Thực Hiện">Chưa Thực Hiện</option>
-                                    <option value="Đang Thực Hiện">Đang Thực Hiện</option>
-                                    <option value="Hoàn Thành">Hoàn Thành</option>
-                                </select>
-                            </div>
-                            
-                            <div>
-                                <label class="block text-sm font-medium text-slate-700 mb-1">Hạn hoàn thành</label>
-                                <input type="date" id="taskHanHoanThanh" required class="block w-full shadow-sm text-sm border-slate-300 rounded-xl border px-4 py-2.5 bg-white transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent border-l-4 border-l-blue-500">
-                            </div>
-
-                            <div class="md:col-span-2">
-                                <label class="block text-sm font-medium text-slate-700 mb-1">Kết quả thực hiện</label>
-                                <input type="text" id="taskKetQua" class="block w-full shadow-sm text-sm border-slate-300 rounded-xl border px-4 py-2.5 bg-white transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent border-l-4 border-l-blue-500">
-                            </div>
-                            <div class="md:col-span-2">
-                                <label class="block text-sm font-medium text-slate-700 mb-1">Ghi chú</label>
-                                <input type="text" id="taskGhiChu" class="block w-full shadow-sm text-sm border-slate-300 rounded-xl border px-4 py-2.5 bg-white transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent border-l-4 border-l-blue-500">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div class="admin-only-field">
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Giao việc (Ngày & Giờ) *</label>
+                                    <div class="grid grid-cols-5 gap-2">
+                                        <input type="date" id="taskNgayGiao" required class="col-span-3 px-3 py-2 text-xs sm:text-sm border border-slate-200 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 outline-none disabled:bg-slate-100 disabled:text-slate-500">
+                                        <input type="time" id="taskGioGiao" class="col-span-2 px-2 py-2 text-xs sm:text-sm border border-slate-200 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 outline-none disabled:bg-slate-100 disabled:text-slate-500" title="Giờ bắt đầu giao (VD: 08:00)">
+                                    </div>
+                                </div>
+                                <div class="admin-only-field">
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Hạn hoàn thành (Ngày & Giờ) *</label>
+                                    <div class="grid grid-cols-5 gap-2">
+                                        <input type="date" id="taskHanHoanThanh" required class="col-span-3 px-3 py-2 text-xs sm:text-sm border border-slate-200 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 outline-none disabled:bg-slate-100 disabled:text-slate-500">
+                                        <input type="time" id="taskGioHan" class="col-span-2 px-2 py-2 text-xs sm:text-sm border border-slate-200 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 outline-none disabled:bg-slate-100 disabled:text-slate-500" title="Hạn chót xong lúc (VD: 10:00)">
+                                    </div>
+                                </div>
                             </div>
                         </div>
+
+                        <!-- Block 2: Cập nhật tiến độ & Nghiệm thu (Mọi người / Thợ đều sửa được) -->
+                        <div class="bg-blue-50/50 p-4 rounded-2xl border border-blue-200/80 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-bold text-blue-900 uppercase tracking-wider flex items-center gap-1.5">
+                                    <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    Cập Nhật Tiến Độ & Nghiệm Thu
+                                </span>
+                                <span class="text-[10px] text-emerald-700 font-bold bg-emerald-100 px-2 py-0.5 rounded-full">Kỹ thuật viên & Khách</span>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Trạng thái hiện tại</label>
+                                    <select id="taskTrangThai" onchange="handleTrangThaiChange(this.value)" class="w-full px-3 py-2 text-xs sm:text-sm font-bold border-2 border-blue-400 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 outline-none">
+                                        <option value="Chưa Thực Hiện">⚪ Chưa Thực Hiện</option>
+                                        <option value="Đang Thực Hiện">🟡 Đang Thực Hiện</option>
+                                        <option value="Hoàn Thành">🟢 Hoàn Thành</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Ngày xong thực tế</label>
+                                    <input type="date" id="taskNgayHoanThanh" class="w-full px-3 py-2 text-xs sm:text-sm border border-slate-200 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 outline-none">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Khung giờ thực hiện thực tế (Làm từ mấy giờ ➔ mấy giờ)</label>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div class="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3 py-2 focus-within:ring-2 focus-within:ring-blue-500">
+                                        <span class="text-xs font-bold text-slate-400 uppercase">Từ:</span>
+                                        <input type="time" id="taskGioBatDauThucTe" class="w-full text-xs sm:text-sm font-semibold outline-none bg-transparent text-slate-800" title="Bắt đầu làm lúc mấy giờ">
+                                    </div>
+                                    <div class="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3 py-2 focus-within:ring-2 focus-within:ring-blue-500">
+                                        <span class="text-xs font-bold text-slate-400 uppercase">Đến:</span>
+                                        <input type="time" id="taskGioKetThucThucTe" class="w-full text-xs sm:text-sm font-semibold outline-none bg-transparent text-slate-800" title="Làm xong lúc mấy giờ">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Kết quả thực hiện / Vật tư thay thế</label>
+                                <input type="text" id="taskKetQua" placeholder="VD: Đã thay tụ điện máy lạnh, máy chạy tốt..." class="w-full px-3 py-2 text-xs sm:text-sm border border-slate-200 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 outline-none">
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Ghi chú thêm</label>
+                                <input type="text" id="taskGhiChu" placeholder="VD: Cần theo dõi tiếp trong 3 ngày tới..." class="w-full px-3 py-2 text-xs sm:text-sm border border-slate-200 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 outline-none">
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Link ảnh nghiệm thu / hiện trạng (URL)</label>
+                                <input type="url" id="taskAnhNghiemThu" placeholder="https://..." class="w-full px-3 py-2 text-xs sm:text-sm border border-slate-200 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 outline-none">
+                            </div>
+                        </div>
+
                     </div>
-                    <div class="bg-slate-50/80 px-6 py-4 sm:flex sm:flex-row-reverse rounded-b-2xl">
-                        <button type="submit" id="btnSaveTask" class="w-full inline-flex justify-center rounded-xl border border-transparent shadow-sm px-6 py-2.5 bg-blue-600 text-base font-semibold text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm transition-all">
-                            Lưu cấu hình
+
+                    <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex flex-row-reverse gap-3 rounded-b-3xl">
+                        <button type="submit" id="btnSaveTask" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-bold rounded-xl transition-all shadow-md shadow-blue-500/20">
+                            Lưu Thông Tin
                         </button>
-                        <button type="button" onclick="closeTaskModal()" class="mt-3 w-full inline-flex justify-center rounded-xl border border-slate-300 shadow-sm px-6 py-2.5 bg-white text-base font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-all">
-                            Hủy bỏ
+                        <button type="button" onclick="closeTaskModal()" class="px-4 py-2.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs sm:text-sm font-semibold rounded-xl transition-all">
+                            Đóng
                         </button>
                     </div>
                 </form>
+
             </div>
         </div>
     </div>
 
-    <!-- Modal Tạo User Mới -->
-    <div id="createUserModal" class="fixed inset-0 z-[65] hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <!-- Modal 3: Tạo Tài Khoản User Mới (Admin) -->
+    <div id="createUserModal" class="fixed inset-0 z-[80] hidden overflow-y-auto">
         <div class="flex items-center justify-center min-h-screen p-4 text-center">
-            <div class="fixed inset-0 bg-slate-900 bg-opacity-60 transition-opacity backdrop-blur-sm" aria-hidden="true" onclick="closeCreateUserModal()"></div>
-            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-            <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md w-full border border-slate-200 relative">
-                <div class="px-6 pt-6 pb-6 border-b border-slate-100">
-                    <h3 class="text-xl font-bold text-slate-800 flex items-center">
-                        <svg class="w-6 h-6 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
-                        Tạo Tài Khoản Mới
-                    </h3>
-                </div>
-                <form id="createUserForm" onsubmit="event.preventDefault(); submitCreateUser();" class="px-6 py-4 space-y-4">
+            <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeCreateUserModal()"></div>
+            <div class="inline-block bg-white rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:max-w-md w-full border border-slate-200 relative z-10 p-6">
+                <h3 class="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
+                    Tạo Tài Khoản Mới
+                </h3>
+                <form id="createUserForm" onsubmit="event.preventDefault(); submitCreateUser();" class="space-y-3">
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Tên đăng nhập (Email)</label>
-                        <input type="text" id="newUsername" required class="block w-full px-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 text-sm" placeholder="VD: nguyenvanb (sẽ tự thêm @nsg.edu.vn)">
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Tên đăng nhập (Email)</label>
+                        <input type="text" id="newUsername" required class="w-full px-3 py-2 text-xs sm:text-sm border border-slate-200 rounded-xl bg-slate-50 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="VD: nguyenvanb (tự thêm @nsg.edu.vn)">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Mật khẩu</label>
-                        <input type="password" id="newUserPassword" required minlength="6" class="block w-full px-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 text-sm" placeholder="Tối thiểu 6 ký tự">
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Mật khẩu ban đầu</label>
+                        <input type="password" id="newUserPassword" required minlength="6" class="w-full px-3 py-2 text-xs sm:text-sm border border-slate-200 rounded-xl bg-slate-50 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Tối thiểu 6 ký tự">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Tên hiển thị</label>
-                        <input type="text" id="newUserDisplayName" required class="block w-full px-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 text-sm" placeholder="VD: Nguyễn Văn B">
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Tên hiển thị</label>
+                        <input type="text" id="newUserDisplayName" required class="w-full px-3 py-2 text-xs sm:text-sm border border-slate-200 rounded-xl bg-slate-50 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="VD: Nguyễn Văn Bình">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Chức vụ / Phân quyền</label>
-                        <select id="newUserRole" class="block w-full px-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 text-sm">
-                            <option value="user">Nhân viên (Chỉ cập nhật tiến độ)</option>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Chức vụ & Phân quyền</label>
+                        <select id="newUserRole" class="w-full px-3 py-2 text-xs sm:text-sm border border-slate-200 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 outline-none">
+                            <option value="user">Kỹ thuật viên / Nhân viên (Chỉ cập nhật tiến độ)</option>
                             <option value="truongphong">Trưởng Phòng (Có quyền giao việc)</option>
                             <option value="phophong">Phó Phòng (Có quyền giao việc)</option>
-                            <option value="admin">Quản trị viên (Toàn quyền)</option>
+                            <option value="admin">Quản Trị Viên (Toàn quyền hệ thống)</option>
                         </select>
                     </div>
-                    <div id="createUserError" class="hidden text-red-600 text-sm font-medium bg-red-50 p-2 rounded-lg border border-red-100"></div>
-                    <div class="pt-4 flex flex-row-reverse space-x-3 space-x-reverse">
-                        <button type="submit" id="btnSubmitCreateUser" class="bg-blue-600 text-white px-5 py-2 rounded-xl text-sm font-semibold hover:bg-blue-700 transition-all shadow-sm">Tạo tài khoản</button>
-                        <button type="button" onclick="closeCreateUserModal()" class="bg-white text-slate-700 border border-slate-300 px-5 py-2 rounded-xl text-sm font-medium hover:bg-slate-50 transition-all">Hủy</button>
+                    <div id="createUserError" class="hidden text-red-600 text-xs font-semibold bg-red-50 p-2 rounded-xl"></div>
+                    <div class="pt-2 flex flex-row-reverse gap-2">
+                        <button type="submit" id="btnSubmitCreateUser" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-all shadow-sm">
+                            Tạo Tài Khoản
+                        </button>
+                        <button type="button" onclick="closeCreateUserModal()" class="px-3 py-2 bg-slate-100 text-slate-700 text-xs font-semibold rounded-xl hover:bg-slate-200 transition-all">
+                            Hủy
+                        </button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 
-    <!-- Alert Modal -->
-    <div id="alertModal" class="fixed inset-0 z-[70] hidden overflow-y-auto" aria-labelledby="alert-title" role="dialog" aria-modal="true">
-        <div class="flex items-center justify-center min-h-screen p-4 text-center">
-            <div class="fixed inset-0 bg-slate-900 bg-opacity-40 backdrop-blur-sm" aria-hidden="true"></div>
-            <div class="inline-block bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:max-w-sm w-full relative z-10">
-                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4 text-center">
-                    <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 mb-4">
-                        <svg class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                    </div>
-                    <h3 class="text-lg leading-6 font-semibold text-slate-900" id="alert-title">Thông báo</h3>
-                    <p class="text-sm text-slate-500 mt-2" id="alertMessage"></p>
+    <!-- Modal 4: Xem Ảnh Nghiệm Thu Phóng To -->
+    <div id="imagePreviewModal" class="fixed inset-0 z-[90] hidden overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="fixed inset-0 bg-black/80 backdrop-blur-sm" onclick="closeImagePreview()"></div>
+            <div class="relative z-10 max-w-2xl w-full bg-white rounded-3xl overflow-hidden shadow-2xl p-4">
+                <div class="flex justify-between items-center mb-3">
+                    <h4 class="font-bold text-sm text-slate-800" id="imagePreviewTitle">Hình ảnh nghiệm thu</h4>
+                    <button onclick="closeImagePreview()" class="text-slate-400 hover:text-slate-700 p-1">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
                 </div>
-                <div class="bg-slate-50 px-4 py-3 sm:px-6 flex justify-center">
-                    <button type="button" onclick="closeAlert()" class="w-full inline-flex justify-center rounded-xl border border-transparent shadow-sm px-6 py-2.5 bg-blue-600 text-base font-semibold text-white hover:bg-blue-700 focus:outline-none sm:text-sm transition-all">Đã hiểu</button>
+                <div class="w-full max-h-[70vh] flex items-center justify-center bg-slate-100 rounded-2xl overflow-hidden">
+                    <img id="imagePreviewImg" src="" alt="Minh chứng" class="max-h-full max-w-full object-contain">
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Confirm Modal (Dùng chung cho Xóa việc & Xóa User) -->
-    <div id="confirmModal" class="fixed inset-0 z-[70] hidden overflow-y-auto" aria-labelledby="confirm-title" role="dialog" aria-modal="true">
-        <div class="flex items-center justify-center min-h-screen p-4 text-center">
-            <div class="fixed inset-0 bg-slate-900 bg-opacity-40 backdrop-blur-sm" aria-hidden="true"></div>
-            <div class="inline-block bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:max-w-sm w-full relative z-10">
-                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4 text-center">
-                    <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
-                        <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-                    </div>
-                    <h3 class="text-lg leading-6 font-semibold text-slate-900" id="confirm-title">Xác nhận xóa</h3>
-                    <p class="text-sm text-slate-500 mt-2" id="confirmMessage">Bạn có chắc chắn muốn xóa không? Hành động này không thể hoàn tác.</p>
-                </div>
-                <div class="bg-slate-50 px-4 py-3 sm:px-6 flex space-x-3 justify-center">
-                    <button type="button" id="btnConfirmCancel" class="w-1/2 inline-flex justify-center rounded-xl border border-slate-300 shadow-sm px-4 py-2.5 bg-white text-base font-medium text-slate-700 hover:bg-slate-50 focus:outline-none sm:text-sm transition-all">Hủy</button>
-                    <button type="button" id="btnConfirmDelete" class="w-1/2 inline-flex justify-center rounded-xl border border-transparent shadow-sm px-4 py-2.5 bg-red-600 text-base font-semibold text-white hover:bg-red-700 focus:outline-none sm:text-sm transition-all">Xóa Bỏ</button>
+                <div class="mt-3 text-right">
+                    <a id="imagePreviewDownload" href="#" target="_blank" class="text-xs font-bold text-blue-600 hover:underline inline-flex items-center gap-1">
+                        Mở ảnh gốc trong tab mới ↗
+                    </a>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Modal 5: Xác Nhận Thao Tác (Xóa) -->
+    <div id="confirmModal" class="fixed inset-0 z-[95] hidden overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen p-4 text-center">
+            <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeConfirmModal()"></div>
+            <div class="inline-block bg-white rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:max-w-sm w-full border border-slate-200 relative z-10 p-6">
+                <div class="w-12 h-12 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center mb-3">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                </div>
+                <h3 class="text-base font-bold text-slate-900" id="confirmTitle">Xác nhận xóa</h3>
+                <p class="text-xs text-slate-500 mt-1 leading-relaxed" id="confirmMessage">Hành động này sẽ xóa dữ liệu vĩnh viễn và không thể hoàn tác.</p>
+                <div class="mt-5 flex gap-2">
+                    <button type="button" id="btnConfirmCancel" class="w-1/2 py-2.5 bg-slate-100 text-slate-700 text-xs font-bold rounded-xl hover:bg-slate-200 transition-all">Hủy</button>
+                    <button type="button" id="btnConfirmOk" class="w-1/2 py-2.5 bg-red-600 text-white text-xs font-bold rounded-xl hover:bg-red-700 transition-all shadow-sm">Xóa Bỏ</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
+    <!-- Modal 6: Hướng Dẫn Cài Đặt PWA Mobile (iOS / Android) -->
+    <div id="pwaGuideModal" class="fixed inset-0 z-[90] hidden overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen p-4 text-center">
+            <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closePwaGuide()"></div>
+            <div class="inline-block bg-white rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:max-w-md w-full border border-slate-200 relative z-10 p-6">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-12 h-12 bg-blue-600 text-white rounded-2xl flex items-center justify-center shadow-md">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-extrabold text-slate-800">Cài Đặt App Vào Điện Thoại</h3>
+                        <p class="text-xs text-slate-500">Sử dụng mượt mà không cần mở trình duyệt</p>
+                    </div>
+                </div>
+
+                <div class="space-y-3 text-xs text-slate-600">
+                    <div class="p-3 bg-slate-50 rounded-2xl border border-slate-200">
+                        <p class="font-bold text-slate-800 mb-1">📱 Dành cho iPhone / iPad (Safari):</p>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>Bấm vào nút <strong>Chia sẻ (Share) 📤</strong> ở thanh dưới Safari.</li>
+                            <li>Kéo xuống và chọn <strong>"Thêm vào Màn hình chính" (Add to Home Screen) ➕</strong>.</li>
+                            <li>Nhấn <strong>Thêm (Add)</strong> ở góc trên bên phải.</li>
+                        </ol>
+                    </div>
+                    <div class="p-3 bg-slate-50 rounded-2xl border border-slate-200">
+                        <p class="font-bold text-slate-800 mb-1">🤖 Dành cho Android (Chrome / Cốc Cốc):</p>
+                        <p>Bấm nút <strong>"Cài đặt ứng dụng"</strong> hiển thị trên màn hình hoặc mở menu (dấu 3 chấm) chọn <strong>"Cài đặt ứng dụng" / "Thêm vào màn hình chính"</strong>.</p>
+                    </div>
+                </div>
+
+                <button onclick="closePwaGuide()" class="mt-5 w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition-all shadow-sm">
+                    Đã hiểu
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ==================== FIREBASE & JAVASCRIPT ==================== -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, collection, onSnapshot, query, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+        // Cấu hình Firebase gốc của bạn
         const firebaseConfig = {
             apiKey: "AIzaSyDi5gsOdE9tGOR6JQzMgw_9QscD-XBRNwk",
             authDomain: "alook-26a1f.firebaseapp.com",
@@ -491,53 +905,98 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // Khởi tạo App phụ để tạo user mà không làm văng tài khoản Admin hiện tại
+        // Khởi tạo app phụ để Admin tạo user mới mà không làm văng session hiện tại
         const secondaryApp = initializeApp(firebaseConfig, "SecondaryApp");
         const secondaryAuth = getAuth(secondaryApp);
 
-        // State variables
+        // App States
         let currentUser = null;
-        let currentUserData = null; // null có nghĩa là Khách (Guest)
+        let currentUserData = null; // null = Khách (Guest)
         let tasks = [];
         let allUsersData = [];
-        let tasksUnsubscribe = null;
-        let usersUnsubscribe = null;
-        
-        // Quản lý Ngày chọn lọc (Mặc định hôm nay)
         let selectedDate = new Date();
+        let dateScope = 'day'; // 'day' | 'week' | 'all'
+        let currentViewMode = 'table'; // 'table' | 'card'
+        let deferredPrompt = null;
 
-        const getCollectionPath = (collName) => collection(db, collName);
-        const getDocPath = (collName, docId) => doc(db, collName, docId);
+        // Register Service Worker for PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(() => console.log('Bảo Trì NSG: Service Worker đã kích hoạt.'))
+                    .catch((err) => console.log('Lỗi Service Worker:', err));
+            });
+        }
 
-        // Utilities UI
-        window.showAlert = (msg) => {
-            document.getElementById('alertMessage').innerText = msg;
-            document.getElementById('alertModal').classList.remove('hidden');
+        // Handle PWA BeforeInstallPrompt
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            const btn = document.getElementById('pwaInstallBtn');
+            if (btn) btn.classList.remove('hidden');
+        });
+
+        window.triggerPwaInstall = async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    showToast('Đã cài đặt ứng dụng Bảo Trì NSG thành công!', 'success');
+                }
+                deferredPrompt = null;
+            } else {
+                // Mở hướng dẫn cho iOS Safari / trình duyệt chưa hỗ trợ native prompt
+                document.getElementById('pwaGuideModal').classList.remove('hidden');
+            }
         };
-        window.closeAlert = () => document.getElementById('alertModal').classList.add('hidden');
-        
-        window.openLoginModal = () => document.getElementById('loginModal').classList.remove('hidden');
-        window.closeLoginModal = () => document.getElementById('loginModal').classList.add('hidden');
 
-        // Hàm confirm custom thay cho window.confirm()
-        window.confirmAction = (message, callback) => {
-            document.getElementById('confirmMessage').innerText = message;
-            document.getElementById('confirmModal').classList.remove('hidden');
+        window.closePwaGuide = () => {
+            document.getElementById('pwaGuideModal').classList.add('hidden');
+        };
+
+        // UI Helpers: Toasts
+        window.showToast = (message, type = 'info') => {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
             
-            document.getElementById('btnConfirmCancel').onclick = () => {
-                document.getElementById('confirmModal').classList.add('hidden');
-            };
-            document.getElementById('btnConfirmDelete').onclick = () => {
-                document.getElementById('confirmModal').classList.add('hidden');
-                callback();
-            };
+            let bgClass = 'bg-slate-800 text-white';
+            let iconSvg = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>';
+            
+            if (type === 'success') {
+                bgClass = 'bg-emerald-600 text-white';
+                iconSvg = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>';
+            } else if (type === 'error') {
+                bgClass = 'bg-rose-600 text-white';
+                iconSvg = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>';
+            } else if (type === 'warning') {
+                bgClass = 'bg-amber-500 text-white';
+                iconSvg = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>';
+            }
+
+            toast.className = `${bgClass} pointer-events-auto px-4 py-3 rounded-2xl shadow-xl flex items-center gap-3 transform transition-all duration-300 translate-y-[-10px] opacity-0 text-xs font-semibold`;
+            toast.innerHTML = `
+                <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">${iconSvg}</svg>
+                <span class="flex-1">${message}</span>
+            `;
+
+            container.appendChild(toast);
+            
+            // Animation in
+            setTimeout(() => {
+                toast.classList.remove('translate-y-[-10px]', 'opacity-0');
+            }, 10);
+
+            // Dismiss
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-[-10px]');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
         };
 
         const showLoader = (show) => {
             const el = document.getElementById('globalLoader');
-            if(show) {
+            if (show) {
                 el.style.display = 'flex';
-                // Trigger reflow
                 void el.offsetWidth;
                 el.style.opacity = '1';
             } else {
@@ -546,17 +1005,39 @@
             }
         };
 
-        // Cập nhật hiển thị Ngày
+        // Confirmation Dialog
+        window.confirmAction = (title, message, callback) => {
+            document.getElementById('confirmTitle').innerText = title;
+            document.getElementById('confirmMessage').innerText = message;
+            document.getElementById('confirmModal').classList.remove('hidden');
+
+            document.getElementById('btnConfirmCancel').onclick = () => {
+                document.getElementById('confirmModal').classList.add('hidden');
+            };
+            document.getElementById('btnConfirmOk').onclick = () => {
+                document.getElementById('confirmModal').classList.add('hidden');
+                callback();
+            };
+        };
+        window.closeConfirmModal = () => document.getElementById('confirmModal').classList.add('hidden');
+
+        // Date Scope & Formats
+        const getSelectedDateString = () => {
+            const year = selectedDate.getFullYear();
+            const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+            const day = String(selectedDate.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        };
+
         const updateDateDisplay = () => {
             const dateOptions = { weekday: 'long', year: 'numeric', month: 'numeric', day: 'numeric' };
-            document.getElementById('currentDateDisplay').innerText = selectedDate.toLocaleDateString('vi-VN', dateOptions);
-            
-            const dateStr = getSelectedDateString();
-            document.getElementById('globalDateInput').value = dateStr;
-            
-            // Re-render khi ngày thay đổi
+            const strFormatted = selectedDate.toLocaleDateString('vi-VN', dateOptions);
+            document.getElementById('currentDateDisplay').innerText = strFormatted;
+            document.getElementById('globalDateInput').value = getSelectedDateString();
+
             renderTasks();
             updateDashboardStats();
+            updateAnalyticsView();
         };
 
         window.changeDate = (offsetDays) => {
@@ -565,125 +1046,211 @@
         };
 
         window.setDate = (dateStr) => {
-            if(dateStr) {
+            if (dateStr) {
                 selectedDate = new Date(dateStr);
                 updateDateDisplay();
             }
         };
 
-        const getSelectedDateString = () => {
-            const year = selectedDate.getFullYear();
-            const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
-            const day = String(selectedDate.getDate()).padStart(2, '0');
-            return `${year}-${month}-${day}`;
+        window.setToday = () => {
+            selectedDate = new Date();
+            updateDateDisplay();
         };
 
-        // Đăng nhập
+        window.setDateScope = (scope) => {
+            dateScope = scope;
+            ['day', 'week', 'all'].forEach(s => {
+                const btn = document.getElementById(`scope-${s}`);
+                if (s === scope) {
+                    btn.className = "px-3 py-1.5 rounded-lg bg-white shadow-sm text-blue-600 font-bold";
+                } else {
+                    btn.className = "px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900";
+                }
+            });
+
+            const scopeLabel = document.getElementById('dashboardScopeLabel');
+            if (scope === 'day') scopeLabel.innerText = "Trong ngày";
+            else if (scope === 'week') scopeLabel.innerText = "Trong tuần này";
+            else scopeLabel.innerText = "Toàn bộ thời gian";
+
+            renderTasks();
+            updateDashboardStats();
+            updateAnalyticsView();
+        };
+
+        // Navigation Tabs (Mobile & Desktop)
+        window.switchTab = (tabName) => {
+            const views = ['dashboard', 'tasks', 'analytics', 'users'];
+            views.forEach(v => {
+                document.getElementById(`view-${v}`)?.classList.add('hidden');
+                
+                // Desktop tabs
+                const dTab = document.getElementById(`tab-${v}`);
+                if (dTab) {
+                    dTab.classList.remove('text-blue-600', 'border-blue-600');
+                    dTab.classList.add('text-slate-600', 'border-transparent');
+                }
+
+                // Mobile bottom tabs
+                const mTab = document.getElementById(`mTab-${v}`);
+                if (mTab) {
+                    mTab.classList.remove('text-blue-600', 'font-bold');
+                    mTab.classList.add('text-slate-500', 'font-medium');
+                }
+            });
+
+            document.getElementById(`view-${tabName}`)?.classList.remove('hidden');
+
+            const activeDTab = document.getElementById(`tab-${tabName}`);
+            if (activeDTab) {
+                activeDTab.classList.remove('text-slate-600', 'border-transparent');
+                activeDTab.classList.add('text-blue-600', 'border-blue-600');
+            }
+
+            const activeMTab = document.getElementById(`mTab-${tabName}`);
+            if (activeMTab) {
+                activeMTab.classList.remove('text-slate-500', 'font-medium');
+                activeMTab.classList.add('text-blue-600', 'font-bold');
+            }
+        };
+
+        // View Mode: Table vs Card
+        window.setViewMode = (mode) => {
+            currentViewMode = mode;
+            const tableEl = document.getElementById('tasksTableView');
+            const cardEl = document.getElementById('tasksCardView');
+            const btnTable = document.getElementById('viewModeTableBtn');
+            const btnCard = document.getElementById('viewModeCardBtn');
+
+            if (mode === 'table') {
+                tableEl.classList.remove('hidden');
+                cardEl.classList.add('hidden');
+                btnTable.className = "p-1.5 rounded-lg bg-white shadow-sm text-blue-600";
+                btnCard.className = "p-1.5 rounded-lg text-slate-500 hover:text-slate-900";
+            } else {
+                tableEl.classList.add('hidden');
+                cardEl.classList.remove('hidden');
+                btnCard.className = "p-1.5 rounded-lg bg-white shadow-sm text-blue-600";
+                btnTable.className = "p-1.5 rounded-lg text-slate-500 hover:text-slate-900";
+            }
+            renderTasks();
+        };
+
+        // Auth management
+        window.openLoginModal = () => document.getElementById('loginModal').classList.remove('hidden');
+        window.closeLoginModal = () => document.getElementById('loginModal').classList.add('hidden');
+
         window.handleAuth = async () => {
-            const rawUsername = document.getElementById('username').value.trim().toLowerCase();
+            const raw = document.getElementById('username').value.trim().toLowerCase();
             const password = document.getElementById('password').value;
             const errorEl = document.getElementById('authError');
             errorEl.classList.add('hidden');
-            
-            if (!rawUsername || !password) {
-                errorEl.innerText = "Vui lòng nhập đầy đủ thông tin.";
+
+            if (!raw || !password) {
+                errorEl.innerText = "Vui lòng nhập tài khoản và mật khẩu.";
                 errorEl.classList.remove('hidden');
                 return;
             }
 
-            const email = rawUsername.includes('@') ? rawUsername : `${rawUsername}@nsg.edu.vn`;
+            const email = raw.includes('@') ? raw : `${raw}@nsg.edu.vn`;
             const btn = document.getElementById('authSubmitBtn');
-            const oldBtnText = btn.innerText;
-            btn.innerText = "Đang xử lý...";
+            const originalText = btn.innerText;
+            btn.innerText = "Đang kiểm tra...";
             btn.disabled = true;
 
             try {
                 try {
                     await signInWithEmailAndPassword(auth, email, password);
-                } catch (signInErr) {
-                    // Tự động tạo nếu là admin đăng nhập lần đầu
-                    const isDefaultAccount = ['admin@nsg.edu.vn'].includes(email);
-                    if (isDefaultAccount && (signInErr.code === 'auth/invalid-credential' || signInErr.code === 'auth/user-not-found')) {
-                         await createUserWithEmailAndPassword(auth, email, password);
+                } catch (err) {
+                    if (email === 'admin@nsg.edu.vn' && (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found')) {
+                        await createUserWithEmailAndPassword(auth, email, password);
                     } else {
-                        throw signInErr;
+                        throw err;
                     }
                 }
                 closeLoginModal();
-            } catch (error) {
-                console.error("Auth error:", error);
-                errorEl.innerText = error.code === 'auth/invalid-credential' ? 'Sai tài khoản hoặc mật khẩu' : 'Lỗi đăng nhập: ' + error.message;
+                showToast("Đăng nhập thành công!", "success");
+            } catch (err) {
+                console.error("Auth error:", err);
+                errorEl.innerText = err.code === 'auth/invalid-credential' ? "Sai tài khoản hoặc mật khẩu." : "Lỗi: " + err.message;
                 errorEl.classList.remove('hidden');
             } finally {
-                btn.innerText = oldBtnText;
+                btn.innerText = originalText;
                 btn.disabled = false;
             }
         };
 
         window.handleLogout = () => {
             signOut(auth);
-            // Reset về Khách
-            currentUserData = null;
             currentUser = null;
+            currentUserData = null;
             setupRoleBasedUI();
+            showToast("Đã đăng xuất tài khoản.");
         };
 
+        // Listen Auth State
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 currentUser = user;
                 try {
                     let targetRole = 'user';
-                    
-                    // Nếu là tk admin đăng nhập, ép thẳng thành quyền Admin
                     if (user.email === 'admin@nsg.edu.vn') targetRole = 'admin';
 
-                    const userDocRef = getDocPath('users', user.uid);
-                    const userDoc = await getDoc(userDocRef);
-                    let shouldUpdateFirestore = false;
+                    const userRef = doc(db, 'users', user.uid);
+                    const userDoc = await getDoc(userRef);
+                    let shouldUpdate = false;
 
                     if (userDoc.exists()) {
                         currentUserData = userDoc.data();
-                        // Chỉ ép lại thành admin nếu doc trên db chưa đúng chuẩn admin
-                        if ((targetRole === 'admin' && currentUserData.role !== 'admin')) {
+                        if (targetRole === 'admin' && currentUserData.role !== 'admin') {
                             currentUserData.role = targetRole;
-                            shouldUpdateFirestore = true;
+                            shouldUpdate = true;
                         }
                     } else {
-                        // Nếu user chưa tồn tại trên db thì tạo mới
-                        currentUserData = { 
-                            email: user.email, role: targetRole, displayName: user.email.split('@')[0], createdAt: serverTimestamp()
+                        currentUserData = {
+                            email: user.email,
+                            role: targetRole,
+                            displayName: user.email.split('@')[0],
+                            createdAt: serverTimestamp()
                         };
-                        shouldUpdateFirestore = true;
+                        shouldUpdate = true;
                     }
 
-                    if (shouldUpdateFirestore) await setDoc(userDocRef, currentUserData, { merge: true });
-                    
-                    // Hiển thị chức vụ trên thanh Header
-                    let displayRole = "Nhân viên";
-                    if(currentUserData.role === 'admin') displayRole = "Quản trị viên";
-                    else if(currentUserData.role === 'truongphong') displayRole = "Trưởng Phòng";
-                    else if(currentUserData.role === 'phophong') displayRole = "Phó Phòng";
+                    if (shouldUpdate) await setDoc(userRef, currentUserData, { merge: true });
+
+                    let roleDisplay = "Kỹ thuật viên";
+                    if (currentUserData.role === 'admin') roleDisplay = "Quản trị viên";
+                    else if (currentUserData.role === 'truongphong') roleDisplay = "Trưởng Phòng";
+                    else if (currentUserData.role === 'phophong') roleDisplay = "Phó Phòng";
 
                     document.getElementById('headerUserName').innerText = currentUserData.displayName;
-                    document.getElementById('headerUserRole').innerText = displayRole;
-                    
-                    document.getElementById('authBtn').outerHTML = `
-                        <button id="authBtn" onclick="handleLogout()" class="text-slate-500 hover:text-red-600 transition-colors p-2 rounded-full hover:bg-red-50 flex items-center justify-center" title="Đăng xuất">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                    document.getElementById('headerUserRole').innerHTML = `
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block"></span>
+                        ${roleDisplay}
+                    `;
+
+                    document.getElementById('authBtnWrapper').innerHTML = `
+                        <button onclick="handleLogout()" class="text-slate-500 hover:text-red-600 p-2 rounded-xl hover:bg-red-50 transition-colors flex items-center justify-center ring-1 ring-slate-200" title="Đăng xuất">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
                         </button>
                     `;
-                    
-                    if(currentUserData.role === 'admin') loadUsersData();
-                } catch(e) {
-                    console.error("Lỗi tải user:", e);
+
+                    if (currentUserData.role === 'admin') loadUsersData();
+                } catch (e) {
+                    console.error("User sync error:", e);
                 }
             } else {
-                // Khách mode
+                // Guest mode
+                currentUser = null;
+                currentUserData = null;
                 document.getElementById('headerUserName').innerText = "Khách Truy Cập";
-                document.getElementById('headerUserRole').innerText = "Chỉ cập nhật tiến độ";
-                document.getElementById('authBtn').outerHTML = `
-                    <button id="authBtn" onclick="openLoginModal()" class="text-slate-500 hover:text-blue-600 transition-colors p-2 rounded-full hover:bg-slate-100 flex items-center justify-center" title="Đăng nhập Quản lý">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path></svg>
+                document.getElementById('headerUserRole').innerHTML = `
+                    <span class="w-1.5 h-1.5 rounded-full bg-slate-400 inline-block"></span>
+                    Chỉ xem & báo cáo
+                `;
+                document.getElementById('authBtnWrapper').innerHTML = `
+                    <button id="authBtn" onclick="openLoginModal()" class="text-slate-600 hover:text-blue-600 p-2 rounded-xl hover:bg-slate-100 transition-colors flex items-center justify-center ring-1 ring-slate-200" title="Đăng nhập Ban Quản Lý">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path></svg>
                     </button>
                 `;
             }
@@ -693,266 +1260,430 @@
         const setupRoleBasedUI = () => {
             const role = currentUserData?.role || 'guest';
             const btnCreate = document.getElementById('btnCreateTask');
+            const btnCreateQuick = document.getElementById('btnCreateTaskQuick');
             const tabUsers = document.getElementById('tab-users');
+            const mTabUsers = document.getElementById('mTab-users');
 
             if (role === 'admin' || role === 'truongphong' || role === 'phophong') {
                 btnCreate.classList.remove('hidden');
-                if(role === 'admin') tabUsers.classList.remove('hidden');
-                else tabUsers.classList.add('hidden');
+                btnCreateQuick.classList.remove('hidden');
+                if (role === 'admin') {
+                    tabUsers.classList.remove('hidden');
+                    mTabUsers.classList.remove('hidden');
+                } else {
+                    tabUsers.classList.add('hidden');
+                    mTabUsers.classList.add('hidden');
+                }
             } else {
-                // Khách hoặc Nhân viên thường ẩn giao việc và user
                 btnCreate.classList.add('hidden');
+                btnCreateQuick.classList.add('hidden');
                 tabUsers.classList.add('hidden');
+                mTabUsers.classList.add('hidden');
             }
         };
 
-        window.switchTab = (tabName) => {
-            const views = ['dashboard', 'tasks', 'users'];
-            views.forEach(v => {
-                document.getElementById(`view-${v}`)?.classList.add('hidden');
-                const tab = document.getElementById(`tab-${v}`);
-                if(tab) {
-                    tab.classList.remove('text-blue-600', 'border-blue-600');
-                    tab.classList.add('text-slate-500', 'border-transparent');
-                }
-            });
-
-            document.getElementById(`view-${tabName}`).classList.remove('hidden');
-            const activeTab = document.getElementById(`tab-${tabName}`);
-            activeTab.classList.remove('text-slate-500', 'border-transparent');
-            activeTab.classList.add('text-blue-600', 'border-blue-600');
-        };
-
-        // Load Tasks cho TẤT CẢ mọi người (Guest + Admin)
+        // Realtime Data Sync
         const loadTasksData = () => {
-            const q = query(getCollectionPath('tasks'));
-            tasksUnsubscribe = onSnapshot(q, (snapshot) => {
+            const q = query(collection(db, 'tasks'));
+            onSnapshot(q, (snapshot) => {
                 tasks = [];
-                snapshot.forEach((doc) => tasks.push({ id: doc.id, ...doc.data() }));
+                snapshot.forEach(d => tasks.push({ id: d.id, ...d.data() }));
+
+                document.getElementById('taskCountBadge').innerText = tasks.length;
                 
-                if(document.getElementById('currentDateDisplay').innerText === 'Đang tải...') {
-                    updateDateDisplay();
-                } else {
-                    renderTasks();
-                    updateDashboardStats();
-                }
+                updateDateDisplay();
                 showLoader(false);
             }, (error) => {
-                console.error("Lỗi Firestore:", error);
-                if(error.code === 'permission-denied') {
-                    window.showAlert("Lỗi quyền Firebase: Hãy cập nhật Rules cho phép 'read' và 'update' cho if true.");
-                } else {
-                    window.showAlert("Không thể tải danh sách công việc.");
-                }
+                console.error("Firestore tasks error:", error);
+                showToast("Lỗi đồng bộ dữ liệu bảo trì.", "error");
                 showLoader(false);
             });
         };
 
         const loadUsersData = () => {
             if (currentUserData?.role !== 'admin') return;
-            const q = query(getCollectionPath('users'));
-            usersUnsubscribe = onSnapshot(q, (snapshot) => {
+            const q = query(collection(db, 'users'));
+            onSnapshot(q, (snapshot) => {
                 allUsersData = [];
-                snapshot.forEach((doc) => allUsersData.push({ id: doc.id, ...doc.data() }));
+                snapshot.forEach(d => allUsersData.push({ id: d.id, ...d.data() }));
                 renderUsers();
             });
         };
 
-        // Cập nhật Thống kê & Biểu đồ của CÁC TASK TRONG NGÀY ĐANG CHỌN
-        const updateDashboardStats = () => {
+        // Filter Tasks by Scope & Inputs
+        const getFilteredTasks = () => {
+            const searchVal = document.getElementById('searchInput')?.value.toLowerCase() || '';
+            const filterStatus = document.getElementById('filterStatus')?.value || 'all';
+            const filterArea = document.getElementById('filterArea')?.value || 'all';
+            const filterPriority = document.getElementById('filterPriority')?.value || 'all';
             const dateStr = getSelectedDateString();
-            const tasksToday = tasks.filter(t => t.ngayGiao === dateStr);
-            
-            const total = tasksToday.length;
-            const todo = tasksToday.filter(t => t.trangThai === 'Chưa Thực Hiện' || !t.trangThai).length;
-            const inProgress = tasksToday.filter(t => t.trangThai === 'Đang Thực Hiện').length;
-            const done = tasksToday.filter(t => t.trangThai === 'Hoàn Thành').length;
 
-            document.getElementById('stat-total').innerText = total;
-            document.getElementById('stat-todo').innerText = todo;
-            document.getElementById('stat-inprogress').innerText = inProgress;
-            document.getElementById('stat-done').innerText = done;
+            // Tính phạm vi tuần nếu dateScope === 'week'
+            const currentObj = new Date(selectedDate);
+            const firstDayOfWeek = new Date(currentObj.setDate(currentObj.getDate() - currentObj.getDay() + 1));
+            const lastDayOfWeek = new Date(currentObj.setDate(currentObj.getDate() - currentObj.getDay() + 7));
+            const startWeekStr = firstDayOfWeek.toISOString().split('T')[0];
+            const endWeekStr = lastDayOfWeek.toISOString().split('T')[0];
 
-            // Xử lý vẽ biểu đồ SVG
-            if (total === 0) {
-                document.getElementById('chart-todo').style.strokeDasharray = `0 100`;
-                document.getElementById('chart-inprogress').style.strokeDasharray = `0 100`;
-                document.getElementById('chart-done').style.strokeDasharray = `0 100`;
-                document.getElementById('chart-percent').innerText = `0%`;
-            } else {
-                const pDone = (done / total) * 100;
-                const pInProgress = (inProgress / total) * 100;
-                const pTodo = (todo / total) * 100;
-                
-                document.getElementById('chart-percent').innerText = `${Math.round(pDone)}%`;
+            return tasks.filter(t => {
+                // 1. Date Scope:
+                // Việc của ngày nào chỉ hiển thị trong ngày đó, không tràn qua ngày sau nếu đã quá ngày hạn
+                if (dateScope === 'day') {
+                    // Việc chưa đến ngày giao -> không hiển thị
+                    if (t.ngayGiao && t.ngayGiao > dateStr) return false;
 
-                // SVG circle có chu vi giả định là 100 (nhờ pathLength="100")
-                document.getElementById('chart-done').style.strokeDasharray = `${pDone} 100`;
-                document.getElementById('chart-done').style.strokeDashoffset = `0`;
+                    const deadline = t.hanHoanThanh || t.ngayGiao;
 
-                document.getElementById('chart-inprogress').style.strokeDasharray = `${pInProgress} 100`;
-                document.getElementById('chart-inprogress').style.strokeDashoffset = `-${pDone}`;
+                    // Không hiển thị tràn qua ngày tiếp theo nếu đã quá hạn ngày đó:
+                    if (deadline && dateStr > deadline) return false;
 
-                document.getElementById('chart-todo').style.strokeDasharray = `${pTodo} 100`;
-                document.getElementById('chart-todo').style.strokeDashoffset = `-${pDone + pInProgress}`;
+                    // Nếu công việc đã Hoàn Thành:
+                    if (t.trangThai === 'Hoàn Thành') {
+                        const doneDate = t.ngayHoanThanh || deadline;
+                        // Nếu đã hoàn thành trước ngày đang xem -> không hiển thị nữa
+                        if (doneDate && doneDate < dateStr) return false;
+                    }
+                } else if (dateScope === 'week') {
+                    if (t.ngayGiao && t.ngayGiao > endWeekStr) return false;
+                    if (t.trangThai === 'Hoàn Thành') {
+                        const doneDate = t.ngayHoanThanh || t.hanHoanThanh || t.ngayGiao;
+                        if (doneDate && doneDate < startWeekStr) return false;
+                    }
+                }
+
+                // 2. Status Filter
+                if (filterStatus !== 'all' && t.trangThai !== filterStatus) {
+                    return false;
+                }
+
+                // 3. Area Filter
+                if (filterArea !== 'all' && t.khuVuc !== filterArea) return false;
+
+                // 4. Priority Filter
+                if (filterPriority !== 'all' && (t.mucDoUuTien || 'Bình thường') !== filterPriority) return false;
+
+                // 5. Search text
+                const textPool = `${t.noiDung || ''} ${t.nguoiPhuTrach || ''} ${t.donVi || ''} ${t.khuVuc || ''} ${t.hangMuc || ''} ${t.ketQua || ''}`.toLowerCase();
+                return textPool.includes(searchVal);
+            });
+        };
+
+        // Update Dashboard Statistics & SVG Donut Chart
+        const updateDashboardStats = () => {
+            const list = getFilteredTasks();
+            const total = list.length;
+            const done = list.filter(t => t.trangThai === 'Hoàn Thành').length;
+            const inProgress = list.filter(t => t.trangThai === 'Đang Thực Hiện').length;
+            const todo = list.filter(t => t.trangThai === 'Chưa Thực Hiện' || !t.trangThai).length;
+
+            const elTotal = document.getElementById('stat-total');
+            const elDone = document.getElementById('stat-done');
+            const elInProgress = document.getElementById('stat-inprogress');
+            const elTodo = document.getElementById('stat-todo');
+
+            if (elTotal) elTotal.innerText = total;
+            if (elDone) elDone.innerText = done;
+            if (elInProgress) elInProgress.innerText = inProgress;
+            if (elTodo) elTodo.innerText = todo;
+
+            // SVG Donut Calculations
+            const pDone = total ? (done / total) * 100 : 0;
+            const pInProgress = total ? (inProgress / total) * 100 : 0;
+            const pTodo = total ? (todo / total) * 100 : 0;
+
+            const elPercent = document.getElementById('chart-percent');
+            if (elPercent) elPercent.innerText = `${Math.round(pDone)}%`;
+
+            const elChartDone = document.getElementById('chart-done');
+            if (elChartDone) {
+                elChartDone.style.strokeDasharray = `${pDone} 100`;
+                elChartDone.style.strokeDashoffset = `0`;
+            }
+
+            const elChartInProg = document.getElementById('chart-inprogress');
+            if (elChartInProg) {
+                elChartInProg.style.strokeDasharray = `${pInProgress} 100`;
+                elChartInProg.style.strokeDashoffset = `-${pDone}`;
+            }
+
+            const elChartTodo = document.getElementById('chart-todo');
+            if (elChartTodo) {
+                elChartTodo.style.strokeDasharray = `${pTodo} 100`;
+                elChartTodo.style.strokeDashoffset = `-${pDone + pInProgress}`;
             }
         };
 
+        // Render Tasks in Table & Cards
         const renderTasks = () => {
+            const filteredTasks = getFilteredTasks();
             const tbody = document.getElementById('tasksTableBody');
-            const searchVal = document.getElementById('searchInput').value.toLowerCase();
-            const filterVal = document.getElementById('filterStatus').value;
-            const dateStr = getSelectedDateString();
-            
-            tbody.innerHTML = '';
-            
-            // 1. Lọc theo NGÀY CHỌN, Search và Status
-            let filteredTasks = tasks.filter(t => {
-                if (t.ngayGiao !== dateStr) return false; // CHỈ HIỂN THỊ VIỆC CỦA NGÀY TRÊN LỊCH
-                
-                const matchSearch = (t.noiDung || '').toLowerCase().includes(searchVal) || 
-                                    (t.nguoiPhuTrach || '').toLowerCase().includes(searchVal) ||
-                                    (t.khuVuc || '').toLowerCase().includes(searchVal) ||
-                                    (t.donVi || '').toLowerCase().includes(searchVal);
-                const matchStatus = filterVal === 'all' || t.trangThai === filterVal;
-                return matchSearch && matchStatus;
-            });
+            const cardContainer = document.getElementById('tasksCardView');
+            const emptyEl = document.getElementById('emptyTasksMessage');
 
-            // 2. SẮP XẾP VÀ NHÓM THEO KHU VỰC
+            tbody.innerHTML = '';
+            cardContainer.innerHTML = '';
+
+            if (filteredTasks.length === 0) {
+                emptyEl.classList.remove('hidden');
+                emptyEl.classList.add('flex');
+                document.getElementById('tasksTableView').classList.add('hidden');
+                document.getElementById('tasksCardView').classList.add('hidden');
+                return;
+            } else {
+                emptyEl.classList.add('hidden');
+                emptyEl.classList.remove('flex');
+                if (currentViewMode === 'table') {
+                    document.getElementById('tasksTableView').classList.remove('hidden');
+                } else {
+                    document.getElementById('tasksCardView').classList.remove('hidden');
+                }
+            }
+
+            // Sắp xếp theo Khu vực -> Ưu tiên -> Ngày tạo
             filteredTasks.sort((a, b) => {
+                const priorityWeight = { 'Khẩn cấp': 3, 'Cao': 2, 'Bình thường': 1 };
+                const wA = priorityWeight[a.mucDoUuTien] || 1;
+                const wB = priorityWeight[b.mucDoUuTien] || 1;
+                if (wA !== wB) return wB - wA;
+
                 const khuA = a.khuVuc || 'Khác';
                 const khuB = b.khuVuc || 'Khác';
                 if (khuA !== khuB) return khuA.localeCompare(khuB);
-                return new Date(b.createdAt || 0) - new Date(a.createdAt || 0); // Cùng khu vực thì sắp xếp thời gian tạo
+
+                return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
             });
 
-            if (filteredTasks.length === 0) {
-                document.getElementById('emptyTasksMessage').classList.remove('hidden');
-                document.getElementById('emptyTasksMessage').classList.add('flex');
-                tbody.parentElement.parentElement.classList.add('hidden');
-                return;
-            } else {
-                document.getElementById('emptyTasksMessage').classList.add('hidden');
-                document.getElementById('emptyTasksMessage').classList.remove('flex');
-                tbody.parentElement.parentElement.classList.remove('hidden');
-            }
-
-            let currentKhuVuc = null;
+            let currentKhu = null;
             let counter = 1;
 
-            filteredTasks.forEach((task) => {
-                // Header Nhóm Khu Vực
-                if (task.khuVuc !== currentKhuVuc) {
-                    currentKhuVuc = task.khuVuc;
-                    counter = 1; // Reset số TT cho mỗi khu
+            filteredTasks.forEach(task => {
+                const priority = task.mucDoUuTien || 'Bình thường';
+                
+                // Priority Badge
+                let priorityBadge = '<span class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-slate-100 text-slate-600">Bình thường</span>';
+                if (priority === 'Khẩn cấp') {
+                    priorityBadge = '<span class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-red-100 text-red-700 urgent-pulse flex items-center gap-1 w-fit"><span class="w-1.5 h-1.5 rounded-full bg-red-600"></span>Khẩn cấp</span>';
+                } else if (priority === 'Cao') {
+                    priorityBadge = '<span class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-amber-100 text-amber-800 flex items-center gap-1 w-fit"><span class="w-1.5 h-1.5 rounded-full bg-amber-600"></span>Ưu tiên Cao</span>';
+                }
+
+                // Status Badge
+                let statusBadge = '<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-slate-100 text-slate-600">Chưa Thực Hiện</span>';
+                if (task.trangThai === 'Hoàn Thành') {
+                    statusBadge = '<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center gap-1"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>Hoàn Thành</span>';
+                } else if (task.trangThai === 'Đang Thực Hiện') {
+                    statusBadge = '<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-amber-100 text-amber-800">Đang Thực Hiện</span>';
+                }
+
+                // Image button
+                const imageBtn = task.anhNghiemThu ? `
+                    <button onclick="previewImage('${task.anhNghiemThu}', '${task.noiDung?.replace(/'/g, "\\'")}')" class="text-xs font-bold text-blue-600 hover:text-blue-800 underline flex items-center gap-1 mt-1">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        Xem ảnh minh chứng
+                    </button>
+                ` : '';
+
+                // Table Group Header (Area)
+                if (task.khuVuc !== currentKhu) {
+                    currentKhu = task.khuVuc;
+                    counter = 1;
                     const groupTr = document.createElement('tr');
-                    groupTr.className = 'bg-slate-100 border-y border-slate-200';
+                    groupTr.className = 'bg-slate-100/80 border-y border-slate-200';
                     groupTr.innerHTML = `
-                        <td colspan="8" class="px-4 py-2.5 text-xs font-bold text-slate-700 uppercase tracking-wider">
-                            <div class="flex items-center">
-                                <svg class="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
-                                Nhóm: ${currentKhuVuc || 'Khác'}
+                        <td colspan="9" class="px-4 py-2 text-xs font-extrabold text-slate-800 uppercase tracking-wider">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span>
+                                Khu vực: ${currentKhu || 'Khác'}
                             </div>
                         </td>
                     `;
                     tbody.appendChild(groupTr);
                 }
 
-                // Dòng Công Việc
+                // 1. RENDER TABLE ROW
                 const tr = document.createElement('tr');
-                tr.className = 'hover:bg-blue-50/30 border-b border-slate-100 transition-colors duration-150';
-                
-                let statusBadge = '';
-                if(task.trangThai === 'Hoàn Thành') statusBadge = '<span class="px-2.5 py-1 inline-flex text-xs leading-4 font-semibold rounded-full bg-green-100 text-green-700">Hoàn Thành</span>';
-                else if(task.trangThai === 'Đang Thực Hiện') statusBadge = '<span class="px-2.5 py-1 inline-flex text-xs leading-4 font-semibold rounded-full bg-yellow-100 text-yellow-700">Đang Thực hiện</span>';
-                else statusBadge = '<span class="px-2.5 py-1 inline-flex text-xs leading-4 font-semibold rounded-full bg-slate-100 text-slate-700">Chưa Thực Hiện</span>';
-
-                const actionsHtml = `
-                    <div class="flex items-center justify-end space-x-2">
-                        <button onclick="editTask('${task.id}')" class="px-3 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors border border-blue-100" title="Cập nhật">
-                            Cập nhật
-                        </button>
-                        ${currentUserData?.role === 'admin' ? `
-                        <button onclick="deleteTask('${task.id}')" class="p-1.5 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors" title="Xóa">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                        </button>` : ''}
-                    </div>
-                `;
-
+                tr.className = 'hover:bg-blue-50/40 transition-colors';
                 tr.innerHTML = `
-                    <td class="px-4 py-4 whitespace-nowrap text-sm text-slate-500 font-medium text-center">${counter++}</td>
-                    <td class="px-4 py-4 whitespace-nowrap text-sm text-slate-700">${task.donVi || ''}</td>
-                    <td class="px-6 py-4 text-sm text-slate-800 break-words max-w-xs leading-relaxed font-medium">${task.noiDung || ''}</td>
-                    <td class="px-4 py-4 whitespace-nowrap text-sm text-slate-700">${task.nguoiPhuTrach || ''}</td>
-                    <td class="px-4 py-4 whitespace-nowrap text-sm text-slate-600">
-                        <div class="text-[13px] mb-1"><span class="text-slate-400">Giao:</span> ${task.ngayGiao || '-'}</div>
-                        <div class="text-[13px] text-red-500 font-medium"><span class="text-red-300">Hạn:</span> ${task.hanHoanThanh || '-'}</div>
+                    <td class="px-3 py-3 text-center text-slate-500 font-bold">${counter++}</td>
+                    <td class="px-3 py-3 whitespace-nowrap">${priorityBadge}</td>
+                    <td class="px-3 py-3">
+                        <div class="font-bold text-slate-800">${task.donVi || '-'}</div>
+                        <div class="text-[11px] text-slate-500 font-medium">${task.hangMuc || 'Chưa phân loại'}</div>
                     </td>
-                    <td class="px-4 py-4 whitespace-nowrap">${statusBadge}</td>
-                    <td class="px-4 py-4 text-sm text-slate-600 max-w-[150px] truncate" title="${task.ketQua || ''}">${task.ketQua || '-'}</td>
-                    <td class="px-4 py-4 whitespace-nowrap text-right">${actionsHtml}</td>
+                    <td class="px-4 py-3">
+                        <p class="font-semibold text-slate-800 leading-relaxed">${task.noiDung || '-'}</p>
+                        ${task.ghiChu ? `<p class="text-[11px] text-slate-500 italic mt-0.5">Ghi chú: ${task.ghiChu}</p>` : ''}
+                    </td>
+                    <td class="px-3 py-3 whitespace-nowrap font-medium text-slate-700">${task.nguoiPhuTrach || '-'}</td>
+                    <td class="px-3 py-3 whitespace-nowrap">
+                        <div class="text-[11px] text-slate-500">Giao: <span class="font-semibold text-slate-700">${task.ngayGiao || '-'}${task.gioGiao ? ` (${task.gioGiao})` : ''}</span></div>
+                        <div class="text-[11px] text-slate-700 font-medium">Hạn: <span>${task.hanHoanThanh || '-'}${task.gioHan ? ` (${task.gioHan})` : ''}</span></div>
+                        ${(task.gioBatDauThucTe || task.gioKetThucThucTe) ? `
+                            <div class="text-[10px] text-emerald-800 font-semibold bg-emerald-50 px-1.5 py-0.5 rounded mt-1 inline-flex items-center gap-1 border border-emerald-200">
+                                <span>⏱ Làm:</span>
+                                <span>${task.gioBatDauThucTe || '??'} ➔ ${task.gioKetThucThucTe || '??'}</span>
+                            </div>
+                        ` : ''}
+                    </td>
+                    <td class="px-3 py-3 whitespace-nowrap text-center">
+                        <div onclick="quickToggleStatus('${task.id}', '${task.trangThai}')" class="cursor-pointer hover:opacity-80 transition-opacity" title="Click để đổi nhanh trạng thái">
+                            ${statusBadge}
+                        </div>
+                    </td>
+                    <td class="px-3 py-3 text-xs max-w-[190px]">
+                        <div class="truncate text-slate-700 font-medium" title="${task.ketQua || ''}">${task.ketQua || '<span class="text-slate-400">Chưa có kết quả</span>'}</div>
+                        ${task.ngayHoanThanh ? `<div class="text-[10px] text-emerald-600 font-semibold mt-0.5">Xong ngày: ${task.ngayHoanThanh}</div>` : ''}
+                        ${imageBtn}
+                    </td>
+                    <td class="px-3 py-3 text-right whitespace-nowrap">
+                        <div class="flex items-center justify-end gap-1.5">
+                            <button onclick="editTask('${task.id}')" class="px-2.5 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg text-xs font-bold transition-all border border-blue-100">
+                                Sửa
+                            </button>
+                            ${currentUserData?.role === 'admin' ? `
+                            <button onclick="deleteTask('${task.id}')" class="p-1.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg transition-all border border-red-100" title="Xóa">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            </button>` : ''}
+                        </div>
+                    </td>
                 `;
                 tbody.appendChild(tr);
+
+                // 2. RENDER CARD (MOBILE FIRST)
+                const card = document.createElement('div');
+                card.className = 'bg-white rounded-2xl p-4 shadow-sm border border-slate-200 flex flex-col justify-between hover:shadow-md transition-all';
+                card.innerHTML = `
+                    <div>
+                        <div class="flex items-start justify-between gap-2 mb-2">
+                            <div class="flex flex-wrap items-center gap-1.5">
+                                ${priorityBadge}
+                                <span class="bg-slate-100 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-md">${task.khuVuc || 'Khác'}</span>
+                            </div>
+                            <div onclick="quickToggleStatus('${task.id}', '${task.trangThai}')" class="cursor-pointer">
+                                ${statusBadge}
+                            </div>
+                        </div>
+
+                        <h4 class="text-xs font-extrabold text-blue-600 uppercase mb-0.5">${task.donVi || 'Đơn vị'} • <span class="text-slate-500 font-medium lowercase">${task.hangMuc || 'thiết bị'}</span></h4>
+                        <p class="text-sm font-bold text-slate-800 leading-snug my-2">${task.noiDung || ''}</p>
+
+                        <div class="bg-slate-50 p-2.5 rounded-xl text-xs space-y-1.5 my-2 border border-slate-100">
+                            <div class="flex justify-between">
+                                <span class="text-slate-500">Phụ trách:</span>
+                                <span class="font-bold text-slate-800">${task.nguoiPhuTrach || '-'}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-500">Kế hoạch giao:</span>
+                                <span class="font-semibold text-slate-700">${task.ngayGiao || '-'}${task.gioGiao ? ` (${task.gioGiao})` : ''}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-500">Hạn hoàn thành:</span>
+                                <span class="font-bold text-slate-800">${task.hanHoanThanh || '-'}${task.gioHan ? ` (${task.gioHan})` : ''}</span>
+                            </div>
+                            ${(task.gioBatDauThucTe || task.gioKetThucThucTe || task.ngayHoanThanh) ? `
+                            <div class="pt-1.5 mt-1 border-t border-slate-200/80 flex justify-between items-center text-[11px]">
+                                <span class="text-emerald-700 font-bold">Thực tế làm:</span>
+                                <span class="font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                                    ${task.gioBatDauThucTe ? task.gioBatDauThucTe : '??'}${task.gioKetThucThucTe ? ` ➔ ${task.gioKetThucThucTe}` : ''}${task.ngayHoanThanh ? ` (${task.ngayHoanThanh})` : ''}
+                                </span>
+                            </div>
+                            ` : ''}
+                        </div>
+
+                        ${task.ketQua ? `<p class="text-xs text-slate-600 mt-2 font-medium"><strong>KQ:</strong> ${task.ketQua}</p>` : ''}
+                        ${imageBtn}
+                    </div>
+
+                    <div class="pt-3 mt-3 border-t border-slate-100 flex items-center justify-between">
+                        <span class="text-[11px] text-slate-400">Giao lúc: ${task.gioGiao ? task.gioGiao + ' ' : ''}${task.ngayGiao || '-'}</span>
+                        <div class="flex items-center gap-2">
+                            <button onclick="editTask('${task.id}')" class="px-3 py-1.5 bg-blue-600 text-white rounded-xl text-xs font-bold hover:bg-blue-700 transition-all shadow-sm">
+                                Cập nhật
+                            </button>
+                            ${currentUserData?.role === 'admin' ? `
+                            <button onclick="deleteTask('${task.id}')" class="p-1.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl transition-all" title="Xóa">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            </button>` : ''}
+                        </div>
+                    </div>
+                `;
+                cardContainer.appendChild(card);
             });
         };
 
-        const renderUsers = () => {
-            const tbody = document.getElementById('usersTableBody');
-            tbody.innerHTML = '';
+        // Quick toggle status directly without opening modal
+        window.quickToggleStatus = async (id, currentStatus) => {
+            const nextMap = {
+                'Chưa Thực Hiện': 'Đang Thực Hiện',
+                'Đang Thực Hiện': 'Hoàn Thành',
+                'Hoàn Thành': 'Chưa Thực Hiện'
+            };
+            const nextStatus = nextMap[currentStatus] || 'Đang Thực Hiện';
             
-            allUsersData.forEach(u => {
-                const tr = document.createElement('tr');
-                
-                let roleName = 'Nhân viên';
-                if(u.role === 'admin') roleName = 'Quản trị viên';
-                else if(u.role === 'truongphong') roleName = 'Trưởng Phòng';
-                else if(u.role === 'phophong') roleName = 'Phó Phòng';
+            try {
+                const now = new Date();
+                const todayStr = now.toISOString().split('T')[0];
+                const currentTimeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
-                tr.className = 'hover:bg-slate-50 transition-colors duration-150';
+                const curTask = tasks.find(t => t.id === id);
+                const updateData = {
+                    trangThai: nextStatus,
+                    updatedAt: serverTimestamp()
+                };
 
-                tr.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-800 font-medium">${u.email}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600">${u.displayName || '-'}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-800">${roleName}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm">
-                        ${u.id !== currentUser?.uid ? `
-                        <div class="flex items-center space-x-2">
-                            <select onchange="updateUserRole('${u.id}', this.value)" class="block w-full pl-3 pr-8 py-1.5 text-sm border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg border bg-white cursor-pointer">
-                                <option value="user" ${u.role === 'user' ? 'selected' : ''}>Nhân viên</option>
-                                <option value="truongphong" ${u.role === 'truongphong' ? 'selected' : ''}>Trưởng Phòng</option>
-                                <option value="phophong" ${u.role === 'phophong' ? 'selected' : ''}>Phó Phòng</option>
-                                <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Quản trị viên</option>
-                            </select>
-                            <button onclick="deleteUserAccount('${u.id}')" class="p-1.5 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors border border-red-100" title="Xóa dữ liệu tài khoản">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                            </button>
-                        </div>
-                        ` : '<span class="text-slate-400 italic text-sm">Tài khoản của bạn</span>'}
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
+                if (nextStatus === 'Hoàn Thành') {
+                    updateData.ngayHoanThanh = todayStr;
+                    if (curTask && !curTask.gioKetThucThucTe) {
+                        updateData.gioKetThucThucTe = currentTimeStr;
+                    }
+                } else if (nextStatus === 'Đang Thực Hiện') {
+                    if (curTask && !curTask.gioBatDauThucTe) {
+                        updateData.gioBatDauThucTe = currentTimeStr;
+                    }
+                } else {
+                    updateData.ngayHoanThanh = '';
+                }
 
-        document.getElementById('searchInput').addEventListener('input', renderTasks);
-        document.getElementById('filterStatus').addEventListener('change', renderTasks);
+                await updateDoc(doc(db, 'tasks', id), updateData);
+                showToast(`Đã chuyển trạng thái: ${nextStatus}`, 'success');
+            } catch (err) {
+                console.error(err);
+                showToast("Không thể cập nhật trạng thái: " + err.message, 'error');
+            }
+        };
 
+        // Image Preview Modal
+        window.previewImage = (url, title) => {
+            document.getElementById('imagePreviewTitle').innerText = title || "Hình ảnh minh chứng";
+            document.getElementById('imagePreviewImg').src = url;
+            document.getElementById('imagePreviewDownload').href = url;
+            document.getElementById('imagePreviewModal').classList.remove('hidden');
+        };
+        window.closeImagePreview = () => document.getElementById('imagePreviewModal').classList.add('hidden');
+
+        // Task Modal (Add / Edit)
         window.openTaskModal = () => {
             document.getElementById('taskForm').reset();
             document.getElementById('taskId').value = '';
             
-            // Giao việc mới mặc định lấy Ngày Đang Chọn Trên Lịch
-            document.getElementById('taskNgayGiao').value = getSelectedDateString();
-            document.getElementById('taskHanHoanThanh').value = getSelectedDateString();
+            const dateStr = getSelectedDateString();
+            document.getElementById('taskNgayGiao').value = dateStr;
+            document.getElementById('taskHanHoanThanh').value = dateStr;
+            document.getElementById('taskGioGiao').value = '08:00';
+            document.getElementById('taskGioHan').value = '17:00';
+            document.getElementById('taskGioBatDauThucTe').value = '';
+            document.getElementById('taskGioKetThucThucTe').value = '';
             
-            document.getElementById('modal-title').innerHTML = '<svg class="w-6 h-6 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg> Thêm Công Việc Mới';
-            
-            // Admin có quyền hết
+            document.getElementById('taskModalTitle').innerHTML = `
+                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                <span>Giao Việc Mới</span>
+            `;
+
+            // Admin / Manager fields enable
+            const role = currentUserData?.role || 'guest';
             const adminFields = document.querySelectorAll('.admin-only-field input, .admin-only-field select, .admin-only-field textarea');
-            adminFields.forEach(el => {
-                el.disabled = false;
-            });
-            
+            adminFields.forEach(el => el.disabled = false);
+
             document.getElementById('taskModal').classList.remove('hidden');
         };
 
@@ -965,132 +1696,315 @@
             document.getElementById('taskId').value = task.id;
             document.getElementById('taskKhuVuc').value = task.khuVuc || '';
             document.getElementById('taskDonVi').value = task.donVi || '';
-            document.getElementById('taskNoiDung').value = task.noiDung || '';
+            document.getElementById('taskMucDoUuTien').value = task.mucDoUuTien || 'Bình thường';
+            document.getElementById('taskHangMuc').value = task.hangMuc || 'Điện - Chiếu sáng';
             document.getElementById('taskNguoiPhuTrach').value = task.nguoiPhuTrach || '';
+            document.getElementById('taskNoiDung').value = task.noiDung || '';
             document.getElementById('taskNgayGiao').value = task.ngayGiao || '';
-            
+            document.getElementById('taskGioGiao').value = task.gioGiao || '';
             document.getElementById('taskHanHoanThanh').value = task.hanHoanThanh || '';
+            document.getElementById('taskGioHan').value = task.gioHan || '';
+
             document.getElementById('taskTrangThai').value = task.trangThai || 'Chưa Thực Hiện';
+            document.getElementById('taskNgayHoanThanh').value = task.ngayHoanThanh || '';
+            document.getElementById('taskGioBatDauThucTe').value = task.gioBatDauThucTe || '';
+            document.getElementById('taskGioKetThucThucTe').value = task.gioKetThucThucTe || '';
             document.getElementById('taskKetQua').value = task.ketQua || '';
             document.getElementById('taskGhiChu').value = task.ghiChu || '';
+            document.getElementById('taskAnhNghiemThu').value = task.anhNghiemThu || '';
 
-            document.getElementById('modal-title').innerHTML = '<svg class="w-6 h-6 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg> Cập Nhật Tiến Độ';
+            document.getElementById('taskModalTitle').innerHTML = `
+                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                <span>Cập Nhật Tiến Độ & Giờ Thực Hiện</span>
+            `;
 
-            // Phân quyền trên Modal
-            const adminFields = document.querySelectorAll('.admin-only-field input, .admin-only-field select, .admin-only-field textarea');
             const role = currentUserData?.role || 'guest';
-            
+            const adminFields = document.querySelectorAll('.admin-only-field input, .admin-only-field select, .admin-only-field textarea');
             if (role === 'admin' || role === 'truongphong' || role === 'phophong') {
                 adminFields.forEach(el => el.disabled = false);
             } else {
-                // Khách chỉ xem được thông tin gốc
+                // Khách hoặc thợ kỹ thuật chỉ xem trường gốc
                 adminFields.forEach(el => el.disabled = true);
             }
 
             document.getElementById('taskModal').classList.remove('hidden');
         };
 
+        window.handleTrangThaiChange = (val) => {
+            const dateInput = document.getElementById('taskNgayHoanThanh');
+            const gioBatDauInput = document.getElementById('taskGioBatDauThucTe');
+            const gioKetThucInput = document.getElementById('taskGioKetThucThucTe');
+            const now = new Date();
+            const currentTimeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+            if (val === 'Hoàn Thành') {
+                if (!dateInput.value) dateInput.value = now.toISOString().split('T')[0];
+                if (!gioKetThucInput.value) gioKetThucInput.value = currentTimeStr;
+            } else if (val === 'Đang Thực Hiện') {
+                if (!gioBatDauInput.value) gioBatDauInput.value = currentTimeStr;
+            } else {
+                dateInput.value = '';
+            }
+        };
+
         window.saveTask = async () => {
             const btn = document.getElementById('btnSaveTask');
-            const originalText = btn.innerText;
+            const orig = btn.innerText;
             btn.innerText = 'Đang lưu...';
             btn.disabled = true;
 
             const id = document.getElementById('taskId').value;
-            const trangThai = document.getElementById('taskTrangThai').value;
             const role = currentUserData?.role || 'guest';
-            
-            let ngayHoanThanh = '';
-            if (trangThai === 'Hoàn Thành') {
-                const today = new Date();
-                ngayHoanThanh = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+            const isManager = (role === 'admin' || role === 'truongphong' || role === 'phophong');
+
+            const trangThai = document.getElementById('taskTrangThai').value;
+            let ngayHoanThanh = document.getElementById('taskNgayHoanThanh').value || '';
+            if (trangThai === 'Hoàn Thành' && !ngayHoanThanh) {
+                ngayHoanThanh = (new Date()).toISOString().split('T')[0];
+            } else if (trangThai !== 'Hoàn Thành') {
+                ngayHoanThanh = '';
             }
 
-            // Object chứa các trường mà Khách được phép cập nhật
             let taskData = {
-                hanHoanThanh: document.getElementById('taskHanHoanThanh').value,
                 trangThai: trangThai,
-                ketQua: document.getElementById('taskKetQua').value,
-                ghiChu: document.getElementById('taskGhiChu').value,
                 ngayHoanThanh: ngayHoanThanh,
+                gioBatDauThucTe: document.getElementById('taskGioBatDauThucTe').value || '',
+                gioKetThucThucTe: document.getElementById('taskGioKetThucThucTe').value || '',
+                ketQua: document.getElementById('taskKetQua').value.trim(),
+                ghiChu: document.getElementById('taskGhiChu').value.trim(),
+                anhNghiemThu: document.getElementById('taskAnhNghiemThu').value.trim(),
                 updatedAt: serverTimestamp()
             };
 
-            // Nếu là Admin/Trưởng/Phó Phòng thì lưu thêm các trường cốt lõi
-            if (role === 'admin' || role === 'truongphong' || role === 'phophong') {
+            if (isManager) {
                 taskData = {
                     ...taskData,
                     khuVuc: document.getElementById('taskKhuVuc').value,
-                    donVi: document.getElementById('taskDonVi').value,
-                    noiDung: document.getElementById('taskNoiDung').value,
-                    nguoiPhuTrach: document.getElementById('taskNguoiPhuTrach').value,
+                    donVi: document.getElementById('taskDonVi').value.trim(),
+                    mucDoUuTien: document.getElementById('taskMucDoUuTien').value,
+                    hangMuc: document.getElementById('taskHangMuc').value,
+                    nguoiPhuTrach: document.getElementById('taskNguoiPhuTrach').value.trim(),
+                    noiDung: document.getElementById('taskNoiDung').value.trim(),
                     ngayGiao: document.getElementById('taskNgayGiao').value,
+                    gioGiao: document.getElementById('taskGioGiao').value || '',
+                    hanHoanThanh: document.getElementById('taskHanHoanThanh').value,
+                    gioHan: document.getElementById('taskGioHan').value || '',
                 };
             }
 
             try {
                 if (id) {
-                    await updateDoc(getDocPath('tasks', id), taskData);
+                    await updateDoc(doc(db, 'tasks', id), taskData);
+                    showToast("Cập nhật công việc thành công!", "success");
                 } else {
-                    if (role !== 'admin' && role !== 'truongphong' && role !== 'phophong') {
-                        throw new Error("Chỉ Trưởng/Phó phòng và Admin mới được Giao Việc Mới.");
-                    }
+                    if (!isManager) throw new Error("Chỉ Trưởng/Phó Phòng mới được giao việc mới.");
                     taskData.createdAt = serverTimestamp();
-                    await setDoc(doc(getCollectionPath('tasks')), taskData);
+                    await setDoc(doc(collection(db, 'tasks')), taskData);
+                    showToast("Giao việc mới thành công!", "success");
                 }
                 closeTaskModal();
-            } catch (error) {
-                console.error("Lỗi khi lưu:", error);
-                window.showAlert("Lỗi khi lưu: " + error.message);
+            } catch (err) {
+                console.error(err);
+                showToast("Lỗi khi lưu: " + err.message, "error");
             } finally {
-                btn.innerText = originalText;
+                btn.innerText = orig;
                 btn.disabled = false;
             }
         };
 
         window.deleteTask = (id) => {
             if (currentUserData?.role !== 'admin') {
-                window.showAlert("Chỉ Quản trị viên mới được xóa.");
+                showToast("Chỉ Quản trị viên mới có quyền xóa!", "error");
                 return;
             }
-            
-            window.confirmAction("Bạn có chắc chắn muốn xóa công việc này không? Hành động này không thể hoàn tác.", async () => {
+            confirmAction("Xác nhận xóa công việc", "Bạn có chắc chắn muốn xóa công việc này? Thao tác này không thể hoàn tác.", async () => {
                 try {
-                    await deleteDoc(getDocPath('tasks', id));
-                } catch(e) {
-                    console.error(e);
-                    window.showAlert("Lỗi khi xóa.");
+                    await deleteDoc(doc(db, 'tasks', id));
+                    showToast("Đã xóa công việc thành công!", "success");
+                } catch (err) {
+                    showToast("Lỗi khi xóa: " + err.message, "error");
                 }
+            });
+        };
+
+        // Analytics View
+        const updateAnalyticsView = () => {
+            const areas = ['Khu A', 'Khu B', 'Khu C', 'Khu D', 'PHÂN HIỆU'];
+            const areaContainer = document.getElementById('areaStatsList');
+            areaContainer.innerHTML = '';
+
+            areas.forEach(area => {
+                const areaTasks = tasks.filter(t => t.khuVuc === area);
+                const total = areaTasks.length;
+                const done = areaTasks.filter(t => t.trangThai === 'Hoàn Thành').length;
+                const percent = total ? Math.round((done / total) * 100) : 0;
+
+                const item = document.createElement('div');
+                item.className = "p-3 bg-slate-50 rounded-xl border border-slate-200/80";
+                item.innerHTML = `
+                    <div class="flex justify-between text-xs font-bold mb-1.5">
+                        <span class="text-slate-800">${area}</span>
+                        <span class="text-blue-600">${done}/${total} việc (${percent}%)</span>
+                    </div>
+                    <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+                        <div class="bg-blue-600 h-full rounded-full transition-all duration-500" style="width: ${percent}%"></div>
+                    </div>
+                `;
+                areaContainer.appendChild(item);
+            });
+
+            // Categories
+            const categories = [
+                'Điện - Chiếu sáng',
+                'Nước - Vệ sinh',
+                'Bàn ghế - CSVC',
+                'CNTT - Thiết bị dạy học',
+                'Khác'
+            ];
+            const catContainer = document.getElementById('categoryStatsList');
+            catContainer.innerHTML = '';
+
+            categories.forEach(cat => {
+                const catTasks = tasks.filter(t => t.hangMuc === cat);
+                const total = catTasks.length;
+                const done = catTasks.filter(t => t.trangThai === 'Hoàn Thành').length;
+                const percent = total ? Math.round((done / total) * 100) : 0;
+
+                const item = document.createElement('div');
+                item.className = "p-3 bg-slate-50 rounded-xl border border-slate-200/80";
+                item.innerHTML = `
+                    <div class="flex justify-between text-xs font-bold mb-1.5">
+                        <span class="text-slate-800">${cat}</span>
+                        <span class="text-emerald-600">${done}/${total} việc (${percent}%)</span>
+                    </div>
+                    <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+                        <div class="bg-emerald-500 h-full rounded-full transition-all duration-500" style="width: ${percent}%"></div>
+                    </div>
+                `;
+                catContainer.appendChild(item);
+            });
+        };
+
+        // Export to Excel (SheetJS)
+        window.exportToExcel = () => {
+            const list = getFilteredTasks();
+            if (list.length === 0) {
+                showToast("Không có dữ liệu để xuất Excel!", "warning");
+                return;
+            }
+
+            const exportData = list.map((t, idx) => ({
+                "STT": idx + 1,
+                "Khu Vực": t.khuVuc || '',
+                "Đơn Vị": t.donVi || '',
+                "Hạng Mục": t.hangMuc || '',
+                "Mức Độ Ưu Tiên": t.mucDoUuTien || 'Bình thường',
+                "Nội Dung Công Việc": t.noiDung || '',
+                "Người Phụ Trách": t.nguoiPhuTrach || '',
+                "Ngày Giao": t.ngayGiao || '',
+                "Giờ Giao": t.gioGiao || '',
+                "Hạn Hoàn Thành": t.hanHoanThanh || '',
+                "Giờ Hạn": t.gioHan || '',
+                "Trạng Thái": t.trangThai || 'Chưa Thực Hiện',
+                "Ngày Xong": t.ngayHoanThanh || '',
+                "Giờ Làm Thực Tế": (t.gioBatDauThucTe || t.gioKetThucThucTe) ? `${t.gioBatDauThucTe || '??'} - ${t.gioKetThucThucTe || '??'}` : '',
+                "Kết Quả": t.ketQua || '',
+                "Ghi Chú": t.ghiChu || '',
+                "Link Ảnh": t.anhNghiemThu || ''
+            }));
+
+            const ws = XLSX.utils.json_to_sheet(exportData);
+            
+            // Auto width columns
+            const colWidths = [
+                { wch: 6 },  // STT
+                { wch: 12 }, // Khu Vuc
+                { wch: 20 }, // Don Vi
+                { wch: 22 }, // Hang Muc
+                { wch: 15 }, // Uu Tien
+                { wch: 35 }, // Noi Dung
+                { wch: 18 }, // Phu Trach
+                { wch: 14 }, // Ngay Giao
+                { wch: 10 }, // Gio Giao
+                { wch: 14 }, // Han Hoan Thanh
+                { wch: 10 }, // Gio Han
+                { wch: 16 }, // Trang Thai
+                { wch: 14 }, // Ngay Xong
+                { wch: 18 }, // Gio Lam Thuc Te
+                { wch: 25 }, // Ket Qua
+                { wch: 20 }, // Ghi Chu
+                { wch: 25 }  // Link Anh
+            ];
+            ws['!cols'] = colWidths;
+
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "BaoTri_NSG");
+
+            const dateStr = getSelectedDateString();
+            XLSX.writeFile(wb, `BaoCao_BaoTri_NSG_${dateStr}.xlsx`);
+            showToast("Đã xuất file Excel thành công!", "success");
+        };
+
+        // Users Management (Admin)
+        const renderUsers = () => {
+            const tbody = document.getElementById('usersTableBody');
+            tbody.innerHTML = '';
+
+            allUsersData.forEach(u => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50 transition-colors';
+
+                let roleName = 'Kỹ thuật viên';
+                if (u.role === 'admin') roleName = 'Quản trị viên';
+                else if (u.role === 'truongphong') roleName = 'Trưởng Phòng';
+                else if (u.role === 'phophong') roleName = 'Phó Phòng';
+
+                tr.innerHTML = `
+                    <td class="px-5 py-3 font-semibold text-slate-900">${u.email}</td>
+                    <td class="px-5 py-3 text-slate-700">${u.displayName || '-'}</td>
+                    <td class="px-5 py-3 font-bold text-blue-700">${roleName}</td>
+                    <td class="px-5 py-3 text-right">
+                        ${u.id !== currentUser?.uid ? `
+                        <div class="flex items-center justify-end gap-2">
+                            <select onchange="updateUserRole('${u.id}', this.value)" class="text-xs font-semibold px-2.5 py-1.5 border border-slate-200 rounded-lg bg-white outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="user" ${u.role === 'user' ? 'selected' : ''}>Kỹ thuật viên</option>
+                                <option value="truongphong" ${u.role === 'truongphong' ? 'selected' : ''}>Trưởng Phòng</option>
+                                <option value="phophong" ${u.role === 'phophong' ? 'selected' : ''}>Phó Phòng</option>
+                                <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Quản trị viên</option>
+                            </select>
+                            <button onclick="deleteUserAccount('${u.id}')" class="p-1.5 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-all" title="Xóa tài khoản">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                            </button>
+                        </div>
+                        ` : '<span class="text-slate-400 italic text-xs">Tài khoản của bạn</span>'}
+                    </td>
+                `;
+                tbody.appendChild(tr);
             });
         };
 
         window.updateUserRole = async (uid, newRole) => {
             if (currentUserData?.role !== 'admin') return;
             try {
-                await updateDoc(getDocPath('users', uid), { role: newRole });
-            } catch (error) {
-                console.error("Error updating role:", error);
-                window.showAlert("Lỗi khi cập nhật quyền.");
+                await updateDoc(doc(db, 'users', uid), { role: newRole });
+                showToast("Đã cập nhật vai trò người dùng!", "success");
+            } catch (err) {
+                showToast("Lỗi cập nhật: " + err.message, "error");
             }
         };
 
         window.deleteUserAccount = (uid) => {
             if (currentUserData?.role !== 'admin') return;
-            
-            const msg = "Bạn có chắc chắn muốn xóa tài khoản này khỏi hệ thống? (Người dùng này sẽ lập tức mất quyền truy cập vào dữ liệu hệ thống).";
-            
-            window.confirmAction(msg, async () => {
+            confirmAction("Xóa tài khoản người dùng", "Bạn có chắc chắn muốn xóa quyền truy cập của tài khoản này?", async () => {
                 try {
-                    await deleteDoc(getDocPath('users', uid));
-                    window.showAlert("Đã xóa phân quyền và dữ liệu của tài khoản thành công!");
-                } catch (error) {
-                    console.error("Lỗi xóa user:", error);
-                    window.showAlert("Lỗi khi xóa tài khoản.");
+                    await deleteDoc(doc(db, 'users', uid));
+                    showToast("Đã xóa dữ liệu tài khoản khỏi hệ thống!", "success");
+                } catch (err) {
+                    showToast("Lỗi khi xóa: " + err.message, "error");
                 }
             });
         };
 
-        // Các hàm mở/đóng Modal Tạo User
         window.openCreateUserModal = () => {
             document.getElementById('createUserForm').reset();
             document.getElementById('createUserError').classList.add('hidden');
@@ -1098,60 +2012,55 @@
         };
         window.closeCreateUserModal = () => document.getElementById('createUserModal').classList.add('hidden');
 
-        // Logic xử lý tạo User
         window.submitCreateUser = async () => {
-            const rawUsername = document.getElementById('newUsername').value.trim().toLowerCase();
+            const raw = document.getElementById('newUsername').value.trim().toLowerCase();
             const password = document.getElementById('newUserPassword').value;
             const displayName = document.getElementById('newUserDisplayName').value.trim();
             const role = document.getElementById('newUserRole').value;
             const errorEl = document.getElementById('createUserError');
             const btn = document.getElementById('btnSubmitCreateUser');
-            
-            // Tự động thêm đuôi @nsg.edu.vn nếu người quản trị nhập mỗi tên
-            const email = rawUsername.includes('@') ? rawUsername : `${rawUsername}@nsg.edu.vn`;
 
+            const email = raw.includes('@') ? raw : `${raw}@nsg.edu.vn`;
             errorEl.classList.add('hidden');
-            const originalText = btn.innerText;
+            const orig = btn.innerText;
             btn.innerText = "Đang tạo...";
             btn.disabled = true;
 
             try {
-                // 1. Tạo user bằng Auth phụ (secondaryAuth) để không bị out acc admin
-                const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, password);
-                const newUid = userCredential.user.uid;
-
-                // 2. Đăng xuất khỏi Auth phụ ngay lập tức
+                const cred = await createUserWithEmailAndPassword(secondaryAuth, email, password);
                 await signOut(secondaryAuth);
 
-                // 3. Lưu thông tin vào Database Users
-                const newUserDoc = {
+                await setDoc(doc(db, 'users', cred.user.uid), {
                     email: email,
                     displayName: displayName || email.split('@')[0],
                     role: role,
                     createdAt: serverTimestamp()
-                };
-                await setDoc(doc(db, 'users', newUid), newUserDoc);
+                });
 
                 closeCreateUserModal();
-                window.showAlert("Tạo tài khoản thành công!");
-                
-            } catch (error) {
-                console.error("Lỗi tạo user:", error);
-                errorEl.innerText = error.code === 'auth/email-already-in-use' 
-                    ? "Tên đăng nhập/Email này đã tồn tại!" 
-                    : "Lỗi: " + error.message;
+                showToast("Tạo tài khoản thành công!", "success");
+            } catch (err) {
+                console.error(err);
+                errorEl.innerText = err.code === 'auth/email-already-in-use' ? "Email này đã tồn tại." : "Lỗi: " + err.message;
                 errorEl.classList.remove('hidden');
             } finally {
-                btn.innerText = originalText;
+                btn.innerText = orig;
                 btn.disabled = false;
             }
         };
 
-        // Kích hoạt load dữ liệu khi vào trang (Guest Mode)
+        // Listeners for filters
+        document.getElementById('searchInput')?.addEventListener('input', renderTasks);
+        document.getElementById('filterStatus')?.addEventListener('change', renderTasks);
+        document.getElementById('filterArea')?.addEventListener('change', renderTasks);
+        document.getElementById('filterPriority')?.addEventListener('change', renderTasks);
+
+        // App Initializer
         window.onload = () => {
             showLoader(true);
+            updateDateDisplay();
             loadTasksData();
-        }
+        };
     </script>
 </body>
 </html>

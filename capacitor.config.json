@@ -1,0 +1,12 @@
+{
+  "appId": "vn.edu.nsg.baotri",
+  "appName": "Bảo Trì NSG",
+  "webDir": ".",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": true
+  }
+}
