@@ -20,8 +20,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- SheetJS (XLSX) for Exporting Excel Reports -->
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
     <script>
         tailwind.config = {
@@ -1880,12 +1878,29 @@
             });
         };
 
-        // Export to Excel (SheetJS)
-        window.exportToExcel = () => {
+        // Export to Excel (SheetJS on demand)
+        window.exportToExcel = async () => {
             const list = getFilteredTasks();
             if (list.length === 0) {
                 showToast("Không có dữ liệu để xuất Excel!", "warning");
                 return;
+            }
+
+            // Lazy load SheetJS chỉ khi người dùng bấm xuất Excel
+            if (typeof XLSX === 'undefined') {
+                showToast("Đang chuẩn bị file Excel...", "info");
+                try {
+                    await new Promise((resolve, reject) => {
+                        const s = document.createElement('script');
+                        s.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+                        s.onload = resolve;
+                        s.onerror = reject;
+                        document.head.appendChild(s);
+                    });
+                } catch (e) {
+                    showToast("Không thể tải module Excel: " + e.message, "error");
+                    return;
+                }
             }
 
             const exportData = list.map((t, idx) => ({
@@ -2052,9 +2067,9 @@
 
         // App Initializer
         window.onload = () => {
-            showLoader(true);
             updateDateDisplay();
             loadTasksData();
+            setTimeout(() => showLoader(false), 400);
         };
     </script>
 </body>

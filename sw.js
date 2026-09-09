@@ -39,11 +39,17 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Network-first cho trang chính để luôn nhận giao diện mới nhất nếu có mạng
+  // Stale-while-revalidate cho trang chính (Mở app tức thì dưới 0.2s từ bộ nhớ đệm)
   if (event.request.mode === 'navigate') {
     event.respondWith(
-      fetch(event.request).catch(() => {
-        return caches.match('./index.html');
+      caches.match('./index.html').then((cached) => {
+        const fetchPromise = fetch(event.request).then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            caches.open(CACHE_NAME).then((cache) => cache.put('./index.html', networkResponse.clone()));
+          }
+          return networkResponse;
+        }).catch(() => cached);
+        return cached || fetchPromise;
       })
     );
     return;
