@@ -1,5 +1,5 @@
 // Service Worker cho Ứng dụng Bảo Trì NSG
-const CACHE_NAME = 'baotri-nsg-v2.1.0';
+const CACHE_NAME = 'baotri-nsg-v2.3.0';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -30,7 +30,7 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Xử lý nạp tài nguyên: Stale-While-Revalidate cho static assets
+// Xử lý nạp tài nguyên
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
@@ -39,17 +39,17 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Stale-while-revalidate cho trang chính (Mở app tức thì dưới 0.2s từ bộ nhớ đệm)
+  // Network-First cho trang chính: luôn lấy code mới nhất từ server, fallback cache khi offline
   if (event.request.mode === 'navigate') {
     event.respondWith(
-      caches.match('./index.html').then((cached) => {
-        const fetchPromise = fetch(event.request).then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200) {
-            caches.open(CACHE_NAME).then((cache) => cache.put('./index.html', networkResponse.clone()));
-          }
-          return networkResponse;
-        }).catch(() => cached);
-        return cached || fetchPromise;
+      fetch(event.request).then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200) {
+          const clone = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put('./index.html', clone));
+        }
+        return networkResponse;
+      }).catch(() => {
+        return caches.match('./index.html');
       })
     );
     return;

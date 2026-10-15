@@ -81,9 +81,17 @@
         }
 
         /* Print formatting */
+        /* Print formatting */
         @media print {
-            header, .no-print, #bottomNav, #globalActionButtons {
+            header, .no-print, #bottomNav, #globalActionButtons, #loginModal, #taskModal, #createUserModal, #imagePreviewModal, #confirmModal, #pwaGuideModal, #cleaningModal, #printCleaningModal {
                 display: none !important;
+            }
+            body.printing-cleaning-sheet #appContainer {
+                display: none !important;
+            }
+            body.printing-cleaning-sheet #printCleaningSheetDirectArea {
+                display: block !important;
+                padding: 10px !important;
             }
             main {
                 padding: 0 !important;
@@ -171,6 +179,11 @@
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
                         Danh Sách Công Việc
                         <span id="taskCountBadge" class="bg-blue-100 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded-full">0</span>
+                    </button>
+                    <button onclick="switchTab('cleaning')" id="tab-cleaning" class="py-3 text-sm font-medium text-slate-600 hover:text-slate-900 border-b-2 border-transparent hover:border-slate-300 focus:outline-none transition-colors flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                        Phiếu Kiểm Tra Tạp Vụ
+                        <span id="cleaningCountBadge" class="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded-full">0</span>
                     </button>
                     <button onclick="switchTab('analytics')" id="tab-analytics" class="py-3 text-sm font-medium text-slate-600 hover:text-slate-900 border-b-2 border-transparent hover:border-slate-300 focus:outline-none transition-colors flex items-center gap-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
@@ -326,17 +339,86 @@
                                 <img src="./icons/logo.png" alt="Logo Nam Sài Gòn" class="w-full h-full object-contain">
                             </div>
                             <div>
-                                <h4 class="font-bold text-base">Hệ Thống Phân Công Bảo Trì Điện Tử</h4>
-                                <p class="text-xs text-blue-100 mt-0.5">Cập nhật kết quả sửa chữa, đính kèm hình ảnh nghiệm thu trực tuyến trên điện thoại và máy tính.</p>
+                                <h4 class="font-bold text-base">Hệ Thống Phân Công Quản Trị Điện Tử</h4>
+                                <p class="text-xs text-blue-100 mt-0.5">Quản lý giao việc sửa chữa CSVC & kiểm tra chất lượng vệ sinh tạp vụ toàn trường.</p>
                             </div>
                         </div>
-                        <div class="flex items-center gap-2 w-full sm:w-auto">
-                            <button onclick="switchTab('tasks')" class="w-full sm:w-auto bg-white text-blue-700 hover:bg-blue-50 px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm">
-                                Xem danh sách việc
+                        <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
+                            <button onclick="switchTab('tasks')" class="bg-white/10 hover:bg-white/20 text-white border border-white/20 px-3.5 py-2 rounded-xl text-xs font-bold transition-all shadow-sm">
+                                🔧 Việc Bảo Trì
                             </button>
-                            <button id="btnCreateTaskQuick" onclick="openTaskModal()" class="hidden w-full sm:w-auto bg-blue-500 hover:bg-blue-400 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm">
-                                + Giao việc mới
+                            <button onclick="switchTab('cleaning')" class="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-200 border border-emerald-400/30 px-3.5 py-2 rounded-xl text-xs font-bold transition-all shadow-sm">
+                                🧹 Việc Tạp Vụ
                             </button>
+                            <button id="btnCreateTaskQuick" onclick="openTaskModal()" class="bg-blue-500 hover:bg-blue-400 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                                <span>+ Giao Việc Sửa Chữa</span>
+                            </button>
+                            <button id="btnAssignCleanQuick" onclick="openAssignCleaningModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                                <span>+ Giao Việc Tạp Vụ</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- WIDGET TIẾN ĐỘ VỆ SINH & TẠP VỤ TRÊN DASHBOARD -->
+                    <div class="bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-slate-200/80 space-y-4">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-lg shrink-0">
+                                    🧹
+                                </div>
+                                <div>
+                                    <h3 class="font-extrabold text-slate-800 text-sm sm:text-base flex items-center gap-2">
+                                        <span>Tiến Độ Kiểm Tra Vệ Sinh & Tạp Vụ (Trong Ngày)</span>
+                                        <span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full">8 Mẫu NSG</span>
+                                    </h3>
+                                    <p class="text-xs text-slate-500 mt-0.5">Theo dõi chất lượng vệ sinh sân trường, văn phòng, hành lang, NVS và ca tối</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button onclick="switchTab('cleaning')" class="bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1 shadow-sm">
+                                    <span>Xem chi tiết ➔</span>
+                                </button>
+                                <button id="btnAssignCleanWidget" onclick="openAssignCleaningModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm hover:shadow">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                                    <span>Giao Việc Tạp Vụ</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 4 mini stats for cleaning on Dashboard -->
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            <div class="bg-slate-50 rounded-xl p-3 border border-slate-100">
+                                <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Phiếu hôm nay</span>
+                                <span id="dashCleanTotal" class="text-xl sm:text-2xl font-extrabold text-slate-800 mt-0.5 block">0</span>
+                                <span class="text-[10px] text-slate-400">Đã phân công</span>
+                            </div>
+                            <div class="bg-emerald-50/60 rounded-xl p-3 border border-emerald-100">
+                                <span class="text-[10px] font-bold text-emerald-700 uppercase tracking-wider block">Đạt chuẩn 100%</span>
+                                <span id="dashCleanPassed" class="text-xl sm:text-2xl font-extrabold text-emerald-700 mt-0.5 block">0</span>
+                                <span class="text-[10px] text-emerald-600/80">Không có lỗi</span>
+                            </div>
+                            <div class="bg-rose-50/60 rounded-xl p-3 border border-rose-100">
+                                <span class="text-[10px] font-bold text-rose-700 uppercase tracking-wider block">Cần khắc phục</span>
+                                <span id="dashCleanFailed" class="text-xl sm:text-2xl font-extrabold text-rose-700 mt-0.5 block">0</span>
+                                <span class="text-[10px] text-rose-600/80">Có tiêu chí lỗi</span>
+                            </div>
+                            <div class="bg-indigo-50/60 rounded-xl p-3 border border-indigo-100">
+                                <span class="text-[10px] font-bold text-indigo-700 uppercase tracking-wider block">Tỷ lệ đạt chuẩn</span>
+                                <span id="dashCleanPercent" class="text-xl sm:text-2xl font-extrabold text-indigo-700 mt-0.5 block">100%</span>
+                                <span class="text-[10px] text-indigo-600/80">Đánh giá chất lượng</span>
+                            </div>
+                        </div>
+
+                        <!-- Danh sách phiếu kiểm tra nhanh trong ngày -->
+                        <div class="pt-2">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs font-bold text-slate-700 uppercase tracking-wider block">Các Việc Vệ Sinh Phân Công Trong Ngày:</span>
+                            </div>
+                            <div id="dashCleaningQuickList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                                <!-- Rendered dynamically by JS -->
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -345,45 +427,54 @@
                 <div id="view-tasks" class="hidden flex flex-col space-y-4">
                     
                     <!-- Search, Filters & Action Tools -->
-                    <div class="bg-white p-3 sm:p-4 rounded-2xl shadow-sm border border-slate-200/80 flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-3">
+                    <div class="bg-white p-3 sm:p-4 rounded-2xl shadow-sm border border-slate-200/80 flex flex-col space-y-3">
                         
-                        <!-- Search & Status Filter -->
-                        <div class="flex flex-wrap items-center gap-2.5 flex-1">
-                            
-                            <!-- Search box -->
-                            <div class="relative flex-1 min-w-[220px]">
-                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                        <!-- Top Row: Search & Filters & Right Actions -->
+                        <div class="flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-3">
+                            <div class="flex flex-wrap items-center gap-2.5 flex-1">
+                                
+                                <!-- Search box -->
+                                <div class="relative flex-1 min-w-[200px]">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                                    </div>
+                                    <input type="text" id="searchInput" placeholder="Tìm tên nhân sự, nội dung, đơn vị..." class="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xs sm:text-sm bg-slate-50 transition-all outline-none">
                                 </div>
-                                <input type="text" id="searchInput" placeholder="Tìm nội dung, người phụ trách, đơn vị..." class="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xs sm:text-sm bg-slate-50 transition-all outline-none">
+
+                                <!-- Filter: Person / Assignee (Người phụ trách - Chỉ Quản Lý) -->
+                                <div id="filterAssigneeContainer" class="flex items-center gap-1.5 hidden">
+                                    <span class="text-xs font-bold text-slate-500 whitespace-nowrap hidden sm:inline">👤 Người làm:</span>
+                                    <select id="filterAssignee" class="px-3 py-2 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold bg-white text-slate-700 cursor-pointer outline-none focus:ring-2 focus:ring-blue-500 max-w-[190px] truncate">
+                                        <option value="all">Tất cả người phụ trách</option>
+                                    </select>
+                                </div>
+
+                                <!-- Filter: Status -->
+                                <select id="filterStatus" class="px-3 py-2 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold bg-white text-slate-700 cursor-pointer outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="all">Tất cả trạng thái</option>
+                                    <option value="Chưa Thực Hiện">Chưa Thực Hiện</option>
+                                    <option value="Đang Thực Hiện">Đang Thực Hiện</option>
+                                    <option value="Hoàn Thành">Hoàn Thành</option>
+                                </select>
+
+                                <!-- Filter: Area (Khu vực) -->
+                                <select id="filterArea" class="px-3 py-2 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold bg-white text-slate-700 cursor-pointer outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="all">Tất cả khu vực</option>
+                                    <option value="Khu A">Khu A</option>
+                                    <option value="Khu B">Khu B</option>
+                                    <option value="Khu C">Khu C</option>
+                                    <option value="Khu D">Khu D</option>
+                                    <option value="PHÂN HIỆU">PHÂN HIỆU</option>
+                                </select>
+
+                                <!-- Filter: Priority -->
+                                <select id="filterPriority" class="px-3 py-2 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold bg-white text-slate-700 cursor-pointer outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="all">Mọi ưu tiên</option>
+                                    <option value="Khẩn cấp">Khẩn cấp 🔴</option>
+                                    <option value="Cao">Ưu tiên Cao 🟠</option>
+                                    <option value="Bình thường">Bình thường 🟢</option>
+                                </select>
                             </div>
-
-                            <!-- Filter: Status -->
-                            <select id="filterStatus" class="px-3 py-2 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold bg-white text-slate-700 cursor-pointer outline-none focus:ring-2 focus:ring-blue-500">
-                                <option value="all">Tất cả trạng thái</option>
-                                <option value="Chưa Thực Hiện">Chưa Thực Hiện</option>
-                                <option value="Đang Thực Hiện">Đang Thực Hiện</option>
-                                <option value="Hoàn Thành">Hoàn Thành</option>
-                            </select>
-
-                            <!-- Filter: Area (Khu vực) -->
-                            <select id="filterArea" class="px-3 py-2 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold bg-white text-slate-700 cursor-pointer outline-none focus:ring-2 focus:ring-blue-500">
-                                <option value="all">Tất cả khu vực</option>
-                                <option value="Khu A">Khu A</option>
-                                <option value="Khu B">Khu B</option>
-                                <option value="Khu C">Khu C</option>
-                                <option value="Khu D">Khu D</option>
-                                <option value="PHÂN HIỆU">PHÂN HIỆU</option>
-                            </select>
-
-                            <!-- Filter: Priority -->
-                            <select id="filterPriority" class="px-3 py-2 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold bg-white text-slate-700 cursor-pointer outline-none focus:ring-2 focus:ring-blue-500">
-                                <option value="all">Mọi ưu tiên</option>
-                                <option value="Khẩn cấp">Khẩn cấp 🔴</option>
-                                <option value="Cao">Ưu tiên Cao 🟠</option>
-                                <option value="Bình thường">Bình thường 🟢</option>
-                            </select>
-                        </div>
 
                         <!-- Right Actions (Create, Export Excel, View Mode Toggle) -->
                         <div class="flex items-center gap-2 justify-end shrink-0">
@@ -411,13 +502,31 @@
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
                             </button>
 
-                            <!-- Button Giao Việc (Manager / Admin only) -->
-                            <button id="btnCreateTask" onclick="openTaskModal()" class="hidden bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm hover:shadow">
+                            <!-- Button Giao Việc Bảo Trì -->
+                            <button id="btnCreateTask" onclick="openTaskModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm hover:shadow">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-                                <span>Giao Việc</span>
+                                <span>Giao Việc Sửa Chữa</span>
+                            </button>
+
+                            <!-- Button Giao Việc Tạp Vụ -->
+                            <button onclick="openAssignCleaningModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm hover:shadow">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                                <span>Giao Việc Tạp Vụ</span>
                             </button>
                         </div>
                     </div>
+
+                    <!-- Row 2: Quick Filter Chips by Assignee Name (Chỉ Quản Lý) -->
+                    <div id="taskAssigneeChipsRow" class="flex items-center gap-2 pt-2 border-t border-slate-100 overflow-x-auto no-scrollbar hidden">
+                        <span class="text-xs font-bold text-slate-500 whitespace-nowrap flex items-center gap-1">
+                            <svg class="w-3.5 h-3.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                            Lọc nhanh theo tên:
+                        </span>
+                        <div id="taskAssigneeQuickChips" class="flex items-center gap-1.5 flex-nowrap">
+                            <!-- Chips dynamically generated -->
+                        </div>
+                    </div>
+                </div>
 
                     <!-- Tasks Presentation: TABLE VIEW (Default) -->
                     <div id="tasksTableView" class="bg-white rounded-2xl shadow-sm overflow-hidden border border-slate-200/80 flex flex-col">
@@ -456,6 +565,263 @@
                         <h4 class="text-base font-bold text-slate-800">Không tìm thấy công việc nào</h4>
                         <p class="text-xs text-slate-500 mt-1 max-w-sm">Không có dữ liệu phù hợp với ngày được chọn hoặc bộ lọc hiện tại. Thử chọn ngày khác hoặc chuyển sang chế độ "Tất cả".</p>
                     </div>
+                </div>
+
+                <!-- VIEW: CLEANING (PHIẾU KIỂM TRA CÔNG VIỆC VỆ SINH / TẠP VỤ) -->
+                <div id="view-cleaning" class="hidden flex flex-col space-y-4">
+                    
+                    <!-- KPI Banner / Summary for Cleaning Inspections -->
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                        <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200/80 flex items-center justify-between">
+                            <div>
+                                <span class="text-[11px] font-bold text-slate-500 uppercase">Tổng lượt kiểm tra</span>
+                                <p id="cleanStatTotal" class="text-2xl sm:text-3xl font-extrabold text-slate-800 mt-1">0</p>
+                                <span class="text-[10px] text-slate-400">Phiếu đánh giá</span>
+                            </div>
+                            <div class="p-3 bg-blue-50 text-blue-600 rounded-2xl">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200/80 flex items-center justify-between">
+                            <div>
+                                <span class="text-[11px] font-bold text-emerald-600 uppercase">Đạt chuẩn 100%</span>
+                                <p id="cleanStatPassed" class="text-2xl sm:text-3xl font-extrabold text-emerald-600 mt-1">0</p>
+                                <span class="text-[10px] text-slate-400">Không có lỗi</span>
+                            </div>
+                            <div class="p-3 bg-emerald-50 text-emerald-600 rounded-2xl">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200/80 flex items-center justify-between">
+                            <div>
+                                <span class="text-[11px] font-bold text-rose-600 uppercase">Cần nhắc nhở</span>
+                                <p id="cleanStatFailed" class="text-2xl sm:text-3xl font-extrabold text-rose-600 mt-1">0</p>
+                                <span class="text-[10px] text-slate-400">Có mục không đạt</span>
+                            </div>
+                            <div class="p-3 bg-rose-50 text-rose-600 rounded-2xl">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200/80 flex items-center justify-between">
+                            <div>
+                                <span class="text-[11px] font-bold text-indigo-600 uppercase">Tỷ lệ đạt chuẩn</span>
+                                <p id="cleanStatPercent" class="text-2xl sm:text-3xl font-extrabold text-indigo-600 mt-1">100%</p>
+                                <span class="text-[10px] text-slate-400">Chất lượng vệ sinh</span>
+                            </div>
+                            <div class="p-3 bg-indigo-50 text-indigo-600 rounded-2xl">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- BẢNG ĐÁNH GIÁ CÔNG VIỆC THỰC TẾ & TỐI ƯU (KPI PERFORMANCE PANEL) -->
+                    <div id="cleaningPerformancePanel" class="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 rounded-2xl p-4 sm:p-5 text-white shadow-md border border-slate-800 flex flex-col gap-4">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/10 pb-3">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-blue-500/20 text-blue-400 border border-blue-400/30 flex items-center justify-center text-lg shrink-0">
+                                    📊
+                                </div>
+                                <div>
+                                    <h3 class="text-sm sm:text-base font-extrabold tracking-tight flex items-center gap-2">
+                                        <span>Bảng Đánh Giá Hiệu Suất Công Việc Thực Tế</span>
+                                        <span id="kpiTargetBadge" class="bg-blue-500/20 text-blue-300 border border-blue-400/30 text-[10px] px-2 py-0.5 rounded-full font-bold">Toàn Đội Tạp Vụ</span>
+                                    </h3>
+                                    <p class="text-xs text-slate-300 mt-0.5">Thống kê theo dữ liệu phân công & kết quả nghiệm thu thực tế theo người được giao / quản lý</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2 shrink-0">
+                                <span id="kpiRatingBadge" class="px-3 py-1 rounded-xl text-xs font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-400/40">
+                                    🌟 Xếp Loại: Xuất Sắc (100%)
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- 4 mini stats inside Performance Panel -->
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            <div class="bg-white/5 rounded-xl p-3 border border-white/10">
+                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Người được giao</span>
+                                <span id="kpiStaffName" class="text-sm font-bold text-white mt-1 block truncate">Tất cả nhân viên</span>
+                            </div>
+                            <div class="bg-white/5 rounded-xl p-3 border border-white/10">
+                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Quản lý giao việc</span>
+                                <span id="kpiManagerName" class="text-sm font-bold text-white mt-1 block truncate">Tất cả quản lý</span>
+                            </div>
+                            <div class="bg-white/5 rounded-xl p-3 border border-white/10">
+                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Tỷ lệ hoàn thành Đạt</span>
+                                <span id="kpiPassedRatio" class="text-sm font-extrabold text-emerald-400 mt-1 block">0/0 Phiếu (100%)</span>
+                            </div>
+                            <div class="bg-white/5 rounded-xl p-3 border border-white/10">
+                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Tiêu chí vi phạm / lỗi</span>
+                                <span id="kpiFailedCount" class="text-sm font-extrabold text-rose-400 mt-1 block">0 lỗi ghi nhận</span>
+                            </div>
+                        </div>
+
+                        <!-- Optimization suggestions based on issues -->
+                        <div id="kpiSuggestionsBox" class="text-xs text-slate-300 bg-white/5 p-3 rounded-xl border border-white/10 flex items-start gap-2">
+                            <span class="text-base shrink-0">💡</span>
+                            <div id="kpiSuggestionsText" class="flex-1 leading-relaxed">
+                                Chưa phát hiện lỗi vi phạm nào. Công tác vệ sinh đạt chuẩn chất lượng theo quy định NSG.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Search, Filters & Action Tools for Cleaning -->
+                    <div class="bg-white p-3 sm:p-4 rounded-2xl shadow-sm border border-slate-200/80 flex flex-col space-y-3">
+                        
+                        <!-- Row 1: Search & Dropdown Filters -->
+                        <div class="flex flex-wrap items-center gap-2.5">
+                            
+                            <!-- Search box -->
+                            <div class="relative flex-1 min-w-[180px]">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                                </div>
+                                <input type="text" id="cleaningSearchInput" placeholder="Tìm tên phiếu, khu vực, lỗi..." class="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-xs sm:text-sm bg-slate-50 transition-all outline-none">
+                            </div>
+
+                            <!-- Filter: Staff (Người được giao việc - Chỉ Quản Lý) -->
+                            <div id="filterCleaningStaffContainer" class="flex items-center gap-1.5 hidden">
+                                <span class="text-xs font-bold text-slate-500 whitespace-nowrap hidden sm:inline">👤 Người làm:</span>
+                                <select id="filterCleaningStaff" class="px-3 py-2 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold bg-white text-slate-700 cursor-pointer outline-none focus:ring-2 focus:ring-emerald-500 max-w-[180px] truncate">
+                                    <option value="all">Tất cả người được giao</option>
+                                </select>
+                            </div>
+
+                            <!-- Filter: Manager (Quản lý giao việc - Chỉ Quản Lý) -->
+                            <div id="filterCleaningManagerContainer" class="flex items-center gap-1.5 hidden">
+                                <span class="text-xs font-bold text-slate-500 whitespace-nowrap hidden sm:inline">👔 Người giao:</span>
+                                <select id="filterCleaningManager" class="px-3 py-2 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold bg-white text-slate-700 cursor-pointer outline-none focus:ring-2 focus:ring-emerald-500 max-w-[180px] truncate">
+                                    <option value="all">Tất cả quản lý giao việc</option>
+                                </select>
+                            </div>
+
+                            <!-- Filter: Sheet Type (1 - 8) -->
+                            <select id="filterCleaningSheetType" class="px-3 py-2 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold bg-white text-slate-700 cursor-pointer outline-none focus:ring-2 focus:ring-emerald-500 max-w-[190px] truncate">
+                                <option value="all">Tất cả 8 mẫu phiếu</option>
+                                <option value="san_truong">1. Sân trường & Ngoại cảnh</option>
+                                <option value="van_phong">2. Văn phòng</option>
+                                <option value="hanh_lang">3. Hành lang và Cầu thang</option>
+                                <option value="nha_ve_sinh">4. Nhà vệ sinh (NVS)</option>
+                                <option value="rac_thai">5. Thu gom và Xử lý rác</option>
+                                <option value="ca_toi">6. Ca tối (Thứ 3 - 5 - 7)</option>
+                                <option value="phong_hoc">7. Phòng học lý thuyết</option>
+                                <option value="hoi_truong">8. Hội trường (A, B, C & A1.22)</option>
+                            </select>
+
+                            <!-- Filter: Evaluation Result -->
+                            <select id="filterCleaningResult" class="px-3 py-2 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold bg-white text-slate-700 cursor-pointer outline-none focus:ring-2 focus:ring-emerald-500">
+                                <option value="all">Mọi kết quả</option>
+                                <option value="passed">Đạt chuẩn 100% 🟢</option>
+                                <option value="failed">Có lỗi không đạt 🔴</option>
+                            </select>
+                        </div>
+
+                        <!-- Quick Filter Chips for Cleaning Staff (Chỉ Quản Lý) -->
+                        <div id="cleaningStaffChipsRow" class="flex items-center gap-2 pt-2 border-t border-slate-100 overflow-x-auto no-scrollbar hidden">
+                            <span class="text-xs font-bold text-slate-500 whitespace-nowrap flex items-center gap-1">
+                                <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                                Lọc theo tên tạp vụ:
+                            </span>
+                            <div id="cleaningStaffQuickChips" class="flex items-center gap-1.5 flex-nowrap">
+                                <!-- Chips dynamically inserted here -->
+                            </div>
+                        </div>
+
+                        <!-- Row 2: Right Actions: Giao việc mới, In, Xuất Excel, View Mode -->
+                        <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100">
+                            
+                            <!-- Toggle View Mode: Card / Table -->
+                            <div class="flex items-center gap-2">
+                                <div class="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
+                                    <button onclick="setCleaningViewMode('card')" id="cleanViewCardBtn" class="p-1.5 rounded-lg bg-white shadow-sm text-emerald-700 flex items-center gap-1.5 px-2.5 transition-all" title="Dạng Thẻ Đánh Giá">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+                                        <span class="text-xs font-bold hidden sm:inline">Dạng Thẻ</span>
+                                    </button>
+                                    <button onclick="setCleaningViewMode('table')" id="cleanViewTableBtn" class="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 flex items-center gap-1.5 px-2.5 transition-all" title="Dạng Bảng">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                                        <span class="text-xs font-bold hidden sm:inline">Dạng Bảng</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center gap-2">
+                                <!-- Export Cleaning to Excel -->
+                                <button onclick="exportCleaningToExcel()" class="bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm" title="Xuất báo cáo Excel đánh giá vệ sinh">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                    <span class="hidden sm:inline">Xuất Excel</span>
+                                </button>
+
+                                <!-- In Mẫu Phiếu Trắng hoặc Mẫu Hiện Tại -->
+                                <button onclick="openPrintCleaningModal()" class="bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200 px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm" title="In mẫu phiếu kiểm tra vệ sinh">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                                    <span class="hidden sm:inline">In Mẫu Phiếu</span>
+                                </button>
+
+                                <!-- Button Giao Việc Cho Tạp Vụ -->
+                                <button id="btnAssignCleanTab" onclick="openAssignCleaningModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm hover:shadow">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                                    <span>Giao Việc Cho Tạp Vụ</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Template Filter Pills (Scrollable horizontally) -->
+                    <div class="flex items-center gap-2 overflow-x-auto pb-1 text-xs font-medium no-scrollbar">
+                        <button onclick="quickFilterSheetType('all')" id="sheetPill-all" class="px-3 py-1.5 rounded-full bg-emerald-600 text-white font-bold whitespace-nowrap shadow-sm">Tất cả mẫu</button>
+                        <button onclick="quickFilterSheetType('san_truong')" id="sheetPill-san_truong" class="px-3 py-1.5 rounded-full bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 whitespace-nowrap shadow-sm">1. Sân trường & Ngoại cảnh</button>
+                        <button onclick="quickFilterSheetType('van_phong')" id="sheetPill-van_phong" class="px-3 py-1.5 rounded-full bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 whitespace-nowrap shadow-sm">2. Văn phòng</button>
+                        <button onclick="quickFilterSheetType('hanh_lang')" id="sheetPill-hanh_lang" class="px-3 py-1.5 rounded-full bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 whitespace-nowrap shadow-sm">3. Hành lang & Cầu thang</button>
+                        <button onclick="quickFilterSheetType('nha_ve_sinh')" id="sheetPill-nha_ve_sinh" class="px-3 py-1.5 rounded-full bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 whitespace-nowrap shadow-sm">4. Nhà vệ sinh (NVS)</button>
+                        <button onclick="quickFilterSheetType('rac_thai')" id="sheetPill-rac_thai" class="px-3 py-1.5 rounded-full bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 whitespace-nowrap shadow-sm">5. Thu gom rác</button>
+                        <button onclick="quickFilterSheetType('ca_toi')" id="sheetPill-ca_toi" class="px-3 py-1.5 rounded-full bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 whitespace-nowrap shadow-sm">6. Ca tối (3-5-7)</button>
+                        <button onclick="quickFilterSheetType('phong_hoc')" id="sheetPill-phong_hoc" class="px-3 py-1.5 rounded-full bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 whitespace-nowrap shadow-sm">7. Phòng học lý thuyết</button>
+                        <button onclick="quickFilterSheetType('hoi_truong')" id="sheetPill-hoi_truong" class="px-3 py-1.5 rounded-full bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 whitespace-nowrap shadow-sm">8. Hội trường</button>
+                    </div>
+
+                    <!-- Cleaning Checks Presentation: CARDS VIEW (Default) -->
+                    <div id="cleaningCardsView" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+                        <!-- Rendered by JS -->
+                    </div>
+
+                    <!-- Cleaning Checks Presentation: TABLE VIEW -->
+                    <div id="cleaningTableView" class="hidden bg-white rounded-2xl shadow-sm overflow-hidden border border-slate-200/80 flex flex-col">
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full text-xs sm:text-sm">
+                                <thead class="bg-slate-50 border-b border-slate-200 sticky top-0 z-10">
+                                    <tr>
+                                        <th scope="col" class="px-3 py-3 text-center font-bold text-slate-500 uppercase tracking-wider w-10">STT</th>
+                                        <th scope="col" class="px-3 py-3 text-left font-bold text-slate-500 uppercase tracking-wider">Thời gian</th>
+                                        <th scope="col" class="px-3 py-3 text-left font-bold text-slate-500 uppercase tracking-wider">Loại Phiếu & Khu vực</th>
+                                        <th scope="col" class="px-3 py-3 text-left font-bold text-slate-500 uppercase tracking-wider">Nhân viên & Giám sát</th>
+                                        <th scope="col" class="px-4 py-3 text-left font-bold text-slate-500 uppercase tracking-wider min-w-[200px]">Chi tiết đánh giá tiêu chí</th>
+                                        <th scope="col" class="px-3 py-3 text-center font-bold text-slate-500 uppercase tracking-wider">Kết quả</th>
+                                        <th scope="col" class="px-3 py-3 text-right font-bold text-slate-500 uppercase tracking-wider w-28">Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="cleaningTableBody" class="divide-y divide-slate-100 bg-white">
+                                    <!-- Rendered by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Empty State for Cleaning -->
+                    <div id="emptyCleaningMessage" class="hidden bg-white rounded-2xl p-12 text-center border border-slate-200/80 flex flex-col items-center justify-center">
+                        <div class="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mb-3">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                        </div>
+                        <h4 class="text-base font-bold text-slate-800">Chưa có phiếu kiểm tra vệ sinh nào</h4>
+                        <p class="text-xs text-slate-500 mt-1 max-w-sm">Chưa có đánh giá nào cho ngày đang chọn hoặc bộ lọc hiện tại. Bấm nút bên dưới để chấm phiếu mới.</p>
+                        <button id="btnEmptyCleaningCreate" onclick="openCleaningModal()" class="mt-4 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1.5">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                            Lập phiếu kiểm tra ngay
+                        </button>
+                    </div>
+
                 </div>
 
                 <!-- VIEW 3: ANALYTICS (THỐNG KÊ CHI TIẾT THEO KHU VỰC & HẠNG MỤC) -->
@@ -534,6 +900,11 @@
                 <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
                 <span class="text-[10px]">Công việc</span>
                 <span id="mTaskBadge" class="hidden absolute top-1 right-2 w-2 h-2 rounded-full bg-blue-600"></span>
+            </button>
+            <button onclick="switchTab('cleaning')" id="mTab-cleaning" class="flex flex-col items-center py-1.5 px-3 text-slate-500 font-medium transition-all relative">
+                <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                <span class="text-[10px]">Tạp vụ</span>
+                <span id="mCleaningBadge" class="hidden absolute top-1 right-2 w-2 h-2 rounded-full bg-emerald-600"></span>
             </button>
             <button onclick="switchTab('analytics')" id="mTab-analytics" class="flex flex-col items-center py-1.5 px-3 text-slate-500 font-medium transition-all">
                 <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
@@ -879,6 +1250,224 @@
         </div>
     </div>
 
+    <!-- Modal 7: Lập & Chấm Phiếu Kiểm Tra Vệ Sinh / Tạp Vụ -->
+    <div id="cleaningModal" class="fixed inset-0 z-[75] hidden overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen p-3 sm:p-4 text-center">
+            <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="closeCleaningModal()"></div>
+            <div class="inline-block glass-panel rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:max-w-3xl w-full border border-slate-200 relative z-10">
+                
+                <form id="cleaningForm" onsubmit="event.preventDefault(); saveCleaningCheck();">
+                    <input type="hidden" id="cleanCheckId">
+                    
+                    <!-- Header -->
+                    <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-white">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                            </div>
+                            <div>
+                                <h3 class="text-base sm:text-lg font-bold text-slate-900" id="cleanModalTitle">Phiếu Kiểm Tra Vệ Sinh</h3>
+                                <p class="text-xs text-slate-500">Đánh giá chất lượng công việc vệ sinh theo bộ tiêu chuẩn NSG</p>
+                            </div>
+                        </div>
+                        <button type="button" onclick="closeCleaningModal()" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-xl hover:bg-slate-100 transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                    </div>
+                    
+                    <div class="px-6 py-4 max-h-[75vh] overflow-y-auto space-y-4">
+                        
+                        <!-- Banner Trạng thái Phân công & Khóa thông tin -->
+                        <div id="cleanModalNotice" class="p-3.5 rounded-2xl border text-xs font-semibold flex items-center gap-2.5">
+                            <!-- Rendered by JS -->
+                        </div>
+
+                        <!-- 1. Chọn loại phiếu kiểm tra trong 8 mẫu -->
+                        <div class="bg-emerald-50/70 p-4 rounded-2xl border border-emerald-200/80">
+                            <div class="flex items-center justify-between mb-1.5">
+                                <label class="block text-xs font-bold text-emerald-900 uppercase tracking-wider">
+                                    📋 Chọn Mẫu Phiếu Kiểm Tra Vệ Sinh *
+                                </label>
+                                <span id="sheetTypeLockBadge" class="text-[10px] text-slate-500 font-semibold hidden">🔒 Đã cố định</span>
+                            </div>
+                            <select id="cleanSheetTypeSelect" onchange="onCleanSheetTypeChanged(this.value)" class="w-full px-3 py-2.5 text-xs sm:text-sm font-bold border-2 border-emerald-500 rounded-xl bg-white focus:ring-2 focus:ring-emerald-500 outline-none text-slate-800 shadow-sm cursor-pointer disabled:bg-slate-100 disabled:text-slate-600 disabled:cursor-not-allowed">
+                                <option value="san_truong">1. PHIẾU KIỂM TRA VỆ SINH SÂN TRƯỜNG & NGOẠI CẢNH</option>
+                                <option value="van_phong">2. PHIẾU KIỂM TRA VỆ SINH VĂN PHÒNG</option>
+                                <option value="hanh_lang">3. PHIẾU KIỂM TRA VỆ SINH HÀNH LANG VÀ CẦU THANG</option>
+                                <option value="nha_ve_sinh">4. PHIẾU KIỂM TRA VỆ SINH NHÀ VỆ SINH (NVS)</option>
+                                <option value="rac_thai">5. PHIẾU KIỂM TRA THU GOM VÀ XỬ LÝ RÁC THẢI</option>
+                                <option value="ca_toi">6. PHIẾU KIỂM TRA VỆ SINH CA TỐI (THỨ 3 - 5 - 7)</option>
+                                <option value="phong_hoc">7. PHIẾU KIỂM TRA VỆ SINH PHÒNG HỌC LÝ THUYẾT</option>
+                                <option value="hoi_truong">8. PHIẾU KIỂM TRA VỆ SINH HỘI TRƯỜNG (A, B, C & A1.22)</option>
+                            </select>
+                        </div>
+
+                        <!-- 2. Thông tin chung: Tòa nhà, NV, Giám sát, Thời gian -->
+                        <div class="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-sm space-y-3">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1 flex items-center justify-between">
+                                        <span>Tòa nhà / Khu vực kiểm tra *</span>
+                                        <span id="khuVucLockBadge" class="text-[10px] text-slate-400 font-normal hidden">🔒 Khóa</span>
+                                    </label>
+                                    <input type="text" id="cleanKhuVuc" required placeholder="VD: Khu B, NVS Tầng 1..." class="w-full px-3 py-2 text-xs sm:text-sm border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 outline-none font-medium disabled:bg-slate-100 disabled:text-slate-600 disabled:cursor-not-allowed">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1 flex items-center justify-between">
+                                        <span>Nhân viên thực hiện (Tạp vụ) *</span>
+                                        <span id="nhanVienLockBadge" class="text-[10px] text-slate-400 font-normal hidden">🔒 Khóa</span>
+                                    </label>
+                                    <input type="text" id="cleanNhanVien" required placeholder="VD: Nguyễn Thị Chung..." class="w-full px-3 py-2 text-xs sm:text-sm border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 outline-none font-semibold text-slate-800 disabled:bg-slate-100 disabled:text-slate-600 disabled:cursor-not-allowed">
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1 flex items-center justify-between">
+                                        <span>Quản lý giao việc / Giám sát *</span>
+                                        <span id="giamSatLockBadge" class="text-[10px] text-slate-400 font-normal hidden">🔒 Khóa</span>
+                                    </label>
+                                    <input type="text" id="cleanGiamSat" required placeholder="Họ tên người giao / kiểm tra..." class="w-full px-3 py-2 text-xs sm:text-sm border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 outline-none font-medium disabled:bg-slate-100 disabled:text-slate-600 disabled:cursor-not-allowed">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1 flex items-center justify-between">
+                                        <span>Ngày phân công / kiểm tra *</span>
+                                        <span id="ngayLockBadge" class="text-[10px] text-slate-400 font-normal hidden">🔒 Khóa</span>
+                                    </label>
+                                    <input type="date" id="cleanNgay" required class="w-full px-3 py-2 text-xs sm:text-sm border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 outline-none font-medium disabled:bg-slate-100 disabled:text-slate-600 disabled:cursor-not-allowed">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1 flex items-center justify-between">
+                                        <span>Giờ phân công / kiểm tra *</span>
+                                        <span id="gioLockBadge" class="text-[10px] text-slate-400 font-normal hidden">🔒 Khóa</span>
+                                    </label>
+                                    <input type="time" id="cleanGio" required class="w-full px-3 py-2 text-xs sm:text-sm border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 outline-none font-medium disabled:bg-slate-100 disabled:text-slate-600 disabled:cursor-not-allowed">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3. Bảng chấm các tiêu chí công việc -->
+                        <div class="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-sm space-y-3">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-100">
+                                <div>
+                                    <span class="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                                        <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                                        Đánh Giá Từng Tiêu Chí
+                                    </span>
+                                    <p class="text-[11px] text-slate-400">Quy ước: Đạt (✓) | Không đạt (X) | Không làm (\)</p>
+                                </div>
+                                <!-- Nút đánh giá nhanh tất cả Đạt -->
+                                <button type="button" onclick="setAllCriteriaStatus('dat')" class="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-bold transition-all flex items-center gap-1 self-start sm:self-auto shadow-sm">
+                                    <span>⚡ Chấm ĐẠT tất cả (✓)</span>
+                                </button>
+                            </div>
+
+                            <!-- Criteria List Container (Rendered dynamically based on selected sheet type) -->
+                            <div id="criteriaListContainer" class="space-y-2.5">
+                                <!-- Rendered dynamically by JS -->
+                            </div>
+                        </div>
+
+                        <!-- 4. Nhận xét chung, Tỷ lệ đánh giá & Ảnh minh chứng -->
+                        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">Tổng Kết Đánh Giá</span>
+                                <div id="cleanScoreSummary" class="text-xs font-extrabold px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                    0/0 Đạt (100%)
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Nhận xét của Giám sát kiểm tra</label>
+                                <textarea id="cleanNhanXet" rows="2" placeholder="Ghi chú tổng quát về tình hình vệ sinh, nhắc nhở hoặc biểu dương..." class="w-full px-3 py-2 text-xs sm:text-sm border border-slate-200 rounded-xl bg-white focus:ring-2 focus:ring-emerald-500 outline-none"></textarea>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Link ảnh hiện trường / Nghiệm thu (tùy chọn)</label>
+                                <input type="url" id="cleanHinhAnh" placeholder="https://..." class="w-full px-3 py-2 text-xs sm:text-sm border border-slate-200 rounded-xl bg-white focus:ring-2 focus:ring-emerald-500 outline-none">
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Footer Buttons -->
+                    <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex flex-row-reverse gap-3 rounded-b-3xl">
+                        <button type="submit" id="btnSaveCleanCheck" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold rounded-xl transition-all shadow-md shadow-emerald-500/20">
+                            Lưu Phiếu Đánh Giá
+                        </button>
+                        <button type="button" onclick="closeCleaningModal()" class="px-4 py-2.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs sm:text-sm font-semibold rounded-xl transition-all">
+                            Đóng
+                        </button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 8: Xem Trước & In Mẫu Phiếu Kiểm Tra Vệ Sinh (Chuẩn Form PDF) -->
+    <div id="printCleaningModal" class="fixed inset-0 z-[80] hidden overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen p-3 sm:p-4 text-center">
+            <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="closePrintCleaningModal()"></div>
+            <div class="inline-block bg-white rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:max-w-4xl w-full border border-slate-200 relative z-10 p-6">
+                
+                <div class="flex items-center justify-between pb-3 border-b border-slate-200">
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                            <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                            In Mẫu Phiếu Kiểm Tra Vệ Sinh
+                        </h3>
+                        <p class="text-xs text-slate-500">Mẫu biểu chuẩn Trường Cao Đẳng Bách Khoa Nam Sài Gòn</p>
+                    </div>
+                    <button onclick="closePrintCleaningModal()" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-xl hover:bg-slate-100">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+
+                <!-- Print Options Bar -->
+                <div class="my-4 p-3 bg-slate-50 rounded-2xl border border-slate-200 flex flex-wrap items-center justify-between gap-3">
+                    <div class="flex items-center gap-2 flex-1 min-w-[240px]">
+                        <label class="text-xs font-bold text-slate-700 whitespace-nowrap">Chọn Mẫu Phiếu:</label>
+                        <select id="printSheetSelect" onchange="renderPrintPreview(this.value)" class="px-3 py-1.5 text-xs font-semibold border border-slate-200 rounded-xl bg-white outline-none focus:ring-2 focus:ring-emerald-500 flex-1">
+                            <option value="san_truong">1. Sân trường & Ngoại cảnh</option>
+                            <option value="van_phong">2. Văn phòng</option>
+                            <option value="hanh_lang">3. Hành lang và Cầu thang</option>
+                            <option value="nha_ve_sinh">4. Nhà vệ sinh (NVS)</option>
+                            <option value="rac_thai">5. Thu gom và Xử lý rác thải</option>
+                            <option value="ca_toi">6. Ca tối (Thứ 3 - 5 - 7)</option>
+                            <option value="phong_hoc">7. Phòng học lý thuyết</option>
+                            <option value="hoi_truong">8. Hội trường (A, B, C & A1.22)</option>
+                        </select>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <label class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-700 cursor-pointer">
+                            <input type="checkbox" id="printBlankCheckbox" onchange="renderPrintPreview()" class="rounded text-emerald-600 focus:ring-emerald-500">
+                            <span>In mẫu trống (để chấm tay)</span>
+                        </label>
+                        <button onclick="triggerPrintCleaning()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1.5">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                            Bấm In Ngay (Print)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Print Sheet Preview Paper Box -->
+                <div class="max-h-[60vh] overflow-y-auto border border-slate-200 rounded-2xl p-4 sm:p-6 bg-white shadow-inner" id="printSheetPaperContainer">
+                    <!-- Rendered by JS -->
+                </div>
+
+                <div class="mt-4 flex justify-end">
+                    <button type="button" onclick="closePrintCleaningModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl">
+                        Đóng
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden printable container for print output -->
+    <div id="printCleaningSheetDirectArea" class="hidden print-only"></div>
 
     <!-- ==================== FIREBASE & JAVASCRIPT ==================== -->
     <script type="module">
@@ -914,11 +1503,169 @@
         let currentViewMode = 'table'; // 'table' (mặc định) | 'card'
         let deferredPrompt = null;
 
+        // Cleaning Inspection States & 8 Official Templates
+        let cleaningChecks = [];
+        let currentCleaningSheetType = 'all'; // filter
+        let currentCleaningViewMode = 'card'; // 'card' | 'table'
+        let currentCleanModalType = 'san_truong';
+
+        const CLEANING_TEMPLATES = {
+            san_truong: {
+                id: 'san_truong',
+                code: '1',
+                title: '1. PHIẾU KIỂM TRA VỆ SINH SÂN TRƯỜNG & NGOẠI CẢNH',
+                shortTitle: 'Sân trường & Ngoại cảnh',
+                defaultArea: 'Khu B (Từ VP Khoa CNTT-KTĐ đến A 0.32)',
+                defaultStaff: 'Nguyễn Thị Chung',
+                icon: '🌳',
+                criteria: [
+                    { id: 'be_mat_san', name: 'Bề mặt sân, Lối đi', icon: '🧹' },
+                    { id: 'bon_cay', name: 'Bồn cây, Thảm cỏ', icon: '🌿' },
+                    { id: 'bac_tam_cap', name: 'Bậc tam cấp, Lối dốc', icon: '🪜' },
+                    { id: 'thung_rac_ngoai_troi', name: 'Thùng rác ngoài trời', icon: '🗑️' },
+                    { id: 'cong_ranh', name: 'Cống rãnh, Thoát nước', icon: '🌊' },
+                    { id: 'bien_bao', name: 'Biển báo, Bảng tin', icon: '📋' },
+                    { id: 'ghe_da', name: 'Ghế đá, Bàn ghế', icon: '🪑' }
+                ]
+            },
+            van_phong: {
+                id: 'van_phong',
+                code: '2',
+                title: '2. PHIẾU KIỂM TRA VỆ SINH VĂN PHÒNG',
+                shortTitle: 'Văn phòng',
+                defaultArea: 'VP Khoa CNTT-KTĐ & VP Khoa Y Dược',
+                defaultStaff: 'Nguyễn Thị Chung',
+                icon: '🏢',
+                criteria: [
+                    { id: 'san_nha', name: 'Sàn nhà, Góc tường', icon: '🧹' },
+                    { id: 'ban_ghe_lam_viec', name: 'Bàn ghế làm việc', icon: '🪑' },
+                    { id: 'kinh_cua_so', name: 'Kính cửa sổ, Cửa chính', icon: '🚪' },
+                    { id: 'tu_ho_so', name: 'Tủ hồ sơ, Kệ tài liệu', icon: '🗄️' },
+                    { id: 'thiet_bi_dien', name: 'Thiết bị điện, Quạt', icon: '🌀' },
+                    { id: 'thung_rac_vp', name: 'Thùng rác văn phòng', icon: '🗑️' },
+                    { id: 'tuong_tran', name: 'Tường/Trần, Mạng nhện', icon: '🕸️' }
+                ]
+            },
+            hanh_lang: {
+                id: 'hanh_lang',
+                code: '3',
+                title: '3. PHIẾU KIỂM TRA VỆ SINH HÀNH LANG VÀ CẦU THANG',
+                shortTitle: 'Hành lang & Cầu thang',
+                defaultArea: 'Hành lang (Trệt - Tầng 4) & 02 Cầu thang',
+                defaultStaff: 'Nguyễn Thị Chung',
+                icon: '🏢',
+                criteria: [
+                    { id: 'san_hanh_lang', name: 'Sàn hành lang', icon: '🧹' },
+                    { id: 'bac_cau_thang', name: 'Bậc cầu thang', icon: '🪜' },
+                    { id: 'tay_vin', name: 'Tay vịn, Lan can', icon: '🚧' },
+                    { id: 'cua_kinh', name: 'Cửa kính, Cửa ra vào', icon: '🚪' },
+                    { id: 'tuong_tran_den', name: 'Tường/Trần, Đèn', icon: '💡' },
+                    { id: 'thung_rac_hl', name: 'Thùng rác hành lang', icon: '🗑️' },
+                    { id: 'thiet_bi_pccc', name: 'Thiết bị PCCC', icon: '🧯' }
+                ]
+            },
+            nha_ve_sinh: {
+                id: 'nha_ve_sinh',
+                code: '4',
+                title: '4. PHIẾU KIỂM TRA VỆ SINH NHÀ VỆ SINH (NVS)',
+                shortTitle: 'Nhà vệ sinh (NVS)',
+                defaultArea: 'NVS Nam/Nữ (Trệt - Tầng 3) & NVS Khu B',
+                defaultStaff: 'Nguyễn Thị Chung',
+                icon: '🚻',
+                criteria: [
+                    { id: 'san_nvs', name: 'Sàn NVS, Khô ráo', icon: '🧽' },
+                    { id: 'bon_cau_tieu', name: 'Bồn cầu, Bồn tiểu', icon: '🚽' },
+                    { id: 'lavabo_guong', name: 'Lavabo, Gương', icon: '🪞' },
+                    { id: 'voi_nuoc_xa', name: 'Vòi nước, Thiết bị xả', icon: '🚰' },
+                    { id: 'khay_xa_phong', name: 'Khay xà phòng, Giấy', icon: '🧴' },
+                    { id: 'cua_vach_ngan', name: 'Cửa, Vách ngăn', icon: '🚪' },
+                    { id: 'quat_thong_gio', name: 'Quạt thông gió, Mùi hôi', icon: '💨' }
+                ]
+            },
+            rac_thai: {
+                id: 'rac_thai',
+                code: '5',
+                title: '5. PHIẾU KIỂM TRA THU GOM VÀ XỬ LÝ RÁC THẢI',
+                shortTitle: 'Thu gom & Xử lý rác',
+                defaultArea: 'Toàn bộ khu vực phụ trách',
+                defaultStaff: 'Nguyễn Thị Chung',
+                icon: '♻️',
+                criteria: [
+                    { id: 'thu_rac_vp', name: 'Thu rác Văn phòng', icon: '🗑️' },
+                    { id: 'thu_rac_hl', name: 'Thu rác Hành lang', icon: '🗑️' },
+                    { id: 'thu_rac_nvs', name: 'Thu rác Nhà vệ sinh', icon: '🚽' },
+                    { id: 'thay_tui_rac', name: 'Thay túi rác', icon: '🛍️' },
+                    { id: 've_sinh_thung_rac', name: 'Vệ sinh Thùng rác', icon: '🧽' },
+                    { id: 'chuyen_rac_tap_ket', name: 'Chuyển rác tập kết', icon: '🚛' },
+                    { id: 'san_khu_tap_ket', name: 'Sàn khu tập kết', icon: '🧹' }
+                ]
+            },
+            ca_toi: {
+                id: 'ca_toi',
+                code: '6',
+                title: '6. PHIẾU KIỂM TRA VỆ SINH CA TỐI (THỨ 3 - 5 - 7)',
+                shortTitle: 'Vệ sinh Ca tối (3-5-7)',
+                defaultArea: 'Toàn trường (Ca tối)',
+                defaultStaff: 'Nguyễn Thị Chung',
+                icon: '🌙',
+                criteria: [
+                    { id: 'quet_lau_san', name: 'Quét/Lau sàn', icon: '🧹' },
+                    { id: 'do_rac_ca_toi', name: 'Đổ rác ca tối', icon: '🗑️' },
+                    { id: 'ban_ghe_bang', name: 'Bàn ghế, Bảng', icon: '🪑' },
+                    { id: 've_sinh_nvs_ca_toi', name: 'Vệ sinh NVS', icon: '🚽' },
+                    { id: 'kinh_va_cua', name: 'Kính & Cửa', icon: '🚪' },
+                    { id: 'tat_den_thiet_bi', name: 'Tắt đèn, Thiết bị', icon: '💡' },
+                    { id: 'khoa_cua_pccc', name: 'Khóa cửa, PCCC', icon: '🔒' }
+                ]
+            },
+            phong_hoc: {
+                id: 'phong_hoc',
+                code: '7',
+                title: '7. PHIẾU KIỂM TRA VỆ SINH PHÒNG HỌC LÝ THUYẾT',
+                shortTitle: 'Phòng học lý thuyết',
+                defaultArea: 'Các phòng học lý thuyết Khu A, B, C',
+                defaultStaff: 'Nguyễn Thị Chung',
+                icon: '🏫',
+                criteria: [
+                    { id: 'ph_san_nha', name: 'Sàn nhà, Góc tường', icon: '🧹' },
+                    { id: 'ph_ban_gv', name: 'Bàn ghế giáo viên', icon: '🪑' },
+                    { id: 'ph_ban_hs', name: 'Bàn ghế học sinh', icon: '🪑' },
+                    { id: 'ph_bang_viet', name: 'Bảng viết', icon: '📋' },
+                    { id: 'ph_kinh_cua', name: 'Kính cửa sổ, Cửa chính', icon: '🚪' },
+                    { id: 'ph_thiet_bi_dien', name: 'Thiết bị điện, Quạt', icon: '🌀' },
+                    { id: 'ph_thung_rac', name: 'Thùng rác', icon: '🗑️' },
+                    { id: 'ph_tuong_tran', name: 'Tường/Trần, Mạng nhện', icon: '🕸️' }
+                ]
+            },
+            hoi_truong: {
+                id: 'hoi_truong',
+                code: '8',
+                title: '8. PHIẾU KIỂM TRA VỆ SINH HỘI TRƯỜNG (A, B, C & A1.22)',
+                shortTitle: 'Hội trường (A, B, C & A1.22)',
+                defaultArea: 'Hội trường A, B, C & P.A1.22',
+                defaultStaff: 'Nguyễn Thị Chung',
+                icon: '🎭',
+                criteria: [
+                    { id: 'ht_san_nha', name: 'Sàn nhà, Góc tường', icon: '🧹' },
+                    { id: 'ht_bac_tam_cap', name: 'Bậc tam cấp', icon: '🪜' },
+                    { id: 'ht_buc_phat_bieu', name: 'Bục phát biểu', icon: '🎙️' },
+                    { id: 'ht_ban_ghe', name: 'Bàn ghế', icon: '🪑' },
+                    { id: 'ht_kinh_cua', name: 'Kính cửa sổ, Cửa chính', icon: '🚪' },
+                    { id: 'ht_thiet_bi_dien', name: 'Thiết bị điện, Quạt', icon: '🌀' },
+                    { id: 'ht_thung_rac', name: 'Thùng rác', icon: '🗑️' },
+                    { id: 'ht_tuong_tran', name: 'Tường/Trần, Mạng nhện', icon: '🕸️' }
+                ]
+            }
+        };
+
         // Register Service Worker for PWA
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(() => console.log('Bảo Trì NSG: Service Worker đã kích hoạt.'))
+                navigator.serviceWorker.register('./sw.js?v=2.3.0')
+                    .then((reg) => {
+                        if (reg && typeof reg.update === 'function') reg.update();
+                        console.log('Bảo Trì NSG: Service Worker đã kích hoạt (v2.3.0).');
+                    })
                     .catch((err) => console.log('Lỗi Service Worker:', err));
             });
         }
@@ -950,7 +1697,7 @@
         };
 
         // UI Helpers: Toasts
-        window.showToast = (message, type = 'info') => {
+        function showToast(message, type = 'info') {
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
             
@@ -986,7 +1733,8 @@
                 toast.classList.add('opacity-0', 'translate-y-[-10px]');
                 setTimeout(() => toast.remove(), 300);
             }, 3500);
-        };
+        }
+        window.showToast = showToast;
 
         const showLoader = (show) => {
             const el = document.getElementById('globalLoader');
@@ -1001,7 +1749,7 @@
         };
 
         // Confirmation Dialog
-        window.confirmAction = (title, message, callback) => {
+        function confirmAction(title, message, callback) {
             document.getElementById('confirmTitle').innerText = title;
             document.getElementById('confirmMessage').innerText = message;
             document.getElementById('confirmModal').classList.remove('hidden');
@@ -1013,7 +1761,8 @@
                 document.getElementById('confirmModal').classList.add('hidden');
                 callback();
             };
-        };
+        }
+        window.confirmAction = confirmAction;
         window.closeConfirmModal = () => document.getElementById('confirmModal').classList.add('hidden');
 
         // Date Scope & Formats
@@ -1031,6 +1780,7 @@
             document.getElementById('globalDateInput').value = getSelectedDateString();
 
             renderTasks();
+            if (typeof renderCleaningChecks === 'function') renderCleaningChecks();
             updateDashboardStats();
             updateAnalyticsView();
         };
@@ -1069,27 +1819,28 @@
             else scopeLabel.innerText = "Toàn bộ thời gian";
 
             renderTasks();
+            if (typeof renderCleaningChecks === 'function') renderCleaningChecks();
             updateDashboardStats();
             updateAnalyticsView();
         };
 
         // Navigation Tabs (Mobile & Desktop)
         window.switchTab = (tabName) => {
-            const views = ['dashboard', 'tasks', 'analytics', 'users'];
+            const views = ['dashboard', 'tasks', 'cleaning', 'analytics', 'users'];
             views.forEach(v => {
                 document.getElementById(`view-${v}`)?.classList.add('hidden');
                 
                 // Desktop tabs
                 const dTab = document.getElementById(`tab-${v}`);
                 if (dTab) {
-                    dTab.classList.remove('text-blue-600', 'border-blue-600');
+                    dTab.classList.remove('text-blue-600', 'border-blue-600', 'text-emerald-600', 'border-emerald-600');
                     dTab.classList.add('text-slate-600', 'border-transparent');
                 }
 
                 // Mobile bottom tabs
                 const mTab = document.getElementById(`mTab-${v}`);
                 if (mTab) {
-                    mTab.classList.remove('text-blue-600', 'font-bold');
+                    mTab.classList.remove('text-blue-600', 'font-bold', 'text-emerald-600');
                     mTab.classList.add('text-slate-500', 'font-medium');
                 }
             });
@@ -1099,13 +1850,25 @@
             const activeDTab = document.getElementById(`tab-${tabName}`);
             if (activeDTab) {
                 activeDTab.classList.remove('text-slate-600', 'border-transparent');
-                activeDTab.classList.add('text-blue-600', 'border-blue-600');
+                if (tabName === 'cleaning') {
+                    activeDTab.classList.add('text-emerald-600', 'border-emerald-600');
+                } else {
+                    activeDTab.classList.add('text-blue-600', 'border-blue-600');
+                }
             }
 
             const activeMTab = document.getElementById(`mTab-${tabName}`);
             if (activeMTab) {
                 activeMTab.classList.remove('text-slate-500', 'font-medium');
-                activeMTab.classList.add('text-blue-600', 'font-bold');
+                if (tabName === 'cleaning') {
+                    activeMTab.classList.add('text-emerald-600', 'font-bold');
+                } else {
+                    activeMTab.classList.add('text-blue-600', 'font-bold');
+                }
+            }
+
+            if (tabName === 'cleaning' && typeof renderCleaningChecks === 'function') {
+                renderCleaningChecks();
             }
         };
 
@@ -1132,8 +1895,15 @@
         };
 
         // Auth management
-        window.openLoginModal = () => document.getElementById('loginModal').classList.remove('hidden');
-        window.closeLoginModal = () => document.getElementById('loginModal').classList.add('hidden');
+        function openLoginModal() {
+            document.getElementById('loginModal').classList.remove('hidden');
+        }
+        window.openLoginModal = openLoginModal;
+
+        function closeLoginModal() {
+            document.getElementById('loginModal').classList.add('hidden');
+        }
+        window.closeLoginModal = closeLoginModal;
 
         window.handleAuth = async () => {
             const raw = document.getElementById('username').value.trim().toLowerCase();
@@ -1252,30 +2022,57 @@
             setupRoleBasedUI();
         });
 
-        const setupRoleBasedUI = () => {
+        function setupRoleBasedUI() {
             const role = currentUserData?.role || 'guest';
-            const btnCreate = document.getElementById('btnCreateTask');
-            const btnCreateQuick = document.getElementById('btnCreateTaskQuick');
+            const isManager = (role === 'admin' || role === 'truongphong' || role === 'phophong');
+
             const tabUsers = document.getElementById('tab-users');
             const mTabUsers = document.getElementById('mTab-users');
 
-            if (role === 'admin' || role === 'truongphong' || role === 'phophong') {
-                btnCreate.classList.remove('hidden');
-                btnCreateQuick.classList.remove('hidden');
-                if (role === 'admin') {
-                    tabUsers.classList.remove('hidden');
-                    mTabUsers.classList.remove('hidden');
-                } else {
-                    tabUsers.classList.add('hidden');
-                    mTabUsers.classList.add('hidden');
-                }
+            if (role === 'admin') {
+                tabUsers?.classList.remove('hidden');
+                mTabUsers?.classList.remove('hidden');
             } else {
-                btnCreate.classList.add('hidden');
-                btnCreateQuick.classList.add('hidden');
-                tabUsers.classList.add('hidden');
-                mTabUsers.classList.add('hidden');
+                tabUsers?.classList.add('hidden');
+                mTabUsers?.classList.add('hidden');
             }
-        };
+
+            // Giao việc: Chỉ Ban Quản Lý (Admin, Trưởng/Phó Phòng) mới nhìn thấy các nút Giao Việc mới
+            const assignButtons = document.querySelectorAll('#btnAssignCleanQuick, #btnAssignCleanWidget, #btnAssignCleanTab, #btnEmptyCleaningCreate, #btnCreateTask, #btnCreateTaskQuick');
+            assignButtons.forEach(btn => {
+                if (isManager) {
+                    btn.classList.remove('hidden');
+                } else {
+                    btn.classList.add('hidden');
+                }
+            });
+
+            // Bộ lọc theo tên (Người phụ trách, Tạp vụ, Quản lý): Chỉ hiển thị cho Admin, Trưởng/Phó Phòng
+            const nameFilterElements = document.querySelectorAll(
+                '#filterAssigneeContainer, #taskAssigneeChipsRow, #filterCleaningStaffContainer, #filterCleaningManagerContainer, #cleaningStaffChipsRow'
+            );
+            nameFilterElements.forEach(el => {
+                if (isManager) {
+                    el.classList.remove('hidden');
+                } else {
+                    el.classList.add('hidden');
+                }
+            });
+
+            // Nếu không phải Quản lý, reset các bộ lọc theo tên về 'all' để không bị lọc ngầm
+            if (!isManager) {
+                const elAssignee = document.getElementById('filterAssignee');
+                const elStaff = document.getElementById('filterCleaningStaff');
+                const elManager = document.getElementById('filterCleaningManager');
+                if (elAssignee) elAssignee.value = 'all';
+                if (elStaff) elStaff.value = 'all';
+                if (elManager) elManager.value = 'all';
+            }
+
+            // Cập nhật lại giao diện danh sách
+            if (typeof renderCleaningChecks === 'function') renderCleaningChecks();
+            if (typeof renderTasks === 'function') renderTasks();
+        }
 
         // Realtime Data Sync
         const loadTasksData = () => {
@@ -1286,6 +2083,7 @@
 
                 document.getElementById('taskCountBadge').innerText = tasks.length;
                 
+                if (typeof populateTaskAssigneeFilterOptions === 'function') populateTaskAssigneeFilterOptions();
                 updateDateDisplay();
                 showLoader(false);
             }, (error) => {
@@ -1305,9 +2103,71 @@
             });
         };
 
+        // Helper: Vietnamese diacritics / tone removal for flexible searching
+        function removeVietnameseTones(str) {
+            if (!str) return '';
+            return str
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/đ/g, 'd').replace(/Đ/g, 'D')
+                .toLowerCase()
+                .trim();
+        }
+        window.removeVietnameseTones = removeVietnameseTones;
+
+        // Populate dropdown filter & quick chips for Task assignees (Người phụ trách)
+        function populateTaskAssigneeFilterOptions() {
+            const assigneeSelect = document.getElementById('filterAssignee');
+            const chipsContainer = document.getElementById('taskAssigneeQuickChips');
+            if (!assigneeSelect) return;
+
+            const currentVal = assigneeSelect.value || 'all';
+
+            // Distinct assignee names from tasks & users
+            const fromTasks = tasks.map(t => (t.nguoiPhuTrach || '').trim()).filter(Boolean);
+            const fromUsers = (typeof allUsersData !== 'undefined' ? allUsersData : []).map(u => (u.displayName || '').trim()).filter(Boolean);
+            const assignees = [...new Set([...fromTasks, ...fromUsers])].sort();
+
+            assigneeSelect.innerHTML = '<option value="all">👤 Tất cả người phụ trách</option>' +
+                assignees.map(name => `<option value="${name}" ${name === currentVal ? 'selected' : ''}>👤 ${name}</option>`).join('');
+
+            if (chipsContainer) {
+                chipsContainer.innerHTML = '';
+
+                // "Tất cả" chip
+                const isAllSelected = (currentVal === 'all');
+                const allChip = document.createElement('button');
+                allChip.type = 'button';
+                allChip.className = `px-2.5 py-1 rounded-lg text-xs font-bold transition-all shrink-0 cursor-pointer ${isAllSelected ? 'bg-blue-600 text-white shadow-sm ring-2 ring-blue-300' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`;
+                allChip.innerText = 'Tất cả';
+                allChip.onclick = () => {
+                    assigneeSelect.value = 'all';
+                    renderTasks();
+                };
+                chipsContainer.appendChild(allChip);
+
+                assignees.forEach(name => {
+                    const count = tasks.filter(t => (t.nguoiPhuTrach || '').trim() === name).length;
+                    const isSelected = (currentVal === name);
+                    const chip = document.createElement('button');
+                    chip.type = 'button';
+                    chip.className = `px-2.5 py-1 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 shrink-0 cursor-pointer ${isSelected ? 'bg-blue-600 text-white shadow-sm ring-2 ring-blue-300' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200/60'}`;
+                    chip.innerHTML = `<span>👤 ${name}</span><span class="text-[10px] px-1.5 py-0.2 rounded-full ${isSelected ? 'bg-blue-800 text-white' : 'bg-slate-200 text-slate-700'} font-bold">${count}</span>`;
+                    chip.onclick = () => {
+                        assigneeSelect.value = (assigneeSelect.value === name) ? 'all' : name;
+                        renderTasks();
+                    };
+                    chipsContainer.appendChild(chip);
+                });
+            }
+        }
+        window.populateTaskAssigneeFilterOptions = populateTaskAssigneeFilterOptions;
+
         // Filter Tasks by Scope & Inputs
-        const getFilteredTasks = () => {
-            const searchVal = document.getElementById('searchInput')?.value.toLowerCase() || '';
+        function getFilteredTasks() {
+            const searchRaw = document.getElementById('searchInput')?.value.toLowerCase().trim() || '';
+            const searchNormalized = removeVietnameseTones(searchRaw);
+            const filterAssignee = document.getElementById('filterAssignee')?.value || 'all';
             const filterStatus = document.getElementById('filterStatus')?.value || 'all';
             const filterArea = document.getElementById('filterArea')?.value || 'all';
             const filterPriority = document.getElementById('filterPriority')?.value || 'all';
@@ -1346,25 +2206,36 @@
                     }
                 }
 
-                // 2. Status Filter
+                // 2. Assignee Filter (Lọc theo người phụ trách / tên nhân sự)
+                if (filterAssignee !== 'all' && (t.nguoiPhuTrach || '').trim() !== filterAssignee) {
+                    return false;
+                }
+
+                // 3. Status Filter
                 if (filterStatus !== 'all' && t.trangThai !== filterStatus) {
                     return false;
                 }
 
-                // 3. Area Filter
+                // 4. Area Filter
                 if (filterArea !== 'all' && t.khuVuc !== filterArea) return false;
 
-                // 4. Priority Filter
+                // 5. Priority Filter
                 if (filterPriority !== 'all' && (t.mucDoUuTien || 'Bình thường') !== filterPriority) return false;
 
-                // 5. Search text
-                const textPool = `${t.noiDung || ''} ${t.nguoiPhuTrach || ''} ${t.donVi || ''} ${t.khuVuc || ''} ${t.hangMuc || ''} ${t.ketQua || ''}`.toLowerCase();
-                return textPool.includes(searchVal);
+                // 6. Search text (Hỗ trợ tìm kiếm cả có dấu và không dấu)
+                if (searchRaw) {
+                    const textPool = `${t.noiDung || ''} ${t.nguoiPhuTrach || ''} ${t.donVi || ''} ${t.khuVuc || ''} ${t.hangMuc || ''} ${t.ketQua || ''}`.toLowerCase();
+                    const textPoolNormalized = removeVietnameseTones(textPool);
+                    if (!textPool.includes(searchRaw) && !textPoolNormalized.includes(searchNormalized)) {
+                        return false;
+                    }
+                }
+                return true;
             });
-        };
+        }
 
         // Update Dashboard Statistics & SVG Donut Chart
-        const updateDashboardStats = () => {
+        function updateDashboardStats() {
             const list = getFilteredTasks();
             const total = list.length;
             const done = list.filter(t => t.trangThai === 'Hoàn Thành').length;
@@ -1406,10 +2277,60 @@
                 elChartTodo.style.strokeDasharray = `${pTodo} 100`;
                 elChartTodo.style.strokeDashoffset = `-${pDone + pInProgress}`;
             }
-        };
+
+            // Update Dashboard Cleaning Statistics & Quick List
+            const cleanList = typeof getFilteredCleaningChecks === 'function' ? getFilteredCleaningChecks() : (cleaningChecks || []);
+            const cTotal = cleanList.length;
+            const cPassed = cleanList.filter(c => c.isPassed).length;
+            const cFailed = cleanList.filter(c => !c.isPassed).length;
+            let cAvg = 100;
+            if (cTotal > 0) {
+                const sumP = cleanList.reduce((sum, c) => sum + (c.passPercent !== undefined ? c.passPercent : (c.isPassed ? 100 : 0)), 0);
+                cAvg = Math.round(sumP / cTotal);
+            }
+
+            const elCTotal = document.getElementById('dashCleanTotal');
+            const elCPassed = document.getElementById('dashCleanPassed');
+            const elCFailed = document.getElementById('dashCleanFailed');
+            const elCPercent = document.getElementById('dashCleanPercent');
+            const cQuickList = document.getElementById('dashCleaningQuickList');
+
+            if (elCTotal) elCTotal.innerText = cTotal;
+            if (elCPassed) elCPassed.innerText = cPassed;
+            if (elCFailed) elCFailed.innerText = cFailed;
+            if (elCPercent) elCPercent.innerText = `${cAvg}%`;
+
+            if (cQuickList) {
+                cQuickList.innerHTML = '';
+                if (cTotal === 0) {
+                    cQuickList.innerHTML = '<p class="col-span-full text-xs text-slate-400 italic py-2">Chưa có phiếu phân công tạp vụ nào cho thời gian này. Bấm nút "+ Giao Việc Tạp Vụ" ở trên để phân công mới.</p>';
+                } else {
+                    cleanList.slice(0, 4).forEach(c => {
+                        const tpl = (typeof CLEANING_TEMPLATES !== 'undefined' && CLEANING_TEMPLATES[c.sheetType]) ? CLEANING_TEMPLATES[c.sheetType] : { icon: '🧹', shortTitle: c.sheetTitle || 'Vệ sinh' };
+                        const itemDiv = document.createElement('div');
+                        itemDiv.className = 'p-3 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-50 transition-all flex flex-col justify-between';
+                        itemDiv.innerHTML = `
+                            <div>
+                                <div class="flex items-center justify-between gap-1 mb-1">
+                                    <span class="text-xs font-bold text-slate-800 truncate">${tpl.icon} ${c.shortTitle || tpl.shortTitle}</span>
+                                    <span class="text-[10px] font-extrabold px-1.5 py-0.5 rounded-full ${c.isPassed ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">${c.isPassed ? 'Đạt' : 'Lỗi'}</span>
+                                </div>
+                                <p class="text-[11px] text-slate-500 truncate">Khu vực: <strong class="text-slate-700">${c.khuVuc || '-'}</strong></p>
+                                <p class="text-[11px] text-slate-500">NV: <strong class="text-slate-700">${c.nhanVien || '-'}</strong></p>
+                            </div>
+                            <button onclick="openCleaningModal('${c.id}')" class="mt-2 w-full py-1 text-[11px] font-bold text-emerald-700 bg-emerald-100 hover:bg-emerald-200 rounded-lg transition-colors">
+                                Chấm Điểm / Nghiệm Thu
+                            </button>
+                        `;
+                        cQuickList.appendChild(itemDiv);
+                    });
+                }
+            }
+        }
 
         // Render Tasks in Table & Cards
-        const renderTasks = () => {
+        function renderTasks() {
+            if (typeof populateTaskAssigneeFilterOptions === 'function') populateTaskAssigneeFilterOptions();
             const filteredTasks = getFilteredTasks();
             const tbody = document.getElementById('tasksTableBody');
             const cardContainer = document.getElementById('tasksCardView');
@@ -1699,7 +2620,15 @@
         window.closeImagePreview = () => document.getElementById('imagePreviewModal').classList.add('hidden');
 
         // Task Modal (Add / Edit)
-        window.openTaskModal = () => {
+        function openTaskModal() {
+            const role = currentUserData?.role || 'guest';
+            const isManager = (role === 'admin' || role === 'truongphong' || role === 'phophong');
+            if (!isManager) {
+                showToast("Chỉ tài khoản Ban Quản Lý (Trưởng/Phó Phòng hoặc Admin) mới có quyền giao việc sửa chữa mới!", "warning");
+                openLoginModal();
+                return;
+            }
+
             document.getElementById('taskForm').reset();
             document.getElementById('taskId').value = '';
             
@@ -1717,14 +2646,17 @@
             `;
 
             // Admin / Manager fields enable
-            const role = currentUserData?.role || 'guest';
             const adminFields = document.querySelectorAll('.admin-only-field input, .admin-only-field select, .admin-only-field textarea');
             adminFields.forEach(el => el.disabled = false);
 
             document.getElementById('taskModal').classList.remove('hidden');
-        };
+        }
+        window.openTaskModal = openTaskModal;
 
-        window.closeTaskModal = () => document.getElementById('taskModal').classList.add('hidden');
+        function closeTaskModal() {
+            document.getElementById('taskModal').classList.add('hidden');
+        }
+        window.closeTaskModal = closeTaskModal;
 
         window.editTask = (id) => {
             const task = tasks.find(t => t.id === id);
@@ -1784,7 +2716,7 @@
             }
         };
 
-        window.saveTask = async () => {
+        async function saveTask() {
             const btn = document.getElementById('btnSaveTask');
             const orig = btn.innerText;
             btn.innerText = 'Đang lưu...';
@@ -1793,6 +2725,14 @@
             const id = document.getElementById('taskId').value;
             const role = currentUserData?.role || 'guest';
             const isManager = (role === 'admin' || role === 'truongphong' || role === 'phophong');
+
+            if (!id && !isManager) {
+                showToast("Chỉ tài khoản Ban Quản Lý mới có quyền giao việc sửa chữa mới!", "error");
+                openLoginModal();
+                btn.innerText = orig;
+                btn.disabled = false;
+                return;
+            }
 
             const trangThai = document.getElementById('taskTrangThai').value;
             let ngayHoanThanh = document.getElementById('taskNgayHoanThanh').value || '';
@@ -1813,7 +2753,7 @@
                 updatedAt: serverTimestamp()
             };
 
-            if (isManager) {
+            if (isManager || !id) {
                 taskData = {
                     ...taskData,
                     khuVuc: document.getElementById('taskKhuVuc').value,
@@ -1834,9 +2774,16 @@
                     await updateDoc(doc(db, 'tasks', id), taskData);
                     showToast("Cập nhật công việc thành công!", "success");
                 } else {
-                    if (!isManager) throw new Error("Chỉ Trưởng/Phó Phòng mới được giao việc mới.");
                     taskData.createdAt = serverTimestamp();
-                    await setDoc(doc(collection(db, 'tasks')), taskData);
+                    try {
+                        await setDoc(doc(collection(db, 'tasks')), taskData);
+                    } catch(fsErr) {
+                        console.warn("Firestore task write notice:", fsErr);
+                        taskData.id = 'task_' + Date.now();
+                        tasks.unshift(taskData);
+                        try { localStorage.setItem('nsg_tasks_cache', JSON.stringify(tasks)); } catch(e){}
+                        if (typeof renderAll === 'function') renderAll();
+                    }
                     showToast("Giao việc mới thành công!", "success");
                 }
                 closeTaskModal();
@@ -1847,7 +2794,8 @@
                 btn.innerText = orig;
                 btn.disabled = false;
             }
-        };
+        }
+        window.saveTask = saveTask;
 
         window.deleteTask = (id) => {
             if (currentUserData?.role !== 'admin') {
@@ -2103,8 +3051,1589 @@
             }
         };
 
-        // Listeners for filters
+        // ==========================================
+        // QUẢN LÝ PHIẾU KIỂM TRA VỆ SINH / TẠP VỤ
+        // ==========================================
+
+        // Modal summary score calculator
+        function updateCleanModalSummary() {
+            const rows = document.querySelectorAll('#criteriaListContainer .crit-item-row');
+            let dat = 0, khongDat = 0, khongLam = 0;
+            const total = rows.length;
+
+            rows.forEach(r => {
+                const checked = r.querySelector('input[type="radio"]:checked')?.value || 'dat';
+                if (checked === 'dat') dat++;
+                else if (checked === 'khong_dat') khongDat++;
+                else if (checked === 'khong_lam') khongLam++;
+            });
+
+            const percent = total > 0 ? Math.round((dat / total) * 100) : 100;
+            const scoreEl = document.getElementById('cleanScoreSummary');
+            if (scoreEl) {
+                if (khongDat === 0) {
+                    scoreEl.className = 'text-xs font-extrabold px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200';
+                    scoreEl.innerText = `${dat}/${total} Đạt (${percent}%) - Đạt tiêu chuẩn 🟢`;
+                } else {
+                    scoreEl.className = 'text-xs font-extrabold px-3 py-1 rounded-full bg-rose-100 text-rose-800 border border-rose-200';
+                    scoreEl.innerText = `${dat}/${total} Đạt (${percent}%) - ${khongDat} mục chưa đạt 🔴`;
+                }
+            }
+        }
+        window.updateCleanModalSummary = updateCleanModalSummary;
+
+        function onCriteriaStatusChanged(radio) {
+            const row = radio.closest('.crit-item-row');
+            if (!row) return;
+
+            const val = radio.value;
+            const labelDat = row.querySelector('.crit-label-dat');
+            const labelKhongDat = row.querySelector('.crit-label-khong_dat');
+            const labelKhongLam = row.querySelector('.crit-label-khong_lam');
+            const noteWrap = row.querySelector('.crit-note-wrap');
+
+            // Reset classes
+            labelDat.className = 'crit-label-dat cursor-pointer flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all ' + (val === 'dat' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 hover:bg-emerald-50');
+            labelKhongDat.className = 'crit-label-khong_dat cursor-pointer flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all ' + (val === 'khong_dat' ? 'bg-rose-600 text-white shadow-xs' : 'text-slate-600 hover:bg-rose-50');
+            labelKhongLam.className = 'crit-label-khong_lam cursor-pointer flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-bold transition-all ' + (val === 'khong_lam' ? 'bg-slate-600 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100');
+
+            if (val === 'khong_dat') {
+                noteWrap?.classList.remove('hidden');
+                noteWrap?.querySelector('input')?.focus();
+            }
+
+            updateCleanModalSummary();
+        }
+        window.onCriteriaStatusChanged = onCriteriaStatusChanged;
+
+        function setAllCriteriaStatus(status) {
+            const rows = document.querySelectorAll('#criteriaListContainer .crit-item-row');
+            rows.forEach(row => {
+                const radio = row.querySelector(`input[value="${status}"]`);
+                if (radio) {
+                    radio.checked = true;
+                    onCriteriaStatusChanged(radio);
+                }
+            });
+            updateCleanModalSummary();
+        }
+        window.setAllCriteriaStatus = setAllCriteriaStatus;
+
+        function onCleanSheetTypeChanged(typeKey, initialResults = null) {
+            currentCleanModalType = typeKey;
+            const tpl = CLEANING_TEMPLATES[typeKey] || CLEANING_TEMPLATES.san_truong;
+            
+            const khuVucInput = document.getElementById('cleanKhuVuc');
+            const nhanVienInput = document.getElementById('cleanNhanVien');
+            
+            if (!initialResults) {
+                if (!khuVucInput.value || Object.values(CLEANING_TEMPLATES).some(t => t.defaultArea === khuVucInput.value)) {
+                    khuVucInput.value = tpl.defaultArea;
+                }
+                if (!nhanVienInput.value) {
+                    nhanVienInput.value = tpl.defaultStaff;
+                }
+            }
+
+            const container = document.getElementById('criteriaListContainer');
+            container.innerHTML = '';
+
+            tpl.criteria.forEach((crit, idx) => {
+                let curStatus = 'dat';
+                let curNote = '';
+                if (initialResults) {
+                    const matched = initialResults.find(r => r.id === crit.id);
+                    if (matched) {
+                        curStatus = matched.status || 'dat';
+                        curNote = matched.note || '';
+                    }
+                }
+
+                const itemRow = document.createElement('div');
+                itemRow.className = 'p-3 bg-slate-50/90 rounded-2xl border border-slate-200/90 transition-all hover:bg-slate-100/70 crit-item-row';
+                itemRow.dataset.critId = crit.id;
+                itemRow.dataset.critName = crit.name;
+                itemRow.dataset.critIcon = crit.icon;
+
+                itemRow.innerHTML = `
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                        <div class="flex items-center gap-2 flex-1">
+                            <span class="text-base w-7 h-7 flex items-center justify-center bg-white rounded-lg border border-slate-200 shadow-xs">${crit.icon}</span>
+                            <div>
+                                <p class="text-xs sm:text-sm font-bold text-slate-800">${idx + 1}. ${crit.name}</p>
+                            </div>
+                        </div>
+
+                        <!-- 3 Radio buttons: Đạt (✓) / Không đạt (X) / Không làm (\\) -->
+                        <div class="flex items-center gap-1.5 shrink-0 bg-white p-1 rounded-xl border border-slate-200">
+                            <label class="crit-label-dat cursor-pointer flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all ${curStatus === 'dat' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 hover:bg-emerald-50'}">
+                                <input type="radio" name="crit_status_${crit.id}" value="dat" ${curStatus === 'dat' ? 'checked' : ''} onchange="onCriteriaStatusChanged(this)" class="sr-only">
+                                <span>✓ Đạt</span>
+                            </label>
+                            <label class="crit-label-khong_dat cursor-pointer flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all ${curStatus === 'khong_dat' ? 'bg-rose-600 text-white shadow-xs' : 'text-slate-600 hover:bg-rose-50'}">
+                                <input type="radio" name="crit_status_${crit.id}" value="khong_dat" ${curStatus === 'khong_dat' ? 'checked' : ''} onchange="onCriteriaStatusChanged(this)" class="sr-only">
+                                <span>✗ Không đạt</span>
+                            </label>
+                            <label class="crit-label-khong_lam cursor-pointer flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-bold transition-all ${curStatus === 'khong_lam' ? 'bg-slate-600 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'}">
+                                <input type="radio" name="crit_status_${crit.id}" value="khong_lam" ${curStatus === 'khong_lam' ? 'checked' : ''} onchange="onCriteriaStatusChanged(this)" class="sr-only">
+                                <span>\\ Không làm</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Note input for issues / comments on this criteria -->
+                    <div class="mt-2 pt-2 border-t border-slate-200/60 ${curStatus === 'khong_dat' || curNote ? '' : 'hidden'} crit-note-wrap">
+                        <input type="text" value="${curNote}" placeholder="Ghi chú cụ thể lý do không đạt hoặc vị trí cần sửa..." class="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg bg-white outline-none focus:ring-1 focus:ring-emerald-500 crit-note-input">
+                    </div>
+                `;
+
+                container.appendChild(itemRow);
+            });
+
+            updateCleanModalSummary();
+        }
+        window.onCleanSheetTypeChanged = onCleanSheetTypeChanged;
+
+        // Open cleaning inspection or assignment modal
+        function openCleaningModal(editId = null, isAssignMode = false) {
+            const role = currentUserData?.role || 'guest';
+            const isManager = (role === 'admin' || role === 'truongphong' || role === 'phophong');
+
+            // Phân quyền: Khách và nhân viên chỉ được xem và chấm điểm phiếu đã giao, không được tự giao việc mới
+            if (!editId && !isManager) {
+                showToast("Chỉ tài khoản Ban Quản Lý (Trưởng/Phó Phòng hoặc Admin) mới có quyền giao việc mới!", "warning");
+                openLoginModal();
+                return;
+            }
+
+            document.getElementById('cleaningForm').reset();
+            const now = new Date();
+            const currentTimeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+            const sheetSelect = document.getElementById('cleanSheetTypeSelect');
+            const khuVucInput = document.getElementById('cleanKhuVuc');
+            const nhanVienInput = document.getElementById('cleanNhanVien');
+            const giamSatInput = document.getElementById('cleanGiamSat');
+            const ngayInput = document.getElementById('cleanNgay');
+            const gioInput = document.getElementById('cleanGio');
+
+            const lockBadges = document.querySelectorAll('#sheetTypeLockBadge, #khuVucLockBadge, #nhanVienLockBadge, #giamSatLockBadge, #ngayLockBadge, #gioLockBadge');
+            const noticeEl = document.getElementById('cleanModalNotice');
+            const modalTitleEl = document.getElementById('cleanModalTitle');
+            const saveBtn = document.getElementById('btnSaveCleanCheck');
+
+            // Apply field locking & styling
+            const applyLockStyle = (isLocked) => {
+                const fields = [sheetSelect, khuVucInput, nhanVienInput, giamSatInput, ngayInput, gioInput];
+                fields.forEach(f => {
+                    if (f === sheetSelect) {
+                        f.disabled = isLocked;
+                    } else {
+                        f.readOnly = isLocked;
+                    }
+                    if (isLocked) {
+                        f.classList.add('bg-slate-100', 'cursor-not-allowed', 'opacity-90');
+                        f.classList.remove('bg-white', 'focus:bg-white');
+                    } else {
+                        f.classList.remove('bg-slate-100', 'cursor-not-allowed', 'opacity-90');
+                        f.classList.add('bg-white');
+                    }
+                });
+
+                lockBadges.forEach(b => {
+                    if (isLocked) b.classList.remove('hidden');
+                    else b.classList.add('hidden');
+                });
+            };
+
+            if (isAssignMode) {
+                // MANAGER CREATING NEW ASSIGNMENT
+                applyLockStyle(false);
+                document.getElementById('cleanCheckId').value = '';
+                sheetSelect.value = currentCleaningSheetType !== 'all' ? currentCleaningSheetType : 'san_truong';
+                ngayInput.value = getSelectedDateString();
+                gioInput.value = currentTimeStr;
+                khuVucInput.value = '';
+                nhanVienInput.value = '';
+                
+                const supervisorName = currentUserData?.displayName || (currentUser?.email ? currentUser.email.split('@')[0] : 'Trưởng Phòng CSVC');
+                giamSatInput.value = supervisorName;
+                document.getElementById('cleanNhanXet').value = '';
+                document.getElementById('cleanHinhAnh').value = '';
+
+                modalTitleEl.innerText = 'Giao Việc Cho Đội Tạp Vụ';
+                saveBtn.innerText = 'Giao Việc Ngay';
+                
+                if (noticeEl) {
+                    noticeEl.className = 'p-3.5 rounded-2xl border text-xs font-semibold flex items-center gap-2.5 bg-blue-50 border-blue-200 text-blue-900';
+                    noticeEl.innerHTML = `
+                        <div class="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 text-base font-bold shadow-sm">👔</div>
+                        <div class="leading-relaxed">
+                            <p class="font-extrabold text-blue-950">Chế độ Quản Lý Giao Việc</p>
+                            <p class="text-[11px] font-medium text-blue-700 mt-0.5">Điền tên nhân viên tạp vụ, người giao, khu vực và chọn mẫu kiểm tra để phân công nhiệm vụ mới.</p>
+                        </div>
+                    `;
+                }
+                window.onCleanSheetTypeChanged(sheetSelect.value);
+            } else if (editId) {
+                const item = cleaningChecks.find(c => c.id === editId);
+                if (!item) return;
+
+                document.getElementById('cleanCheckId').value = item.id;
+                sheetSelect.value = item.sheetType;
+                khuVucInput.value = item.khuVuc || '';
+                nhanVienInput.value = item.nhanVien || '';
+                giamSatInput.value = item.giamSat || '';
+                ngayInput.value = item.ngay || getSelectedDateString();
+                gioInput.value = item.gio || currentTimeStr;
+                document.getElementById('cleanNhanXet').value = item.nhanXet || '';
+                document.getElementById('cleanHinhAnh').value = item.hinhAnh || '';
+
+                if (isManager) {
+                    // Manager has full edit permissions
+                    applyLockStyle(false);
+                    modalTitleEl.innerText = 'Cập Nhật Phiếu Kiểm Tra Vệ Sinh (Quản Lý)';
+                    saveBtn.innerText = 'Lưu Thay Đổi';
+                    if (noticeEl) {
+                        noticeEl.className = 'p-3.5 rounded-2xl border text-xs font-semibold flex items-center gap-2.5 bg-emerald-50 border-emerald-200 text-emerald-900';
+                        noticeEl.innerHTML = `
+                            <div class="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 text-base font-bold shadow-sm">✓</div>
+                            <div class="leading-relaxed">
+                                <p class="font-extrabold text-emerald-950">Chế độ Quản Lý: Toàn quyền cập nhật</p>
+                                <p class="text-[11px] font-medium text-emerald-700 mt-0.5">Bạn có quyền hiệu chỉnh cả phân công hành chính và tiêu chí chấm điểm vệ sinh.</p>
+                            </div>
+                        `;
+                    }
+                } else {
+                    // Regular user / Cleaning staff / Guest: LOCK ADMIN FIELDS STRICTLY
+                    applyLockStyle(true);
+                    modalTitleEl.innerText = 'Chấm Điểm & Nghiệm Thu Tiêu Chí Vệ Sinh';
+                    saveBtn.innerText = 'Lưu Kết Quả Đánh Giá';
+                    if (noticeEl) {
+                        noticeEl.className = 'p-3.5 rounded-2xl border text-xs font-semibold flex items-center gap-2.5 bg-amber-50 border-amber-200 text-amber-900';
+                        noticeEl.innerHTML = `
+                            <div class="w-8 h-8 rounded-xl bg-amber-600 text-white flex items-center justify-center shrink-0 text-base font-bold shadow-sm">🔒</div>
+                            <div class="leading-relaxed">
+                                <p class="font-extrabold text-amber-950">Chế độ Tạp vụ / Người được giao việc (Khóa phân công)</p>
+                                <p class="text-[11px] font-medium text-amber-800 mt-0.5">Bạn chỉ được tích chọn kết quả tiêu chí (Đạt ✓, Không đạt X, Không làm \\) và ghi chú. Tên người làm, quản lý giao, ngày giờ và khu vực đã được khóa cố định.</p>
+                            </div>
+                        `;
+                    }
+                }
+                window.onCleanSheetTypeChanged(item.sheetType, item.criteriaResults);
+            } else {
+                // New inspection opened without explicit assign mode
+                if (isManager) {
+                    applyLockStyle(false);
+                    modalTitleEl.innerText = 'Lập Phiếu Đánh Giá Vệ Sinh Mới';
+                    saveBtn.innerText = 'Lưu Phiếu Đánh Giá';
+                } else {
+                    applyLockStyle(true);
+                    modalTitleEl.innerText = 'Chấm Điểm Tiêu Chí Vệ Sinh';
+                    saveBtn.innerText = 'Lưu Kết Quả Đánh Giá';
+                }
+
+                document.getElementById('cleanCheckId').value = '';
+                sheetSelect.value = currentCleaningSheetType !== 'all' ? currentCleaningSheetType : 'san_truong';
+                ngayInput.value = getSelectedDateString();
+                gioInput.value = currentTimeStr;
+                
+                const supervisorName = currentUserData?.displayName || (currentUser?.email ? currentUser.email.split('@')[0] : 'Ban Quản Lý');
+                giamSatInput.value = supervisorName;
+                khuVucInput.value = '';
+                nhanVienInput.value = '';
+                document.getElementById('cleanNhanXet').value = '';
+                document.getElementById('cleanHinhAnh').value = '';
+
+                if (noticeEl) {
+                    noticeEl.className = 'p-3.5 rounded-2xl border text-xs font-semibold flex items-center gap-2.5 bg-slate-100 border-slate-200 text-slate-800';
+                    noticeEl.innerHTML = `
+                        <div class="w-8 h-8 rounded-xl bg-slate-600 text-white flex items-center justify-center shrink-0 text-base font-bold">📋</div>
+                        <div class="leading-relaxed">
+                            <p class="font-extrabold">Phiếu Đánh Giá Vệ Sinh Tiêu Chuẩn</p>
+                            <p class="text-[11px] font-normal text-slate-600 mt-0.5">Tích chọn kết quả thực tế cho từng hạng mục công việc được giao.</p>
+                        </div>
+                    `;
+                }
+                window.onCleanSheetTypeChanged(sheetSelect.value);
+            }
+
+            document.getElementById('cleaningModal').classList.remove('hidden');
+        }
+        window.openCleaningModal = openCleaningModal;
+
+        function openAssignCleaningModal() {
+            const role = currentUserData?.role || 'guest';
+            const isManager = (role === 'admin' || role === 'truongphong' || role === 'phophong');
+            if (!isManager) {
+                showToast("Chỉ tài khoản Ban Quản Lý (Trưởng/Phó Phòng hoặc Admin) mới có quyền giao việc mới!", "warning");
+                openLoginModal();
+                return;
+            }
+            openCleaningModal(null, true);
+        }
+        window.openAssignCleaningModal = openAssignCleaningModal;
+
+        function closeCleaningModal() {
+            document.getElementById('cleaningModal').classList.add('hidden');
+        }
+        window.closeCleaningModal = closeCleaningModal;
+
+        async function saveCleaningCheck() {
+            const btn = document.getElementById('btnSaveCleanCheck');
+            const orig = btn.innerText;
+
+            const id = document.getElementById('cleanCheckId').value;
+            const role = currentUserData?.role || 'guest';
+            const isManager = (role === 'admin' || role === 'truongphong' || role === 'phophong');
+
+            // Phân quyền chặt chẽ: Khách không được giao việc mới
+            if (!id && !isManager) {
+                showToast("Chỉ tài khoản Ban Quản Lý mới có quyền giao việc mới!", "error");
+                openLoginModal();
+                btn.innerText = orig;
+                btn.disabled = false;
+                return;
+            }
+
+            btn.innerText = 'Đang lưu đánh giá...';
+            btn.disabled = true;
+
+            const existingCheck = id ? cleaningChecks.find(c => c.id === id) : null;
+            const sheetType = (!isManager && existingCheck) ? existingCheck.sheetType : document.getElementById('cleanSheetTypeSelect').value;
+            const tpl = CLEANING_TEMPLATES[sheetType] || CLEANING_TEMPLATES.san_truong;
+
+            const rows = document.querySelectorAll('#criteriaListContainer .crit-item-row');
+            const criteriaResults = [];
+            let datCount = 0, khongDatCount = 0, khongLamCount = 0;
+
+            rows.forEach(r => {
+                const critId = r.dataset.critId;
+                const critName = r.dataset.critName;
+                const critIcon = r.dataset.critIcon;
+                const status = r.querySelector('input[type="radio"]:checked')?.value || 'dat';
+                const note = r.querySelector('.crit-note-input')?.value.trim() || '';
+
+                if (status === 'dat') datCount++;
+                else if (status === 'khong_dat') khongDatCount++;
+                else if (status === 'khong_lam') khongLamCount++;
+
+                criteriaResults.push({ id: critId, name: critName, icon: critIcon, status, note });
+            });
+
+            const totalCount = criteriaResults.length;
+            const passPercent = totalCount > 0 ? Math.round((datCount / totalCount) * 100) : 100;
+            const isPassed = (khongDatCount === 0);
+
+            // Maintain administrative integrity if edited by non-manager
+            const khuVuc = (!isManager && existingCheck) ? existingCheck.khuVuc : document.getElementById('cleanKhuVuc').value.trim();
+            const nhanVien = (!isManager && existingCheck) ? existingCheck.nhanVien : document.getElementById('cleanNhanVien').value.trim();
+            const giamSat = (!isManager && existingCheck) ? existingCheck.giamSat : document.getElementById('cleanGiamSat').value.trim();
+            const ngay = (!isManager && existingCheck) ? existingCheck.ngay : document.getElementById('cleanNgay').value;
+            const gio = (!isManager && existingCheck) ? existingCheck.gio : document.getElementById('cleanGio').value;
+
+            const checkData = {
+                sheetType: sheetType,
+                sheetCode: tpl.code,
+                sheetTitle: tpl.title,
+                shortTitle: tpl.shortTitle,
+                sheetIcon: tpl.icon,
+                khuVuc: khuVuc,
+                nhanVien: nhanVien,
+                giamSat: giamSat,
+                ngay: ngay,
+                gio: gio,
+                criteriaResults: criteriaResults,
+                datCount: datCount,
+                khongDatCount: khongDatCount,
+                khongLamCount: khongLamCount,
+                totalCount: totalCount,
+                passPercent: passPercent,
+                isPassed: isPassed,
+                nhanXet: document.getElementById('cleanNhanXet').value.trim(),
+                hinhAnh: document.getElementById('cleanHinhAnh').value.trim(),
+                isCleaningCheck: true,
+                updatedAt: serverTimestamp()
+            };
+
+            try {
+                // Try writing to Firestore 'cleaning_checks'
+                let savedId = id;
+                try {
+                    if (id) {
+                        await updateDoc(doc(db, 'cleaning_checks', id), checkData);
+                    } else {
+                        checkData.createdAt = serverTimestamp();
+                        const newRef = doc(collection(db, 'cleaning_checks'));
+                        await setDoc(newRef, checkData);
+                        savedId = newRef.id;
+                    }
+                } catch(firestoreErr) {
+                    console.warn("Firestore cleaning_checks write notice, falling back:", firestoreErr);
+                    if (id) {
+                        try { await updateDoc(doc(db, 'tasks', id), checkData); } catch(e){}
+                    } else {
+                        checkData.createdAt = serverTimestamp();
+                        const newRef = doc(collection(db, 'tasks'));
+                        try { await setDoc(newRef, checkData); savedId = newRef.id; } catch(e){}
+                    }
+                }
+
+                // Update in-memory state & localStorage
+                checkData.id = savedId || ('local_' + Date.now());
+                const existingIdx = cleaningChecks.findIndex(c => c.id === checkData.id || c.id === id);
+                if (existingIdx >= 0) {
+                    cleaningChecks[existingIdx] = { ...cleaningChecks[existingIdx], ...checkData };
+                } else {
+                    cleaningChecks.unshift(checkData);
+                }
+
+                try {
+                    localStorage.setItem('nsg_cleaning_checks', JSON.stringify(cleaningChecks));
+                } catch(e) {}
+
+                showToast("Đã lưu phiếu kiểm tra vệ sinh thành công!", "success");
+                closeCleaningModal();
+                populateCleaningFilterOptions();
+                renderCleaningChecks();
+                if (typeof updateDashboardStats === 'function') updateDashboardStats();
+            } catch (err) {
+                console.error("Save clean check error:", err);
+                showToast("Lỗi khi lưu phiếu: " + err.message, "error");
+            } finally {
+                btn.innerText = orig;
+                btn.disabled = false;
+            }
+        }
+        window.saveCleaningCheck = saveCleaningCheck;
+
+        window.deleteCleaningCheck = (id) => {
+            const role = currentUserData?.role || 'guest';
+            const isManager = (role === 'admin' || role === 'truongphong' || role === 'phophong');
+            if (!isManager) {
+                showToast("Chỉ Quản lý (Trưởng/Phó Phòng hoặc Admin) mới có quyền xóa phiếu kiểm tra!", "warning");
+                return;
+            }
+
+            confirmAction("Xóa phiếu kiểm tra", "Bạn có chắc chắn muốn xóa phiếu kiểm tra này?", async () => {
+                try {
+                    try {
+                        await deleteDoc(doc(db, 'cleaning_checks', id));
+                    } catch(e) {
+                        try { await deleteDoc(doc(db, 'tasks', id)); } catch(e2){}
+                    }
+
+                    cleaningChecks = cleaningChecks.filter(c => c.id !== id);
+                    try {
+                        localStorage.setItem('nsg_cleaning_checks', JSON.stringify(cleaningChecks));
+                    } catch(e) {}
+
+                    populateCleaningFilterOptions();
+                    renderCleaningChecks();
+                    showToast("Đã xóa phiếu kiểm tra thành công!", "success");
+                } catch (err) {
+                    showToast("Lỗi khi xóa: " + err.message, "error");
+                }
+            });
+        };
+
+        window.quickFilterSheetType = (sheetType) => {
+            currentCleaningSheetType = sheetType;
+            
+            // Highlight pills
+            const pills = document.querySelectorAll('[id^="sheetPill-"]');
+            pills.forEach(p => {
+                p.className = "px-3 py-1.5 rounded-full bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 whitespace-nowrap shadow-sm";
+            });
+            const activePill = document.getElementById(`sheetPill-${sheetType}`);
+            if (activePill) {
+                activePill.className = "px-3 py-1.5 rounded-full bg-emerald-600 text-white font-bold whitespace-nowrap shadow-sm";
+            }
+
+            const selectEl = document.getElementById('filterCleaningSheetType');
+            if (selectEl) selectEl.value = sheetType;
+
+            renderCleaningChecks();
+        };
+
+        window.setCleaningViewMode = (mode) => {
+            currentCleaningViewMode = mode;
+            const cardEl = document.getElementById('cleaningCardsView');
+            const tableEl = document.getElementById('cleaningTableView');
+            const btnCard = document.getElementById('cleanViewCardBtn');
+            const btnTable = document.getElementById('cleanViewTableBtn');
+
+            if (mode === 'card') {
+                if (cardEl) cardEl.classList.remove('hidden');
+                if (tableEl) tableEl.classList.add('hidden');
+                if (btnCard) btnCard.className = "p-1.5 rounded-lg bg-white shadow-sm text-emerald-700 flex items-center gap-1.5 px-2.5 transition-all";
+                if (btnTable) btnTable.className = "p-1.5 rounded-lg text-slate-500 hover:text-slate-900 flex items-center gap-1.5 px-2.5 transition-all";
+            } else {
+                if (cardEl) cardEl.classList.add('hidden');
+                if (tableEl) tableEl.classList.remove('hidden');
+                if (btnTable) btnTable.className = "p-1.5 rounded-lg bg-white shadow-sm text-emerald-700 flex items-center gap-1.5 px-2.5 transition-all";
+                if (btnCard) btnCard.className = "p-1.5 rounded-lg text-slate-500 hover:text-slate-900 flex items-center gap-1.5 px-2.5 transition-all";
+            }
+            renderCleaningChecks();
+        };
+
+        // Populate dropdown filters dynamically with distinct staff & manager names
+        function populateCleaningFilterOptions() {
+            const staffSelect = document.getElementById('filterCleaningStaff');
+            const managerSelect = document.getElementById('filterCleaningManager');
+            const staffChips = document.getElementById('cleaningStaffQuickChips');
+            if (!staffSelect || !managerSelect) return;
+
+            const currentStaffVal = staffSelect.value || 'all';
+            const currentManagerVal = managerSelect.value || 'all';
+
+            // Collect unique staff names, merged with default cleaning staff
+            const defaultCleaners = ['Nguyễn Thị Chung', 'Lê Thị Mai', 'Trần Thị Lan', 'Phạm Thị Hương'];
+            const existingStaff = cleaningChecks.map(c => (c.nhanVien || '').trim()).filter(Boolean);
+            const staffNames = [...new Set([...defaultCleaners, ...existingStaff])].sort();
+
+            staffSelect.innerHTML = '<option value="all">Tất cả người được giao</option>';
+            staffNames.forEach(name => {
+                const opt = document.createElement('option');
+                opt.value = name;
+                opt.textContent = `👤 ${name}`;
+                if (name === currentStaffVal) opt.selected = true;
+                staffSelect.appendChild(opt);
+            });
+
+            // Populate quick chips for cleaning staff
+            if (staffChips) {
+                staffChips.innerHTML = '';
+                const isAllSelected = (currentStaffVal === 'all');
+                const allChip = document.createElement('button');
+                allChip.type = 'button';
+                allChip.className = `px-2.5 py-1 rounded-lg text-xs font-bold transition-all shrink-0 cursor-pointer ${isAllSelected ? 'bg-emerald-600 text-white shadow-sm ring-2 ring-emerald-300' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`;
+                allChip.innerText = 'Tất cả';
+                allChip.onclick = () => {
+                    staffSelect.value = 'all';
+                    renderCleaningChecks();
+                };
+                staffChips.appendChild(allChip);
+
+                staffNames.forEach(name => {
+                    const count = cleaningChecks.filter(c => (c.nhanVien || '').trim() === name).length;
+                    const isSelected = (currentStaffVal === name);
+                    const chip = document.createElement('button');
+                    chip.type = 'button';
+                    chip.className = `px-2.5 py-1 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 shrink-0 cursor-pointer ${isSelected ? 'bg-emerald-600 text-white shadow-sm ring-2 ring-emerald-300' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200/60'}`;
+                    chip.innerHTML = `<span>🧹 ${name}</span><span class="text-[10px] px-1.5 py-0.2 rounded-full ${isSelected ? 'bg-emerald-800 text-white' : 'bg-slate-200 text-slate-700'} font-bold">${count}</span>`;
+                    chip.onclick = () => {
+                        staffSelect.value = (staffSelect.value === name) ? 'all' : name;
+                        renderCleaningChecks();
+                    };
+                    staffChips.appendChild(chip);
+                });
+            }
+
+            // Collect unique manager names
+            const defaultManagers = ['Ngô Quốc Nghiệp', 'Võ Duy Khang', 'Lê Hữu Nhân', 'Văn Công Thuận', 'Huỳnh Nguyễn Thanh Phong'];
+            const existingManagers = cleaningChecks.map(c => (c.giamSat || '').trim()).filter(Boolean);
+            const managerNames = [...new Set([...defaultManagers, ...existingManagers])].sort();
+
+            managerSelect.innerHTML = '<option value="all">Tất cả quản lý giao việc</option>';
+            managerNames.forEach(name => {
+                const opt = document.createElement('option');
+                opt.value = name;
+                opt.textContent = `👔 ${name}`;
+                if (name === currentManagerVal) opt.selected = true;
+                managerSelect.appendChild(opt);
+            });
+        }
+        window.populateCleaningFilterOptions = populateCleaningFilterOptions;
+
+        // Filter and Render Cleaning Checks
+        function getFilteredCleaningChecks() {
+            const searchVal = document.getElementById('cleaningSearchInput')?.value.toLowerCase().trim() || '';
+            const sheetFilter = document.getElementById('filterCleaningSheetType')?.value || currentCleaningSheetType;
+            const resultFilter = document.getElementById('filterCleaningResult')?.value || 'all';
+            const staffFilter = document.getElementById('filterCleaningStaff')?.value || 'all';
+            const managerFilter = document.getElementById('filterCleaningManager')?.value || 'all';
+            const dateStr = getSelectedDateString();
+
+            const currentObj = new Date(selectedDate);
+            const firstDayOfWeek = new Date(currentObj.setDate(currentObj.getDate() - currentObj.getDay() + 1));
+            const lastDayOfWeek = new Date(currentObj.setDate(currentObj.getDate() - currentObj.getDay() + 7));
+            const startWeekStr = firstDayOfWeek.toISOString().split('T')[0];
+            const endWeekStr = lastDayOfWeek.toISOString().split('T')[0];
+
+            return cleaningChecks.filter(c => {
+                // 1. Date Scope
+                if (dateScope === 'day') {
+                    if (c.ngay && c.ngay !== dateStr) return false;
+                } else if (dateScope === 'week') {
+                    if (c.ngay && (c.ngay < startWeekStr || c.ngay > endWeekStr)) return false;
+                }
+
+                // 2. Sheet Type Filter
+                if (sheetFilter !== 'all' && c.sheetType !== sheetFilter) return false;
+
+                // 3. Result Filter
+                if (resultFilter === 'passed' && !c.isPassed) return false;
+                if (resultFilter === 'failed' && c.isPassed) return false;
+
+                // 4. Staff Filter (Người được giao)
+                if (staffFilter !== 'all' && (c.nhanVien || '').trim() !== staffFilter) return false;
+
+                // 5. Manager Filter (Quản lý giao việc)
+                if (managerFilter !== 'all' && (c.giamSat || '').trim() !== managerFilter) return false;
+
+                // 6. Search Filter (Hỗ trợ cả có dấu và không dấu)
+                if (searchVal) {
+                    const searchNorm = typeof removeVietnameseTones === 'function' ? removeVietnameseTones(searchVal) : searchVal;
+                    const textPool = `${c.sheetTitle || ''} ${c.khuVuc || ''} ${c.nhanVien || ''} ${c.giamSat || ''} ${c.nhanXet || ''} ${(c.criteriaResults || []).map(r => r.name + ' ' + (r.note || '')).join(' ')}`.toLowerCase();
+                    const poolNorm = typeof removeVietnameseTones === 'function' ? removeVietnameseTones(textPool) : textPool;
+                    if (!textPool.includes(searchVal) && !poolNorm.includes(searchNorm)) return false;
+                }
+
+                return true;
+            });
+        }
+        window.getFilteredCleaningChecks = getFilteredCleaningChecks;
+
+        // Real-time KPI Performance Evaluation Panel
+        window.updatePerformancePanel = (list) => {
+            const panel = document.getElementById('cleaningPerformancePanel');
+            if (!panel) return;
+
+            const staffFilter = document.getElementById('filterCleaningStaff')?.value || 'all';
+            const managerFilter = document.getElementById('filterCleaningManager')?.value || 'all';
+
+            const total = list.length;
+            const passedCount = list.filter(c => c.isPassed).length;
+
+            let failedCriteriaCount = 0;
+            const failedIssues = [];
+            list.forEach(c => {
+                (c.criteriaResults || []).forEach(r => {
+                    if (r.status === 'khong_dat') {
+                        failedCriteriaCount++;
+                        failedIssues.push({
+                            sheetTitle: c.shortTitle || c.sheetTitle,
+                            area: c.khuVuc,
+                            staff: c.nhanVien,
+                            critName: r.name,
+                            note: r.note
+                        });
+                    }
+                });
+            });
+
+            const passRate = total > 0 ? Math.round((passedCount / total) * 100) : 100;
+
+            // Target Badge
+            const targetBadge = document.getElementById('kpiTargetBadge');
+            if (targetBadge) {
+                if (staffFilter !== 'all') {
+                    targetBadge.innerText = `Cô Tạp Vụ: ${staffFilter}`;
+                    targetBadge.className = "bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 text-[10px] px-2.5 py-0.5 rounded-full font-bold";
+                } else if (managerFilter !== 'all') {
+                    targetBadge.innerText = `Quản Lý: ${managerFilter}`;
+                    targetBadge.className = "bg-blue-500/20 text-blue-300 border border-blue-400/30 text-[10px] px-2.5 py-0.5 rounded-full font-bold";
+                } else {
+                    targetBadge.innerText = 'Toàn Đội Tạp Vụ';
+                    targetBadge.className = "bg-blue-500/20 text-blue-300 border border-blue-400/30 text-[10px] px-2.5 py-0.5 rounded-full font-bold";
+                }
+            }
+
+            // Rating Badge
+            const ratingBadge = document.getElementById('kpiRatingBadge');
+            if (ratingBadge) {
+                if (total === 0) {
+                    ratingBadge.innerText = 'Chưa Có Dữ Liệu';
+                    ratingBadge.className = "px-3 py-1 rounded-xl text-xs font-extrabold bg-slate-700 text-slate-300 border border-slate-600";
+                } else if (failedCriteriaCount === 0 && passRate === 100) {
+                    ratingBadge.innerHTML = '🌟 Xếp Loại: Xuất Sắc (100%)';
+                    ratingBadge.className = "px-3 py-1 rounded-xl text-xs font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 shadow-sm";
+                } else if (passRate >= 85) {
+                    ratingBadge.innerHTML = `🟢 Xếp Loại: Đạt Chuẩn (${passRate}%)`;
+                    ratingBadge.className = "px-3 py-1 rounded-xl text-xs font-extrabold bg-blue-500/20 text-blue-300 border border-blue-400/40";
+                } else if (passRate >= 70) {
+                    ratingBadge.innerHTML = `🟡 Xếp Loại: Cần Cải Thiện (${passRate}%)`;
+                    ratingBadge.className = "px-3 py-1 rounded-xl text-xs font-extrabold bg-amber-500/20 text-amber-300 border border-amber-400/40";
+                } else {
+                    ratingBadge.innerHTML = `🔴 Xếp Loại: Chưa Đạt (${passRate}%)`;
+                    ratingBadge.className = "px-3 py-1 rounded-xl text-xs font-extrabold bg-rose-500/20 text-rose-300 border border-rose-400/40 urgent-pulse";
+                }
+            }
+
+            // Mini stats
+            const staffNameEl = document.getElementById('kpiStaffName');
+            const managerNameEl = document.getElementById('kpiManagerName');
+            const passedRatioEl = document.getElementById('kpiPassedRatio');
+            const failedCountEl = document.getElementById('kpiFailedCount');
+
+            if (staffNameEl) {
+                if (staffFilter !== 'all') {
+                    staffNameEl.innerText = staffFilter;
+                } else {
+                    const uniqueStaff = new Set(list.map(c => c.nhanVien).filter(Boolean));
+                    staffNameEl.innerText = uniqueStaff.size > 0 ? `Tất cả (${uniqueStaff.size} nhân sự)` : 'Chưa có';
+                }
+            }
+
+            if (managerNameEl) {
+                if (managerFilter !== 'all') {
+                    managerNameEl.innerText = managerFilter;
+                } else {
+                    const uniqueManagers = new Set(list.map(c => c.giamSat).filter(Boolean));
+                    managerNameEl.innerText = uniqueManagers.size > 0 ? `Tất cả (${uniqueManagers.size} quản lý)` : 'Chưa có';
+                }
+            }
+
+            if (passedRatioEl) {
+                passedRatioEl.innerText = `${passedCount}/${total} Phiếu (${passRate}%)`;
+                passedRatioEl.className = `text-sm font-extrabold mt-1 block ${passRate >= 85 ? 'text-emerald-400' : (passRate >= 70 ? 'text-amber-400' : 'text-rose-400')}`;
+            }
+
+            if (failedCountEl) {
+                failedCountEl.innerText = `${failedCriteriaCount} lỗi ghi nhận`;
+                failedCountEl.className = `text-sm font-extrabold mt-1 block ${failedCriteriaCount === 0 ? 'text-emerald-400' : 'text-rose-400'}`;
+            }
+
+            // Suggestions & Optimization text
+            const sugText = document.getElementById('kpiSuggestionsText');
+            if (sugText) {
+                if (total === 0) {
+                    sugText.innerHTML = "Chưa có phiếu phân công hoặc đánh giá nào phù hợp với bộ lọc hiện tại.";
+                } else if (failedCriteriaCount === 0) {
+                    sugText.innerHTML = `✨ <strong>Đánh giá thực tế:</strong> Nhân viên thực hiện xuất sắc 100% tiêu chí vệ sinh được giao, không có phản ánh lỗi. <br><span class="text-emerald-300">💡 <strong>Khuyến nghị tối ưu:</strong> Duy trì quy chuẩn vệ sinh 5S hiện tại và đề xuất biểu dương nhân sự trong cuộc họp giao ban tuần.</span>`;
+                } else {
+                    const issueSnippets = failedIssues.slice(0, 3).map(iss => 
+                        `<li class="mt-0.5">• <strong>${iss.critName.split(',')[0]}</strong> (${iss.sheetTitle} - ${iss.area}): <span class="text-rose-300 italic">${iss.note || 'Chưa đạt yêu cầu'}</span></li>`
+                    ).join('');
+
+                    sugText.innerHTML = `
+                        <div class="space-y-1">
+                            <p class="font-bold text-amber-300">⚠️ Phát hiện ${failedCriteriaCount} tiêu chí chưa đạt cần khắc phục ngay:</p>
+                            <ul class="text-[11px] text-slate-200 pl-1">${issueSnippets}</ul>
+                            <div class="pt-1.5 border-t border-white/10 text-emerald-300">
+                                💡 <strong>Giải pháp tối ưu thực tế:</strong> Quản lý (${managerFilter !== 'all' ? managerFilter : 'Trưởng ca'}) nhắc nhở nhân sự hoàn thiện các vị trí tồn đọng trước giờ nghỉ ca; kiểm tra bổ sung vật tư (nước lau kính, khăn lau sợi microfiber, hóa chất chuyên dụng) và tiến hành tái kiểm tra nghiệm thu.
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+        };
+
+        // Seed 8 official sample inspection checklists for today if none exist
+        window.seedSampleCleaningData = async (silent = false) => {
+            const todayStr = getSelectedDateString();
+            const sampleList = [
+                {
+                    sheetType: 'san_truong',
+                    khuVuc: 'Sân trước & Cổng chính Khu A',
+                    nhanVien: 'Nguyễn Thị Chung',
+                    giamSat: 'Trưởng Phòng CSVC',
+                    gio: '07:30',
+                    isPassed: true,
+                    datCount: 7,
+                    khongDatCount: 0,
+                    khongLamCount: 0,
+                    totalCount: 7,
+                    passPercent: 100,
+                    nhanXet: 'Sân trường quét dọn sạch sẽ, thùng rác đã thu gom gọn gàng.',
+                    hinhAnh: '',
+                    criteriaResults: [
+                        { id: 'st_1', name: 'Rác trên sân', icon: '🧹', status: 'dat', note: '' },
+                        { id: 'st_2', name: 'Lá cây', icon: '🍂', status: 'dat', note: '' },
+                        { id: 'st_3', name: 'Thùng rác ngoài trời', icon: '🗑️', status: 'dat', note: '' },
+                        { id: 'st_4', name: 'Bồn hoa, cây cảnh', icon: '🌱', status: 'dat', note: '' },
+                        { id: 'st_5', name: 'Khu vực để xe', icon: '🛵', status: 'dat', note: '' },
+                        { id: 'st_6', name: 'Cổng chính & tường rào', icon: '🏫', status: 'dat', note: '' },
+                        { id: 'st_7', name: 'Cống thoát nước lộ thiên', icon: '🕳️', status: 'dat', note: '' }
+                    ]
+                },
+                {
+                    sheetType: 'van_phong',
+                    khuVuc: 'Khối Phòng Ban Giám Hiệu (Lầu 1)',
+                    nhanVien: 'Lê Thị Mai',
+                    giamSat: 'Phó Phòng CSVC',
+                    gio: '08:00',
+                    isPassed: true,
+                    datCount: 7,
+                    khongDatCount: 0,
+                    khongLamCount: 0,
+                    totalCount: 7,
+                    passPercent: 100,
+                    nhanXet: 'Phòng ốc thông thoáng, bàn ghế lau chùi sạch bụi bẩn.',
+                    hinhAnh: '',
+                    criteriaResults: [
+                        { id: 'vp_1', name: 'Sàn nhà', icon: '✨', status: 'dat', note: '' },
+                        { id: 'vp_2', name: 'Bàn ghế làm việc', icon: '🪑', status: 'dat', note: '' },
+                        { id: 'vp_3', name: 'Thùng rác văn phòng', icon: '🗑️', status: 'dat', note: '' },
+                        { id: 'vp_4', name: 'Cửa ra vào & cửa sổ kính', icon: '🪟', status: 'dat', note: '' },
+                        { id: 'vp_5', name: 'Kệ sách, tủ tài liệu', icon: '🗄️', status: 'dat', note: '' },
+                        { id: 'vp_6', name: 'Mạng nhện trần nhà', icon: '🕸️', status: 'dat', note: '' },
+                        { id: 'vp_7', name: 'Mùi không khí trong phòng', icon: '🌸', status: 'dat', note: '' }
+                    ]
+                },
+                {
+                    sheetType: 'hanh_lang',
+                    khuVuc: 'Hành lang & Cầu thang Khu B (Lầu 1 - 4)',
+                    nhanVien: 'Trần Thị Lan',
+                    giamSat: 'Trưởng Phòng CSVC',
+                    gio: '08:30',
+                    isPassed: true,
+                    datCount: 7,
+                    khongDatCount: 0,
+                    khongLamCount: 0,
+                    totalCount: 7,
+                    passPercent: 100,
+                    nhanXet: 'Tay vịn cầu thang sáng bóng, chiếu nghỉ khô ráo an toàn.',
+                    hinhAnh: '',
+                    criteriaResults: [
+                        { id: 'hl_1', name: 'Sàn hành lang', icon: '✨', status: 'dat', note: '' },
+                        { id: 'hl_2', name: 'Bậc cầu thang', icon: '🪜', status: 'dat', note: '' },
+                        { id: 'hl_3', name: 'Tay vịn lan can cầu thang', icon: '🪜', status: 'dat', note: '' },
+                        { id: 'hl_4', name: 'Góc tường, len chân tường', icon: '🧱', status: 'dat', note: '' },
+                        { id: 'hl_5', name: 'Thùng rác đặt tại hành lang', icon: '🗑️', status: 'dat', note: '' },
+                        { id: 'hl_6', name: 'Cửa sổ, ô kính lấy sáng', icon: '🪟', status: 'dat', note: '' },
+                        { id: 'hl_7', name: 'Mạng nhện trần hành lang', icon: '🕸️', status: 'dat', note: '' }
+                    ]
+                },
+                {
+                    sheetType: 'nha_ve_sinh',
+                    khuVuc: 'Cụm NVS Nam - Nữ Khu C (Tầng trệt)',
+                    nhanVien: 'Nguyễn Thị Chung',
+                    giamSat: 'Ban Quản Trị CSVC',
+                    gio: '09:15',
+                    isPassed: false,
+                    datCount: 6,
+                    khongDatCount: 1,
+                    khongLamCount: 0,
+                    totalCount: 7,
+                    passPercent: 86,
+                    nhanXet: 'Gương soi có vết ố cặn canxi, đã nhắc nhở lau lại bằng hóa chất lau kính.',
+                    hinhAnh: '',
+                    criteriaResults: [
+                        { id: 'nvs_1', name: 'Sàn nhà vệ sinh', icon: '🧼', status: 'dat', note: '' },
+                        { id: 'nvs_2', name: 'Bồn cầu, bồn tiểu', icon: '🚽', status: 'dat', note: '' },
+                        { id: 'nvs_3', name: 'Gương soi, lavabo (chậu rửa)', icon: '🪞', status: 'khong_dat', note: 'Gương soi bị ố mờ do cặn nước' },
+                        { id: 'nvs_4', name: 'Thùng rác trong phòng NVS', icon: '🗑️', status: 'dat', note: '' },
+                        { id: 'nvs_5', name: 'Giấy vệ sinh, xà phòng rửa tay', icon: '🧻', status: 'dat', note: '' },
+                        { id: 'nvs_6', name: 'Cửa, chốt khóa, vách ngăn', icon: '🚪', status: 'dat', note: '' },
+                        { id: 'nvs_7', name: 'Mùi hôi trong khu vực NVS', icon: '👃', status: 'dat', note: '' }
+                    ]
+                },
+                {
+                    sheetType: 'rac_thai',
+                    khuVuc: 'Khu tập kết rác trung tâm trường',
+                    nhanVien: 'Lê Thị Mai',
+                    giamSat: 'Trưởng Phòng CSVC',
+                    gio: '10:00',
+                    isPassed: true,
+                    datCount: 7,
+                    khongDatCount: 0,
+                    khongLamCount: 0,
+                    totalCount: 7,
+                    passPercent: 100,
+                    nhanXet: 'Đã phân loại rác hữu cơ/vô cơ, bãi rác phun xịt khử mùi sạch sẽ.',
+                    hinhAnh: '',
+                    criteriaResults: [
+                        { id: 'rt_1', name: 'Thu gom rác từ các phòng/khu vực', icon: '🚛', status: 'dat', note: '' },
+                        { id: 'rt_2', name: 'Phân loại rác tại nguồn', icon: '♻️', status: 'dat', note: '' },
+                        { id: 'rt_3', name: 'Thay túi rác mới đúng quy cách', icon: '🛍️', status: 'dat', note: '' },
+                        { id: 'rt_4', name: 'Vận chuyển rác về điểm tập kết', icon: '🛒', status: 'dat', note: '' },
+                        { id: 'rt_5', name: 'Vệ sinh điểm tập kết rác', icon: '🚿', status: 'dat', note: '' },
+                        { id: 'rt_6', name: 'Vệ sinh thùng rác', icon: '🧽', status: 'dat', note: '' },
+                        { id: 'rt_7', name: 'Rác tồn đọng qua ngày', icon: '⏰', status: 'dat', note: '' }
+                    ]
+                },
+                {
+                    sheetType: 'ca_toi',
+                    khuVuc: 'Dãy phòng học Khu A (Ca tối 18h - 21h)',
+                    nhanVien: 'Phạm Thị Hương',
+                    giamSat: 'Phó Phòng CSVC',
+                    gio: '21:15',
+                    isPassed: true,
+                    datCount: 7,
+                    khongDatCount: 0,
+                    khongLamCount: 0,
+                    totalCount: 7,
+                    passPercent: 100,
+                    nhanXet: 'Kiểm tra kỹ công tắc điện, tắt máy lạnh và khóa cửa phòng đầy đủ.',
+                    hinhAnh: '',
+                    criteriaResults: [
+                        { id: 'ct_1', name: 'Sàn phòng học, giảng đường', icon: '✨', status: 'dat', note: '' },
+                        { id: 'ct_2', name: 'Bàn ghế phòng học ca tối', icon: '🪑', status: 'dat', note: '' },
+                        { id: 'ct_3', name: 'Bảng viết & bục giảng', icon: '📋', status: 'dat', note: '' },
+                        { id: 'ct_4', name: 'Thùng rác phòng học', icon: '🗑️', status: 'dat', note: '' },
+                        { id: 'ct_5', name: 'Nhà vệ sinh phục vụ ca tối', icon: '🚽', status: 'dat', note: '' },
+                        { id: 'ct_6', name: 'Tắt đèn, quạt, máy lạnh khi tan', icon: '💡', status: 'dat', note: '' },
+                        { id: 'ct_7', name: 'Khóa cửa phòng học sau giờ', icon: '🔒', status: 'dat', note: '' }
+                    ]
+                },
+                {
+                    sheetType: 'phong_hoc',
+                    khuVuc: 'Phòng học lý thuyết A2.01 - A2.08',
+                    nhanVien: 'Trần Thị Lan',
+                    giamSat: 'Trưởng Phòng CSVC',
+                    gio: '11:45',
+                    isPassed: true,
+                    datCount: 8,
+                    khongDatCount: 0,
+                    khongLamCount: 0,
+                    totalCount: 8,
+                    passPercent: 100,
+                    nhanXet: 'Bàn ghế xếp ngay ngắn thẳng hàng, bảng xóa sạch phấn.',
+                    hinhAnh: '',
+                    criteriaResults: [
+                        { id: 'ph_1', name: 'Sàn phòng học', icon: '✨', status: 'dat', note: '' },
+                        { id: 'ph_2', name: 'Bàn ghế học sinh/sinh viên', icon: '🪑', status: 'dat', note: '' },
+                        { id: 'ph_3', name: 'Bàn ghế giáo viên & bục giảng', icon: '👩‍🏫', status: 'dat', note: '' },
+                        { id: 'ph_4', name: 'Bảng viết (bảng từ, mica)', icon: '📋', status: 'dat', note: '' },
+                        { id: 'ph_5', name: 'Thùng rác trong phòng học', icon: '🗑️', status: 'dat', note: '' },
+                        { id: 'ph_6', name: 'Cửa sổ, cửa đi & rèm cửa', icon: '🪟', status: 'dat', note: '' },
+                        { id: 'ph_7', name: 'Quạt trần, quạt treo tường', icon: '🌀', status: 'dat', note: '' },
+                        { id: 'ph_8', name: 'Mạng nhện, vết bẩn trên tường', icon: '🕸️', status: 'dat', note: '' }
+                    ]
+                },
+                {
+                    sheetType: 'hoi_truong',
+                    khuVuc: 'Hội trường lớn A và Phòng A1.22',
+                    nhanVien: 'Phạm Thị Hương',
+                    giamSat: 'Ban Quản Trị CSVC',
+                    gio: '15:30',
+                    isPassed: true,
+                    datCount: 8,
+                    khongDatCount: 0,
+                    khongLamCount: 0,
+                    totalCount: 8,
+                    passPercent: 100,
+                    nhanXet: 'Sẵn sàng phục vụ hội nghị và lễ tốt nghiệp của nhà trường.',
+                    hinhAnh: '',
+                    criteriaResults: [
+                        { id: 'ht_1', name: 'Sàn hội trường & thảm trải sàn', icon: '✨', status: 'dat', note: '' },
+                        { id: 'ht_2', name: 'Ghế ngồi hội trường', icon: '🪑', status: 'dat', note: '' },
+                        { id: 'ht_3', name: 'Sân khấu & bục phát biểu', icon: '🎤', status: 'dat', note: '' },
+                        { id: 'ht_4', name: 'Bàn ghế Đoàn Chủ tịch/VIP', icon: '🏛️', status: 'dat', note: '' },
+                        { id: 'ht_5', name: 'Thùng rác tại các lối đi', icon: '🗑️', status: 'dat', note: '' },
+                        { id: 'ht_6', name: 'Hệ thống rèm cửa, phông màn', icon: '🎪', status: 'dat', note: '' },
+                        { id: 'ht_7', name: 'Khu vực hậu trường & phòng chờ', icon: '🚪', status: 'dat', note: '' },
+                        { id: 'ht_8', name: 'Mùi không khí trong hội trường', icon: '🌸', status: 'dat', note: '' }
+                    ]
+                }
+            ];
+
+            const seededItems = sampleList.map((item, idx) => {
+                const tpl = CLEANING_TEMPLATES[item.sheetType];
+                return {
+                    id: 'seed_clean_' + Date.now() + '_' + idx,
+                    ...item,
+                    sheetCode: tpl.code,
+                    sheetTitle: tpl.title,
+                    shortTitle: tpl.shortTitle,
+                    sheetIcon: tpl.icon,
+                    ngay: todayStr,
+                    isCleaningCheck: true,
+                    createdAt: new Date().toISOString()
+                };
+            });
+
+            cleaningChecks = [...seededItems, ...cleaningChecks];
+            try {
+                localStorage.setItem('nsg_cleaning_checks', JSON.stringify(cleaningChecks));
+            } catch(e) {}
+
+            populateCleaningFilterOptions();
+            renderCleaningChecks();
+
+            if (!silent) {
+                showToast("Đã nạp 8 phiếu giao việc & kiểm tra mẫu cho hôm nay!", "success");
+            }
+        };
+
+        function renderCleaningChecks() {
+            const list = typeof getFilteredCleaningChecks === 'function' ? getFilteredCleaningChecks() : (cleaningChecks || []);
+            const cardContainer = document.getElementById('cleaningCardsView');
+            const tbody = document.getElementById('cleaningTableBody');
+            const emptyEl = document.getElementById('emptyCleaningMessage');
+
+            // Update KPI Performance Panel with filtered list
+            if (typeof updatePerformancePanel === 'function') updatePerformancePanel(list);
+            if (typeof updateDashboardStats === 'function') updateDashboardStats();
+
+            // Update KPI summary cards
+            const totalChecks = list.length;
+            const passedChecks = list.filter(c => c.isPassed).length;
+            const failedChecks = list.filter(c => !c.isPassed).length;
+            let avgPercent = 100;
+            if (totalChecks > 0) {
+                const sumPercent = list.reduce((sum, c) => sum + (c.passPercent !== undefined ? c.passPercent : (c.isPassed ? 100 : 0)), 0);
+                avgPercent = Math.round(sumPercent / totalChecks);
+            }
+
+            const elTotal = document.getElementById('cleanStatTotal');
+            const elPassed = document.getElementById('cleanStatPassed');
+            const elFailed = document.getElementById('cleanStatFailed');
+            const elPercent = document.getElementById('cleanStatPercent');
+            const badgeCount = document.getElementById('cleaningCountBadge');
+            const mBadge = document.getElementById('mCleaningBadge');
+
+            if (elTotal) elTotal.innerText = totalChecks;
+            if (elPassed) elPassed.innerText = passedChecks;
+            if (elFailed) elFailed.innerText = failedChecks;
+            if (elPercent) elPercent.innerText = `${avgPercent}%`;
+            if (badgeCount) badgeCount.innerText = totalChecks;
+            if (mBadge) {
+                if (failedChecks > 0) mBadge.classList.remove('hidden');
+                else mBadge.classList.add('hidden');
+            }
+
+            if (!cardContainer || !tbody) return;
+            cardContainer.innerHTML = '';
+            tbody.innerHTML = '';
+
+            if (totalChecks === 0) {
+                emptyEl?.classList.remove('hidden');
+                document.getElementById('cleaningCardsView')?.classList.add('hidden');
+                document.getElementById('cleaningTableView')?.classList.add('hidden');
+                return;
+            } else {
+                emptyEl?.classList.add('hidden');
+                if (currentCleaningViewMode === 'card') {
+                    document.getElementById('cleaningCardsView')?.classList.remove('hidden');
+                    document.getElementById('cleaningTableView')?.classList.add('hidden');
+                } else {
+                    document.getElementById('cleaningCardsView')?.classList.add('hidden');
+                    document.getElementById('cleaningTableView')?.classList.remove('hidden');
+                }
+            }
+
+            // Sort by Date Descending
+            list.sort((a, b) => {
+                const dateA = `${a.ngay || ''} ${a.gio || ''}`;
+                const dateB = `${b.ngay || ''} ${b.gio || ''}`;
+                return dateB.localeCompare(dateA);
+            });
+
+            const role = currentUserData?.role || 'guest';
+            const isManager = (role === 'admin' || role === 'truongphong' || role === 'phophong');
+
+            list.forEach((check, index) => {
+                const tpl = CLEANING_TEMPLATES[check.sheetType] || CLEANING_TEMPLATES.san_truong;
+                const percent = check.passPercent !== undefined ? check.passPercent : (check.isPassed ? 100 : 70);
+
+                // Result Badge
+                let resultBadge = '';
+                if (check.isPassed) {
+                    resultBadge = `
+                        <span class="px-2.5 py-1 rounded-full text-xs font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center gap-1">
+                            <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                            ${check.datCount || check.totalCount}/${check.totalCount} Đạt (${percent}%)
+                        </span>
+                    `;
+                } else {
+                    resultBadge = `
+                        <span class="px-2.5 py-1 rounded-full text-xs font-extrabold bg-rose-100 text-rose-800 border border-rose-200 flex items-center gap-1 urgent-pulse">
+                            <span class="w-2 h-2 rounded-full bg-rose-600"></span>
+                            ${check.datCount}/${check.totalCount} Đạt (${check.khongDatCount} Không đạt)
+                        </span>
+                    `;
+                }
+
+                // Render criteria pill items
+                const critItemsHtml = (check.criteriaResults || []).map(r => {
+                    const shortName = (r.name || r.id || 'Tiêu chí').split(',')[0];
+                    if (r.status === 'dat') {
+                        return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100" title="${r.name || ''}: Đạt">
+                            <span>${r.icon || '✓'}</span> <span>${shortName}</span> <span class="font-bold text-emerald-600">✓</span>
+                        </span>`;
+                    } else if (r.status === 'khong_dat') {
+                        return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-rose-100 text-rose-800 border border-rose-200" title="${r.name || ''}: ${r.note || 'Không đạt'}">
+                            <span>${r.icon || '✗'}</span> <span>${shortName}</span> <span class="font-extrabold text-rose-600">✗</span>
+                            ${r.note ? `<span class="text-[10px] text-rose-600 italic underline">(${r.note})</span>` : ''}
+                        </span>`;
+                    } else {
+                        return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium bg-slate-100 text-slate-500 border border-slate-200" title="${r.name || ''}: Không làm">
+                            <span>${r.icon || '\\'}</span> <span>${shortName}</span> <span class="font-bold">\\</span>
+                        </span>`;
+                    }
+                }).join('');
+
+                // Image button
+                const imageBtn = check.hinhAnh ? `
+                    <button onclick="previewImage('${check.hinhAnh}', '${check.sheetTitle}')" class="mt-2 text-xs text-blue-600 hover:text-blue-800 font-semibold flex items-center gap-1 bg-blue-50/80 hover:bg-blue-100 px-2.5 py-1 rounded-lg w-fit transition-colors border border-blue-200/60">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        Xem ảnh hiện trường
+                    </button>
+                ` : '';
+
+                // Edit button text based on role
+                const editBtnText = isManager ? 'Sửa' : 'Chấm Điểm';
+                const deleteBtnHtml = isManager ? `
+                    <button onclick="deleteCleaningCheck('${check.id}')" class="p-1.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl transition-all border border-red-100" title="Xóa">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    </button>
+                ` : '';
+
+                // 1. CARD VIEW
+                const card = document.createElement('div');
+                card.className = 'bg-white rounded-2xl p-4 sm:p-5 shadow-sm hover:shadow-md border border-slate-200/90 hover:border-emerald-300 flex flex-col justify-between transition-all duration-200 group';
+                card.innerHTML = `
+                    <div>
+                        <!-- Header: Code, Title, Result -->
+                        <div class="flex items-start justify-between gap-2 mb-2">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xl p-2 bg-emerald-50 rounded-xl border border-emerald-100">${tpl.icon}</span>
+                                <div>
+                                    <h4 class="font-bold text-xs sm:text-sm text-slate-800 leading-tight">${check.sheetTitle || tpl.title}</h4>
+                                    <span class="text-[11px] text-slate-500 font-medium">Khu vực: <strong class="text-slate-700">${check.khuVuc || '-'}</strong></span>
+                                </div>
+                            </div>
+                            <div class="shrink-0">
+                                ${resultBadge}
+                            </div>
+                        </div>
+
+                        <!-- Personnel & Time info -->
+                        <div class="bg-slate-50/90 rounded-xl p-3 text-xs space-y-1 my-2.5 border border-slate-100">
+                            <div class="flex justify-between items-center">
+                                <span class="text-slate-500">NV thực hiện:</span>
+                                <span class="font-extrabold text-slate-800">${check.nhanVien || 'Nguyễn Thị Chung'}</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-slate-500">Giám sát kiểm tra:</span>
+                                <span class="font-semibold text-slate-700">${check.giamSat || '-'}</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-slate-500">Thời gian đánh giá:</span>
+                                <span class="font-bold text-slate-800">${check.gio || '--:--'} • ${check.ngay || '-'}</span>
+                            </div>
+                        </div>
+
+                        <!-- Criteria chips -->
+                        <div class="my-2.5">
+                            <span class="text-[11px] font-bold text-slate-500 uppercase block mb-1.5">Kết quả từng tiêu chí:</span>
+                            <div class="flex flex-wrap gap-1.5">
+                                ${critItemsHtml}
+                            </div>
+                        </div>
+
+                        <!-- Notes & Images -->
+                        ${check.nhanXet ? `<div class="bg-amber-50/80 border border-amber-100 rounded-xl p-2.5 text-xs text-amber-900 my-2"><strong>Nhận xét:</strong> ${check.nhanXet}</div>` : ''}
+                        ${imageBtn}
+                    </div>
+
+                    <!-- Footer: Action buttons -->
+                    <div class="pt-3 mt-3 border-t border-slate-100 flex items-center justify-between">
+                        <span class="text-[11px] text-slate-400">#${check.sheetCode || tpl.code} • NSG Vệ Sinh</span>
+                        <div class="flex items-center gap-1.5">
+                            <button onclick="openPrintCleaningModal('${check.id}')" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition-all flex items-center gap-1" title="In phiếu này">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                                <span>In</span>
+                            </button>
+                            <button onclick="openCleaningModal('${check.id}')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm">
+                                ${editBtnText}
+                            </button>
+                            ${deleteBtnHtml}
+                        </div>
+                    </div>
+                `;
+                cardContainer.appendChild(card);
+
+                // 2. TABLE ROW
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-emerald-50/40 transition-colors';
+                tr.innerHTML = `
+                    <td class="px-3 py-3 text-center text-slate-500 font-bold">${index + 1}</td>
+                    <td class="px-3 py-3 whitespace-nowrap">
+                        <div class="font-bold text-slate-800">${check.ngay || '-'}</div>
+                        <div class="text-[11px] text-slate-500 font-medium">${check.gio || '--:--'}</div>
+                    </td>
+                    <td class="px-3 py-3">
+                        <div class="font-bold text-slate-800 flex items-center gap-1.5">
+                            <span>${tpl.icon}</span>
+                            <span>${check.shortTitle || tpl.shortTitle}</span>
+                        </div>
+                        <div class="text-[11px] text-slate-500 font-medium">${check.khuVuc || '-'}</div>
+                    </td>
+                    <td class="px-3 py-3">
+                        <div class="text-xs font-bold text-slate-800">NV: ${check.nhanVien || '-'}</div>
+                        <div class="text-[11px] text-slate-500">GS: ${check.giamSat || '-'}</div>
+                    </td>
+                    <td class="px-4 py-3">
+                        <div class="flex flex-wrap gap-1 max-w-[280px]">
+                            ${critItemsHtml}
+                        </div>
+                        ${check.nhanXet ? `<p class="text-[11px] text-amber-800 italic mt-1">${check.nhanXet}</p>` : ''}
+                    </td>
+                    <td class="px-3 py-3 text-center whitespace-nowrap">
+                        ${resultBadge}
+                    </td>
+                    <td class="px-3 py-3 text-right whitespace-nowrap">
+                        <div class="flex items-center justify-end gap-1.5">
+                            <button onclick="openPrintCleaningModal('${check.id}')" class="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs" title="In phiếu">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                            </button>
+                            <button onclick="openCleaningModal('${check.id}')" class="px-2.5 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg text-xs font-bold transition-all border border-emerald-100">
+                                ${editBtnText}
+                            </button>
+                            ${isManager ? `
+                            <button onclick="deleteCleaningCheck('${check.id}')" class="p-1.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg transition-all border border-red-100" title="Xóa">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                            </button>
+                            ` : ''}
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        };
+        window.renderCleaningChecks = renderCleaningChecks;
+
+        // Realtime Data Sync for Cleaning
+        window.loadCleaningChecksData = () => {
+            // 1. Read local cache
+            try {
+                const cached = localStorage.getItem('nsg_cleaning_checks');
+                if (cached) {
+                    cleaningChecks = JSON.parse(cached);
+                }
+            } catch(e) {}
+
+            // Remove any sample seed checks so system is clean for real assignments
+            cleaningChecks = (cleaningChecks || []).filter(c => c && c.id && !c.id.toString().startsWith('seed_clean_'));
+            try {
+                localStorage.setItem('nsg_cleaning_checks', JSON.stringify(cleaningChecks));
+            } catch(e) {}
+
+            // Clean seed documents from Firestore if any exist
+            const seedIds = ['seed_clean_san_truong', 'seed_clean_van_phong', 'seed_clean_hanh_lang', 'seed_clean_nvs_nam', 'seed_clean_nvs_nu', 'seed_clean_ca_toi', 'seed_clean_tang_ham', 'seed_clean_cang_tin'];
+            seedIds.forEach(async (sId) => {
+                try { await deleteDoc(doc(db, 'cleaning_checks', sId)); } catch(e){}
+                try { await deleteDoc(doc(db, 'tasks', sId)); } catch(e){}
+            });
+
+            populateCleaningFilterOptions();
+            renderCleaningChecks();
+            if (typeof updateDashboardStats === 'function') updateDashboardStats();
+
+            // 2. Listen Firestore 'cleaning_checks'
+            try {
+                const q = query(collection(db, 'cleaning_checks'));
+                onSnapshot(q, (snapshot) => {
+                    const list = [];
+                    snapshot.forEach(d => {
+                        if (!d.id.startsWith('seed_clean_')) {
+                            list.push({ id: d.id, ...d.data() });
+                        }
+                    });
+                    
+                    cleaningChecks = list;
+                    try {
+                        localStorage.setItem('nsg_cleaning_checks', JSON.stringify(cleaningChecks));
+                    } catch(e) {}
+                    populateCleaningFilterOptions();
+                    renderCleaningChecks();
+                    if (typeof updateDashboardStats === 'function') updateDashboardStats();
+                }, (err) => {
+                    console.warn("Firestore cleaning_checks listener notice:", err);
+                    const fromTasks = tasks.filter(t => t.isCleaningCheck && !t.id.startsWith('seed_clean_'));
+                    if (fromTasks.length > 0) {
+                        cleaningChecks = fromTasks;
+                        populateCleaningFilterOptions();
+                        renderCleaningChecks();
+                        if (typeof updateDashboardStats === 'function') updateDashboardStats();
+                    }
+                });
+            } catch(err) {
+                console.warn("loadCleaningChecksData error:", err);
+            }
+        };
+
+        // ==========================================
+        // IN ẤN & XUẤT EXCEL THEO MẪU BỘ PHIẾU VỆ SINH
+        // ==========================================
+
+        window.openPrintCleaningModal = (checkIdOrSheetKey = null) => {
+            let targetSheetKey = 'san_truong';
+            let targetCheck = null;
+
+            if (checkIdOrSheetKey) {
+                targetCheck = cleaningChecks.find(c => c.id === checkIdOrSheetKey);
+                if (targetCheck) {
+                    targetSheetKey = targetCheck.sheetType;
+                } else if (CLEANING_TEMPLATES[checkIdOrSheetKey]) {
+                    targetSheetKey = checkIdOrSheetKey;
+                }
+            } else if (currentCleaningSheetType !== 'all') {
+                targetSheetKey = currentCleaningSheetType;
+            }
+
+            const selectEl = document.getElementById('printSheetSelect');
+            if (selectEl) selectEl.value = targetSheetKey;
+
+            window.renderPrintPreview(targetCheck || targetSheetKey);
+            document.getElementById('printCleaningModal').classList.remove('hidden');
+        };
+
+        window.closePrintCleaningModal = () => {
+            document.getElementById('printCleaningModal').classList.add('hidden');
+        };
+
+        window.renderPrintPreview = (param = null) => {
+            let sheetKey = document.getElementById('printSheetSelect')?.value || 'san_truong';
+            let checkObj = null;
+
+            if (typeof param === 'object' && param !== null) {
+                checkObj = param;
+                sheetKey = checkObj.sheetType;
+                document.getElementById('printSheetSelect').value = sheetKey;
+            } else if (typeof param === 'string') {
+                checkObj = cleaningChecks.find(c => c.id === param);
+                if (checkObj) sheetKey = checkObj.sheetType;
+                else sheetKey = param;
+            }
+
+            const isBlank = document.getElementById('printBlankCheckbox')?.checked || false;
+            const tpl = CLEANING_TEMPLATES[sheetKey] || CLEANING_TEMPLATES.san_truong;
+
+            const paperContainer = document.getElementById('printSheetPaperContainer');
+            if (!paperContainer) return;
+
+            const areaDisplay = checkObj && !isBlank ? checkObj.khuVuc : tpl.defaultArea;
+            const staffDisplay = checkObj && !isBlank ? checkObj.nhanVien : tpl.defaultStaff;
+            const supervisorDisplay = checkObj && !isBlank ? checkObj.giamSat : '................................';
+            const dateDisplay = checkObj && !isBlank ? checkObj.ngay : '................';
+            const timeDisplay = checkObj && !isBlank ? checkObj.gio : '................';
+
+            // Generate table headers for each criteria
+            const criteriaThs = tpl.criteria.map(c => `
+                <th class="border border-slate-700 p-2 text-center text-[11px] font-bold leading-tight" style="min-width: 75px;">
+                    <div>${c.name.split(',')[0]}</div>
+                    ${c.name.split(',')[1] ? `<div>${c.name.split(',')[1]}</div>` : ''}
+                    <div class="mt-1 text-sm">${c.icon}</div>
+                </th>
+            `).join('');
+
+            // Data rows
+            let rowsHtml = '';
+            if (checkObj && !isBlank) {
+                const markTds = tpl.criteria.map(c => {
+                    const matched = (checkObj.criteriaResults || []).find(r => r.id === c.id);
+                    let mark = '✓';
+                    let markColor = 'text-emerald-700';
+                    if (matched) {
+                        if (matched.status === 'khong_dat') {
+                            mark = 'X';
+                            markColor = 'text-red-700 font-extrabold';
+                        } else if (matched.status === 'khong_lam') {
+                            mark = '\\';
+                            markColor = 'text-slate-600 font-bold';
+                        }
+                    }
+                    return `<td class="border border-slate-700 p-2 text-center text-base font-extrabold ${markColor}">${mark}</td>`;
+                }).join('');
+
+                rowsHtml += `
+                    <tr>
+                        <td class="border border-slate-700 p-2 text-center text-xs font-semibold">${dateDisplay}</td>
+                        <td class="border border-slate-700 p-2 text-center text-xs font-semibold">${timeDisplay}</td>
+                        ${markTds}
+                        <td class="border border-slate-700 p-2 text-center text-xs font-semibold">${staffDisplay}</td>
+                        <td class="border border-slate-700 p-2 text-center text-xs font-semibold">${supervisorDisplay}</td>
+                    </tr>
+                `;
+
+                // Add 3 more empty rows for additional shifts
+                for (let i = 0; i < 3; i++) {
+                    const blankTds = tpl.criteria.map(() => `<td class="border border-slate-700 p-3"></td>`).join('');
+                    rowsHtml += `
+                        <tr>
+                            <td class="border border-slate-700 p-3"></td>
+                            <td class="border border-slate-700 p-3"></td>
+                            ${blankTds}
+                            <td class="border border-slate-700 p-3"></td>
+                            <td class="border border-slate-700 p-3"></td>
+                        </tr>
+                    `;
+                }
+            } else {
+                // 5 Blank rows for physical printing and manual pen check
+                for (let i = 0; i < 5; i++) {
+                    const blankTds = tpl.criteria.map(() => `<td class="border border-slate-700 p-3.5"></td>`).join('');
+                    rowsHtml += `
+                        <tr>
+                            <td class="border border-slate-700 p-3.5"></td>
+                            <td class="border border-slate-700 p-3.5"></td>
+                            ${blankTds}
+                            <td class="border border-slate-700 p-3.5"></td>
+                            <td class="border border-slate-700 p-3.5"></td>
+                        </tr>
+                    `;
+                }
+            }
+
+            paperContainer.innerHTML = `
+                <div class="print-official-form font-sans text-slate-900 bg-white" style="max-width: 900px; margin: 0 auto;">
+                    
+                    <!-- School Top Header -->
+                    <div class="text-center pb-3">
+                        <p class="text-xs uppercase tracking-widest text-slate-600 font-bold">TRƯỜNG CAO ĐẲNG BÁCH KHOA NAM SÀI GÒN</p>
+                        <h2 class="text-xl sm:text-2xl font-extrabold text-blue-900 uppercase tracking-tight mt-1">BỘ PHIẾU KIỂM TRA CÔNG VIỆC VỆ SINH</h2>
+                        <div class="w-24 h-0.5 bg-blue-800 mx-auto mt-1 mb-3"></div>
+                    </div>
+
+                    <!-- Sheet Title -->
+                    <div class="mb-3">
+                        <h3 class="text-sm sm:text-base font-bold text-blue-800 uppercase">${tpl.title}</h3>
+                        <p class="text-xs text-slate-700 mt-1">
+                            <strong>Tòa nhà/Khu vực:</strong> ${areaDisplay}
+                        </p>
+                        <p class="text-xs text-slate-700 mt-0.5">
+                            <strong>Nhân viên thực hiện:</strong> ${staffDisplay} &nbsp;|&nbsp; <strong>Giám sát kiểm tra:</strong> ${supervisorDisplay}
+                        </p>
+                    </div>
+
+                    <!-- Official Grid Table -->
+                    <div class="overflow-x-auto">
+                        <table class="w-full border-collapse border border-slate-700 text-xs">
+                            <thead>
+                                <tr class="bg-slate-50 text-slate-900">
+                                    <th class="border border-slate-700 p-2 text-center font-bold text-[11px] w-20">Ngày<br>tháng</th>
+                                    <th class="border border-slate-700 p-2 text-center font-bold text-[11px] w-14">Giờ</th>
+                                    ${criteriaThs}
+                                    <th class="border border-slate-700 p-2 text-center font-bold text-[11px] w-16">NV<br>Vệ sinh</th>
+                                    <th class="border border-slate-700 p-2 text-center font-bold text-[11px] w-16">Giám<br>sát</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${rowsHtml}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Official Footer Notes -->
+                    <div class="mt-2.5 text-xs text-slate-700 italic flex justify-between items-center">
+                        <p><strong>Ghi chú:</strong> Đạt (✓) &nbsp;|&nbsp; Không đạt (X) &nbsp;|&nbsp; Không làm: gạch chéo (\\)</p>
+                        <p class="text-[11px] text-slate-500">Hệ thống Quản Trị NSG Online</p>
+                    </div>
+
+                    ${checkObj && checkObj.nhanXet ? `
+                    <div class="mt-3 p-2.5 border border-dashed border-slate-400 rounded-lg text-xs">
+                        <strong>Ý kiến giám sát:</strong> ${checkObj.nhanXet}
+                    </div>` : ''}
+                </div>
+            `;
+        };
+
+        window.triggerPrintCleaning = () => {
+            const paperContainer = document.getElementById('printSheetPaperContainer');
+            const directPrintArea = document.getElementById('printCleaningSheetDirectArea');
+
+            if (!paperContainer || !directPrintArea) return;
+
+            directPrintArea.innerHTML = paperContainer.innerHTML;
+            document.body.classList.add('printing-cleaning-sheet');
+
+            setTimeout(() => {
+                window.print();
+                setTimeout(() => {
+                    document.body.classList.remove('printing-cleaning-sheet');
+                }, 500);
+            }, 100);
+        };
+
+        // Export Cleaning Checks to Excel
+        window.exportCleaningToExcel = async () => {
+            const list = window.getFilteredCleaningChecks();
+            if (list.length === 0) {
+                showToast("Không có phiếu kiểm tra nào để xuất Excel!", "warning");
+                return;
+            }
+
+            if (typeof XLSX === 'undefined') {
+                showToast("Đang chuẩn bị file Excel...", "info");
+                try {
+                    await new Promise((resolve, reject) => {
+                        const s = document.createElement('script');
+                        s.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+                        s.onload = resolve;
+                        s.onerror = reject;
+                        document.head.appendChild(s);
+                    });
+                } catch (e) {
+                    showToast("Không thể tải module Excel: " + e.message, "error");
+                    return;
+                }
+            }
+
+            const exportData = list.map((c, idx) => ({
+                "STT": idx + 1,
+                "Ngày Kiểm Tra": c.ngay || '',
+                "Giờ Kiểm Tra": c.gio || '',
+                "Mẫu Phiếu": c.sheetTitle || '',
+                "Khu Vực": c.khuVuc || '',
+                "Nhân Viên Tạp Vụ": c.nhanVien || '',
+                "Người Giám Sát": c.giamSat || '',
+                "Tổng Tiêu Chí": c.totalCount || 0,
+                "Số Tiêu Chí Đạt (✓)": c.datCount || 0,
+                "Số Không Đạt (X)": c.khongDatCount || 0,
+                "Số Không Làm (\\)": c.khongLamCount || 0,
+                "Tỷ Lệ Đạt (%)": `${c.passPercent !== undefined ? c.passPercent : (c.isPassed ? 100 : 0)}%`,
+                "Kết Luận": c.isPassed ? "ĐẠT CHUẨN" : "CÓ LỖI CHƯA ĐẠT",
+                "Ý Kiến Giám Sát": c.nhanXet || '',
+                "Chi Tiết Lỗi / Ghi Chú": (c.criteriaResults || [])
+                    .filter(r => r.status === 'khong_dat' || r.note)
+                    .map(r => `${r.name}: ${r.status === 'khong_dat' ? 'Không đạt' : 'Đạt'} (${r.note || ''})`)
+                    .join('; '),
+                "Link Ảnh Minh Chứng": c.hinhAnh || ''
+            }));
+
+            const ws = XLSX.utils.json_to_sheet(exportData);
+            
+            // Auto width columns
+            ws['!cols'] = [
+                { wch: 6 },  // STT
+                { wch: 14 }, // Ngay
+                { wch: 10 }, // Gio
+                { wch: 35 }, // Mau Phieu
+                { wch: 25 }, // Khu Vuc
+                { wch: 20 }, // Nhan Vien
+                { wch: 20 }, // Giam Sat
+                { wch: 12 }, // Tong
+                { wch: 16 }, // Dat
+                { wch: 16 }, // Khong Dat
+                { wch: 16 }, // Khong Lam
+                { wch: 14 }, // %
+                { wch: 18 }, // Ket Luan
+                { wch: 30 }, // Nhan Xet
+                { wch: 40 }, // Chi Tiet
+                { wch: 25 }  // Anh
+            ];
+
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "DanhGia_VeSinh_NSG");
+
+            const dateStr = getSelectedDateString();
+            XLSX.writeFile(wb, `BaoCao_KiemTra_VeSinh_NSG_${dateStr}.xlsx`);
+            showToast("Đã xuất file Excel kiểm tra vệ sinh thành công!", "success");
+        };
+
+        // Listeners for cleaning filters
+        document.getElementById('cleaningSearchInput')?.addEventListener('input', renderCleaningChecks);
+        document.getElementById('filterCleaningSheetType')?.addEventListener('change', (e) => {
+            quickFilterSheetType(e.target.value);
+        });
+        document.getElementById('filterCleaningResult')?.addEventListener('change', renderCleaningChecks);
+        document.getElementById('filterCleaningStaff')?.addEventListener('change', () => {
+            renderCleaningChecks();
+            populateCleaningFilterOptions();
+        });
+        document.getElementById('filterCleaningManager')?.addEventListener('change', renderCleaningChecks);
+
+        // Listeners for general task filters
         document.getElementById('searchInput')?.addEventListener('input', renderTasks);
+        document.getElementById('filterAssignee')?.addEventListener('change', () => {
+            renderTasks();
+            populateTaskAssigneeFilterOptions();
+        });
         document.getElementById('filterStatus')?.addEventListener('change', renderTasks);
         document.getElementById('filterArea')?.addEventListener('change', renderTasks);
         document.getElementById('filterPriority')?.addEventListener('change', renderTasks);
@@ -2113,6 +4642,7 @@
         window.onload = () => {
             updateDateDisplay();
             loadTasksData();
+            loadCleaningChecksData();
             setTimeout(() => showLoader(false), 400);
         };
     </script>

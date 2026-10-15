@@ -56,5 +56,12 @@ service cloud.firestore {
       // Chỉ Admin mới được xóa công việc
       allow delete: if isAuthenticated() && isAdmin();
     }
+
+    // 3. Quản lý phiếu kiểm tra vệ sinh / tạp vụ (cleaning_checks)
+    match /cleaning_checks/{checkId} {
+      allow read: if true;
+      allow create, update: if true;
+      allow delete: if isAuthenticated() && (isManager() || isAdmin());
+    }
   }
 }
