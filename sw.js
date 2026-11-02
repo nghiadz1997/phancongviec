@@ -1,5 +1,5 @@
 // Service Worker cho Ứng dụng Bảo Trì NSG
-const CACHE_NAME = 'baotri-nsg-v2.3.0';
+const CACHE_NAME = 'baotri-nsg-v2.4.0';
 const STATIC_ASSETS = [
   './',
   './index.html',
