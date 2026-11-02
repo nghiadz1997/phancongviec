@@ -1,9 +1,10 @@
 // Service Worker cho Ứng dụng Bảo Trì NSG
-const CACHE_NAME = 'baotri-nsg-v2.4.0';
+const CACHE_NAME = 'baotri-nsg-v2.5.0-smartclean';
 const STATIC_ASSETS = [
   './',
   './index.html',
   './manifest.webmanifest',
+  './js/smartclean.js',
   './icons/logo.png',
   './icons/icon-192.png',
   './icons/icon-512.png',

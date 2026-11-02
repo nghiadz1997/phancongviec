@@ -176,6 +176,11 @@
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                         Thống Kê Khu Vực
                     </button>
+                                        <button onclick="switchTab('smartclean')" id="tab-smartclean" class="hidden py-3 text-sm font-medium text-slate-600 hover:text-slate-900 border-b-2 border-transparent hover:border-slate-300 focus:outline-none transition-colors flex items-center gap-2">
+                        <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                        <span>NSG SMART CLEAN</span>
+                        <span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full">Mới</span>
+                    </button>
                     <button onclick="switchTab('users')" id="tab-users" class="hidden py-3 text-sm font-medium text-slate-600 hover:text-slate-900 border-b-2 border-transparent hover:border-slate-300 focus:outline-none transition-colors flex items-center gap-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                         Quản Lý Người Dùng
@@ -521,6 +526,351 @@
                     </div>
                 </div>
 
+
+                <!-- VIEW 5: NSG SMART CLEAN (QUẢN LÝ VỆ SINH & ĐÁNH GIÁ KPI) -->
+                <div id="view-smartclean" class="hidden flex flex-col space-y-5">
+                    
+                    <!-- Banner NSG Smart Clean -->
+                    <div class="bg-gradient-to-r from-emerald-800 via-teal-700 to-slate-900 rounded-3xl p-5 sm:p-6 text-white shadow-lg border border-emerald-700/50 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <div class="flex items-center gap-4">
+                            <div class="w-14 h-14 rounded-2xl bg-white/10 backdrop-blur-md p-2.5 shadow-inner border border-white/20 flex items-center justify-center shrink-0">
+                                <span class="text-3xl">🧹</span>
+                            </div>
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <span class="bg-emerald-400/20 text-emerald-300 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border border-emerald-400/30 uppercase tracking-wider">NSG SMART CLEAN</span>
+                                    <span class="text-xs text-emerald-200/80">Hệ Thống Quản Trị Vệ Sinh & KPI</span>
+                                </div>
+                                <h3 class="text-lg sm:text-2xl font-black tracking-tight mt-1">Quản Lý Vệ Sinh & Đánh Giá KPI Nhân Viên</h3>
+                                <p class="text-xs sm:text-sm text-emerald-100/80 mt-0.5">Giám sát công việc cố định, phân công phát sinh, checklist thực tế & xếp loại KPI khoa học.</p>
+                            </div>
+                        </div>
+
+                        <!-- Top Action Shortcuts -->
+                        <div class="flex flex-wrap items-center gap-2 w-full md:w-auto justify-end">
+                            <button onclick="window.switchSmartCleanSubTab('inspect')" class="bg-emerald-500 hover:bg-emerald-400 text-white font-bold px-3.5 py-2 rounded-xl text-xs transition-all shadow-md flex items-center gap-1.5 cursor-pointer">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+                                <span>Kiểm Tra Thực Tế</span>
+                            </button>
+                            <button onclick="window.openAddAdhocTaskModal()" class="bg-white/10 hover:bg-white/20 text-white border border-white/20 font-bold px-3.5 py-2 rounded-xl text-xs transition-all flex items-center gap-1.5 cursor-pointer">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                <span>Giao Việc Phát Sinh</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Sub-tabs Navigation Bar -->
+                    <div class="bg-white p-2 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+                        <button onclick="window.switchSmartCleanSubTab('dashboard')" id="sc-tab-dashboard" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-emerald-600 text-white shadow-sm flex items-center gap-1.5 transition-all whitespace-nowrap cursor-pointer">
+                            📊 Tổng Quan
+                        </button>
+                        <button onclick="window.switchSmartCleanSubTab('staff')" id="sc-tab-staff" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-white text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-slate-200 transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer">
+                            👥 Nhân Viên
+                        </button>
+                        <button onclick="window.switchSmartCleanSubTab('recurring')" id="sc-tab-recurring" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-white text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-slate-200 transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer">
+                            🔄 Việc Cố Định
+                        </button>
+                        <button onclick="window.switchSmartCleanSubTab('adhoc')" id="sc-tab-adhoc" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-white text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-slate-200 transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer">
+                            ⚡ Việc Phát Sinh
+                        </button>
+                        <button onclick="window.switchSmartCleanSubTab('inspect')" id="sc-tab-inspect" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-white text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-slate-200 transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer">
+                            📝 Kiểm Tra & Checklist
+                        </button>
+                        <button onclick="window.switchSmartCleanSubTab('kpi')" id="sc-tab-kpi" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-white text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-slate-200 transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer">
+                            🏆 Đánh Giá KPI
+                        </button>
+                        <button onclick="window.switchSmartCleanSubTab('reports')" id="sc-tab-reports" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-white text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-slate-200 transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer">
+                            📈 Báo Cáo & Thống Kê
+                        </button>
+                    </div>
+
+                    <!-- SUB-VIEW 1: DASHBOARD TỔNG QUAN -->
+                    <div id="sc-view-dashboard" class="flex flex-col space-y-5">
+                        
+                        <!-- 9 KPI Summary Cards -->
+                        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+                            <!-- Card 1: Tổng nhân viên -->
+                            <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 flex flex-col justify-between">
+                                <span class="text-[11px] font-bold text-slate-500 uppercase">Tổng nhân viên</span>
+                                <p id="sc-stat-total-staff" class="text-2xl sm:text-3xl font-extrabold text-slate-800 mt-2">0</p>
+                                <span class="text-[10px] text-slate-400">Đội ngũ tạp vụ</span>
+                            </div>
+
+                            <!-- Card 2: Khu vực phụ trách -->
+                            <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 flex flex-col justify-between">
+                                <span class="text-[11px] font-bold text-slate-500 uppercase">Khu vực phân công</span>
+                                <p id="sc-stat-total-areas" class="text-2xl sm:text-3xl font-extrabold text-blue-600 mt-2">0</p>
+                                <span class="text-[10px] text-slate-400">Khu vực độc lập</span>
+                            </div>
+
+                            <!-- Card 3: Công việc cố định -->
+                            <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 flex flex-col justify-between">
+                                <span class="text-[11px] font-bold text-slate-500 uppercase">Việc cố định</span>
+                                <p id="sc-stat-recurring-tasks" class="text-2xl sm:text-3xl font-extrabold text-purple-600 mt-2">0</p>
+                                <span class="text-[10px] text-slate-400">Danh mục định kỳ</span>
+                            </div>
+
+                            <!-- Card 4: Lượt kiểm tra hôm nay -->
+                            <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 flex flex-col justify-between">
+                                <span class="text-[11px] font-bold text-emerald-600 uppercase">Lượt kiểm tra hôm nay</span>
+                                <p id="sc-stat-today-inspections" class="text-2xl sm:text-3xl font-extrabold text-emerald-600 mt-2">0</p>
+                                <span class="text-[10px] text-slate-400">Thực tế tại hiện trường</span>
+                            </div>
+
+                            <!-- Card 5: Điểm KPI Trung Bình -->
+                            <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 flex flex-col justify-between">
+                                <span class="text-[11px] font-bold text-indigo-600 uppercase">Điểm KPI Trung Bình</span>
+                                <p id="sc-stat-avg-kpi" class="text-2xl sm:text-3xl font-extrabold text-indigo-600 mt-2">100/100</p>
+                                <span class="text-[10px] text-slate-400">Tháng hiện tại</span>
+                            </div>
+
+                            <!-- Card 6: Đạt chuẩn -->
+                            <div class="bg-emerald-50 rounded-2xl p-4 border border-emerald-100 flex flex-col justify-between">
+                                <span class="text-[11px] font-bold text-emerald-700 uppercase">Đầu việc đạt</span>
+                                <p id="sc-stat-today-passed" class="text-2xl sm:text-3xl font-extrabold text-emerald-700 mt-2">0</p>
+                                <span class="text-[10px] text-emerald-600/80">Chất lượng tốt</span>
+                            </div>
+
+                            <!-- Card 7: Không đạt -->
+                            <div class="bg-rose-50 rounded-2xl p-4 border border-rose-100 flex flex-col justify-between">
+                                <span class="text-[11px] font-bold text-rose-700 uppercase">Không đạt / Cần nhắc</span>
+                                <p id="sc-stat-today-failed" class="text-2xl sm:text-3xl font-extrabold text-rose-700 mt-2">0</p>
+                                <span class="text-[10px] text-rose-600/80">Có lỗi cần khắc phục</span>
+                            </div>
+
+                            <!-- Card 8: Chưa làm -->
+                            <div class="bg-amber-50 rounded-2xl p-4 border border-amber-100 flex flex-col justify-between">
+                                <span class="text-[11px] font-bold text-amber-700 uppercase">Chưa làm</span>
+                                <p id="sc-stat-today-notdone" class="text-2xl sm:text-3xl font-extrabold text-amber-700 mt-2">0</p>
+                                <span class="text-[10px] text-amber-600/80">Chưa bắt đầu ca</span>
+                            </div>
+
+                            <!-- Card 9: Việc phát sinh -->
+                            <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200 flex flex-col justify-between col-span-2 sm:col-span-1">
+                                <span class="text-[11px] font-bold text-slate-600 uppercase">Việc phát sinh</span>
+                                <p id="sc-stat-adhoc-tasks" class="text-2xl sm:text-3xl font-extrabold text-slate-800 mt-2">0</p>
+                                <span class="text-[10px] text-slate-400">Đang chờ xử lý</span>
+                            </div>
+                        </div>
+
+                        <!-- Lịch Sử Kiểm Tra Gần Đây -->
+                        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4">
+                            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                                <h4 class="font-extrabold text-sm sm:text-base text-slate-800 flex items-center gap-2">
+                                    <span>Lịch Sử Kiểm Tra Thực Tế Gần Đây</span>
+                                </h4>
+                                <button onclick="window.switchSmartCleanSubTab('inspect')" class="text-xs font-bold text-emerald-700 hover:text-emerald-800 cursor-pointer">
+                                    Xem tất cả &rarr;
+                                </button>
+                            </div>
+                            <div id="sc-recent-inspections" class="space-y-2.5">
+                                <!-- Rendered by JS -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SUB-VIEW 2: QUẢN LÝ NHÂN VIÊN VỆ SINH -->
+                    <div id="sc-view-staff" class="hidden flex flex-col space-y-4">
+                        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
+                            <div class="flex-1 max-w-md">
+                                <input type="text" id="sc-search-staff" placeholder="Tìm tên nhân viên, mã nhân viên..." class="w-full px-3.5 py-2 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-emerald-500 outline-none">
+                            </div>
+                            <button onclick="window.openAddStaffModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm px-4 py-2 rounded-xl shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                <span>+ Thêm Nhân Viên Mới</span>
+                            </button>
+                        </div>
+                        <div id="sc-staff-cards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <!-- Rendered by JS -->
+                        </div>
+                    </div>
+
+                    <!-- SUB-VIEW 3: QUẢN LÝ CÔNG VIỆC CỐ ĐỊNH -->
+                    <div id="sc-view-recurring" class="hidden flex flex-col space-y-4">
+                        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-3">
+                            <div class="flex flex-wrap items-center gap-2 flex-1">
+                                <input type="text" id="sc-search-rec" placeholder="Tìm tên việc, khu vực, tiêu chí..." class="px-3.5 py-2 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-emerald-500 outline-none min-w-[200px]" oninput="window.renderSmartCleanUI()">
+                                <select id="sc-filter-rec-freq" class="px-3 py-2 text-xs sm:text-sm font-semibold border border-slate-200 rounded-xl bg-white outline-none cursor-pointer" onchange="window.renderSmartCleanUI()">
+                                    <option value="all">Tất cả tần suất</option>
+                                    <option value="daily">Hằng ngày</option>
+                                    <option value="shift">Theo ca</option>
+                                    <option value="days_of_week">Thứ 3-5-7</option>
+                                    <option value="weekly">Hằng tuần</option>
+                                    <option value="monthly">Hằng tháng</option>
+                                    <option value="on_demand">Theo yêu cầu</option>
+                                </select>
+                            </div>
+                            <button onclick="window.openAddRecurringTaskModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm px-4 py-2 rounded-xl shadow-sm transition-all flex items-center gap-1.5 cursor-pointer">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                <span>+ Thêm Việc Cố Định</span>
+                            </button>
+                        </div>
+
+                        <div class="bg-white rounded-2xl shadow-sm overflow-hidden border border-slate-200">
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full text-xs sm:text-sm divide-y divide-slate-200">
+                                    <thead class="bg-slate-50 text-slate-600 text-[11px] font-bold uppercase">
+                                        <tr>
+                                            <th class="p-3 text-center w-10">STT</th>
+                                            <th class="p-3 text-left min-w-[220px]">Tên Công Việc & Mô Tả</th>
+                                            <th class="p-3 text-left w-36">Nhân Viên</th>
+                                            <th class="p-3 text-left w-48">Khu Vực Thực Hiện</th>
+                                            <th class="p-3 text-left w-36">Tần Suất & Ca</th>
+                                            <th class="p-3 text-left min-w-[200px]">Tiêu Chí Đánh Giá</th>
+                                            <th class="p-3 text-center w-24">Thao Tác</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="sc-recurring-table-body" class="divide-y divide-slate-100 bg-white">
+                                        <!-- Rendered by JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SUB-VIEW 4: CÔNG VIỆC PHÁT SINH -->
+                    <div id="sc-view-adhoc" class="hidden flex flex-col space-y-4">
+                        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between gap-3">
+                            <div>
+                                <h4 class="font-extrabold text-sm sm:text-base text-slate-800">Danh Mục Công Việc Phát Sinh</h4>
+                                <p class="text-xs text-slate-500">Quản lý giao việc đột xuất, xử lý sự vụ vệ sinh ngoài kế hoạch.</p>
+                            </div>
+                            <button onclick="window.openAddAdhocTaskModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm px-4 py-2 rounded-xl shadow-sm transition-all flex items-center gap-1.5 cursor-pointer">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                <span>+ Giao Việc Phát Sinh</span>
+                            </button>
+                        </div>
+                        <div id="sc-adhoc-cards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <!-- Rendered by JS -->
+                        </div>
+                    </div>
+
+                    <!-- SUB-VIEW 5: KIỂM TRA & CHECKLIST -->
+                    <div id="sc-view-inspect" class="hidden flex flex-col space-y-4">
+                        <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-4">
+                            <div class="flex flex-wrap items-center gap-3">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Chọn nhân viên kiểm tra:</label>
+                                    <select id="sc-inspect-staff-select" class="px-3 py-2 text-xs sm:text-sm font-semibold border border-slate-200 rounded-xl bg-slate-50 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500 min-w-[220px]" onchange="window.renderActiveInspectionChecklist()">
+                                        <!-- Rendered by JS -->
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Ngày kiểm tra:</label>
+                                    <input type="date" id="sc-inspect-date" class="px-3 py-2 text-xs sm:text-sm border border-slate-200 rounded-xl bg-slate-50 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500" onchange="window.renderActiveInspectionChecklist()">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Giờ:</label>
+                                    <input type="time" id="sc-inspect-time" class="px-3 py-2 text-xs sm:text-sm border border-slate-200 rounded-xl bg-slate-50 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500">
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2 self-end">
+                                <button onclick="window.renderActiveInspectionChecklist()" class="px-3 py-2 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors cursor-pointer">
+                                    Làm mới checklist
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Checklist Container -->
+                        <div id="sc-inspect-checklist-container">
+                            <!-- Rendered by JS -->
+                        </div>
+
+                        <!-- Footer Comments & Save -->
+                        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+                            <label class="block text-xs font-bold text-slate-700">Ý kiến nhận xét của người kiểm tra (Phó Trưởng Phòng):</label>
+                            <textarea id="sc-inspect-comment" rows="2" placeholder="Ghi nhận xét chung về tình hình vệ sinh, nhắc nhở nhân sự..." class="w-full p-3 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500"></textarea>
+
+                            <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2">
+                                <div class="flex-1">
+                                    <input type="text" id="sc-inspect-image" placeholder="Dán link ảnh chụp hiện trường minh chứng (nếu có)..." class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500">
+                                </div>
+                                <button id="sc-btn-save-inspect" onclick="window.saveCurrentInspection()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs sm:text-sm px-6 py-2.5 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                    <span>Lưu Kết Quả Kiểm Tra</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SUB-VIEW 6: ĐÁNH GIÁ KPI NHÂN VIÊN -->
+                    <div id="sc-view-kpi" class="hidden flex flex-col space-y-4">
+                        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                            <div class="flex items-center gap-3">
+                                <div>
+                                    <span class="text-[11px] font-bold text-slate-500 uppercase block mb-1">Tháng đánh giá KPI:</span>
+                                    <input type="month" id="sc-kpi-month" class="px-3 py-1.5 text-xs sm:text-sm font-bold border border-slate-200 rounded-xl bg-slate-50 cursor-pointer outline-none focus:ring-2 focus:ring-emerald-500" onchange="window.renderSmartCleanUI()">
+                                </div>
+                                <div class="p-2.5 rounded-xl bg-emerald-50 text-emerald-800 text-xs border border-emerald-100 hidden sm:block">
+                                    <strong>Trọng số chuẩn:</strong> Hoàn thành 40% &bull; Chất lượng 40% &bull; Kỷ luật 10% &bull; An toàn 10%
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button onclick="window.exportSmartCleanExcel('monthly')" class="bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                    <span>Xuất Báo Cáo KPI</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-2xl shadow-sm overflow-hidden border border-slate-200">
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full text-xs sm:text-sm divide-y divide-slate-200">
+                                    <thead class="bg-slate-50 text-slate-600 text-[11px] font-bold uppercase">
+                                        <tr>
+                                            <th class="p-3 text-center w-10">STT</th>
+                                            <th class="p-3 text-left">Nhân Viên Vệ Sinh</th>
+                                            <th class="p-3 text-center">Lượt Kiểm Tra</th>
+                                            <th class="p-3 text-center">Hoàn Thành (40%)</th>
+                                            <th class="p-3 text-center">Chất Lượng (40%)</th>
+                                            <th class="p-3 text-center font-extrabold">Điểm KPI</th>
+                                            <th class="p-3 text-center">Xếp Loại</th>
+                                            <th class="p-3 text-center w-28">Thao Tác</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="sc-kpi-table-body" class="divide-y divide-slate-100 bg-white">
+                                        <!-- Rendered by JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SUB-VIEW 7: BÁO CÁO & THỐNG KÊ -->
+                    <div id="sc-view-reports" class="hidden flex flex-col space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <!-- Báo cáo 1: Kiểm tra tháng -->
+                            <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col justify-between space-y-4">
+                                <div>
+                                    <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-lg mb-2">
+                                        📊
+                                    </div>
+                                    <h4 class="font-bold text-slate-800 text-sm">Báo Cáo Kiểm Tra Chi Tiết Tháng</h4>
+                                    <p class="text-xs text-slate-500 mt-1">Xuất danh sách tất cả các đợt kiểm tra, tỷ lệ đạt, danh sách lỗi vi phạm và ý kiến chỉ đạo.</p>
+                                </div>
+                                <button onclick="window.exportSmartCleanExcel('monthly')" class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer">
+                                    <span>Tải File Excel (.xlsx)</span>
+                                </button>
+                            </div>
+
+                            <!-- Báo cáo 2: In báo cáo A4 -->
+                            <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col justify-between space-y-4">
+                                <div>
+                                    <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-lg mb-2">
+                                        🖨️
+                                    </div>
+                                    <h4 class="font-bold text-slate-800 text-sm">In Báo Cáo Trực Tiếp (A4)</h4>
+                                    <p class="text-xs text-slate-500 mt-1">Định dạng chuẩn để in ấn trình Ban Giám hiệu hoặc lưu hồ sơ thanh tra nội bộ.</p>
+                                </div>
+                                <button onclick="window.printSmartCleanReport()" class="w-full py-2 bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs rounded-xl transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer">
+                                    <span>In Báo Cáo Ngay</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
             </div>
         </main>
 
@@ -538,6 +888,10 @@
             <button onclick="switchTab('analytics')" id="mTab-analytics" class="flex flex-col items-center py-1.5 px-3 text-slate-500 font-medium transition-all">
                 <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                 <span class="text-[10px]">Khu vực</span>
+            </button>
+                        <button onclick="switchTab('smartclean')" id="mTab-smartclean" class="hidden flex flex-col items-center py-1.5 px-3 text-slate-500 font-medium transition-all">
+                <svg class="w-5 h-5 mb-0.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                <span class="text-[10px]">Smart Clean</span>
             </button>
             <button onclick="switchTab('users')" id="mTab-users" class="hidden flex flex-col items-center py-1.5 px-3 text-slate-500 font-medium transition-all">
                 <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
@@ -880,11 +1234,295 @@
     </div>
 
 
+
+    <!-- ==================== NSG SMART CLEAN MODALS ==================== -->
+
+    <!-- Modal: Thêm/Sửa Nhân Viên Vệ Sinh -->
+    <div id="scStaffModal" class="fixed inset-0 z-[80] hidden overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen p-4 text-center">
+            <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeStaffModal()"></div>
+            <div class="inline-block w-full max-w-lg p-6 my-8 overflow-hidden text-left align-middle bg-white rounded-3xl shadow-2xl relative z-10 border border-slate-100">
+                <div class="flex justify-between items-center pb-3 border-b border-slate-100">
+                    <h3 id="scStaffModalTitle" class="text-base sm:text-lg font-black text-slate-900">Thêm Hồ Sơ Nhân Viên Vệ Sinh</h3>
+                    <button onclick="closeStaffModal()" class="text-slate-400 hover:text-slate-600 p-1 rounded-xl">✕</button>
+                </div>
+                <input type="hidden" id="scStaffId">
+                <div class="mt-4 space-y-3.5">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Họ và tên *</label>
+                            <input type="text" id="scStaffFullName" placeholder="VD: Nguyễn Thị Chung" class="w-full px-3 py-2 text-xs sm:text-sm border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Mã nhân viên *</label>
+                            <input type="text" id="scStaffCode" placeholder="VD: NV-NTC-01" class="w-full px-3 py-2 text-xs sm:text-sm border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Số điện thoại</label>
+                        <input type="text" id="scStaffPhone" placeholder="VD: 0908 123 456" class="w-full px-3 py-2 text-xs sm:text-sm border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Khu vực phụ trách (Mỗi dòng một khu vực)</label>
+                        <textarea id="scStaffAreas" rows="3" placeholder="Khu B, từ Văn phòng Khoa CNTT-KTĐ...&#10;Hành lang tầng trệt..." class="w-full p-3 text-xs border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Ghi chú đặc thù</label>
+                        <input type="text" id="scStaffNote" placeholder="VD: Phụ trách ca tối 3-5-7..." class="w-full px-3 py-2 text-xs sm:text-sm border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Trạng thái làm việc</label>
+                        <select id="scStaffStatus" class="w-full px-3 py-2 text-xs sm:text-sm border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500">
+                            <option value="active">Đang làm việc</option>
+                            <option value="inactive">Ngừng phân công</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mt-5 pt-3 border-t border-slate-100 flex justify-end gap-2">
+                    <button onclick="closeStaffModal()" class="px-4 py-2 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl">Hủy</button>
+                    <button onclick="saveStaffFromModal()" class="px-5 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-sm">Lưu Hồ Sơ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Thêm/Sửa Công Việc Cố Định -->
+    <div id="scRecurringTaskModal" class="fixed inset-0 z-[80] hidden overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen p-4 text-center">
+            <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeRecurringTaskModal()"></div>
+            <div class="inline-block w-full max-w-lg p-6 my-8 overflow-hidden text-left align-middle bg-white rounded-3xl shadow-2xl relative z-10 border border-slate-100">
+                <div class="flex justify-between items-center pb-3 border-b border-slate-100">
+                    <h3 id="scRecTaskModalTitle" class="text-base sm:text-lg font-black text-slate-900">Thêm Công Việc Cố Định</h3>
+                    <button onclick="closeRecurringTaskModal()" class="text-slate-400 hover:text-slate-600 p-1 rounded-xl">✕</button>
+                </div>
+                <input type="hidden" id="scRecTaskId">
+                <div class="mt-4 space-y-3.5">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Tên công việc *</label>
+                        <input type="text" id="scRecTaskTitle" placeholder="VD: Quét, lau sàn nhà, hành lang..." class="w-full px-3 py-2 text-xs sm:text-sm border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Giao cố định cho nhân viên *</label>
+                            <select id="scRecTaskStaff" class="w-full px-3 py-2 text-xs sm:text-sm border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500">
+                                <!-- Populated dynamically -->
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Khu vực thực hiện *</label>
+                            <input type="text" id="scRecTaskArea" placeholder="VD: Khu B, hành lang tầng trệt..." class="w-full px-3 py-2 text-xs sm:text-sm border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Tần suất thực hiện *</label>
+                            <select id="scRecTaskFreq" class="w-full px-3 py-2 text-xs sm:text-sm border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500">
+                                <option value="daily">Hằng ngày</option>
+                                <option value="shift">Theo ca</option>
+                                <option value="days_of_week">Thứ 3 - 5 - 7</option>
+                                <option value="weekly">Hằng tuần</option>
+                                <option value="monthly">Hằng tháng</option>
+                                <option value="on_demand">Theo yêu cầu</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Thời gian / Ca thực hiện</label>
+                            <input type="text" id="scRecTaskShiftTime" placeholder="VD: Ca sáng (06:00 - 08:30)" class="w-full px-3 py-2 text-xs sm:text-sm border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Mô tả yêu cầu thực hiện</label>
+                        <textarea id="scRecTaskDescription" rows="2" placeholder="Quét sạch bụi mịn, lau bằng dung dịch sát khuẩn..." class="w-full p-2.5 text-xs border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Tiêu chí đánh giá chất lượng</label>
+                        <input type="text" id="scRecTaskCriteria" placeholder="VD: Sàn sạch bóng, không bụi cát, không đọng nước..." class="w-full px-3 py-2 text-xs sm:text-sm border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Trạng thái</label>
+                        <select id="scRecTaskStatus" class="w-full px-3 py-2 text-xs sm:text-sm border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500">
+                            <option value="active">Đang áp dụng</option>
+                            <option value="inactive">Tạm ngưng</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mt-5 pt-3 border-t border-slate-100 flex justify-end gap-2">
+                    <button onclick="closeRecurringTaskModal()" class="px-4 py-2 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl">Hủy</button>
+                    <button onclick="saveRecurringTaskFromModal()" class="px-5 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-sm">Lưu Công Việc</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Giao Việc Phát Sinh -->
+    <div id="scAdhocTaskModal" class="fixed inset-0 z-[80] hidden overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen p-4 text-center">
+            <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeAdhocTaskModal()"></div>
+            <div class="inline-block w-full max-w-lg p-6 my-8 overflow-hidden text-left align-middle bg-white rounded-3xl shadow-2xl relative z-10 border border-slate-100">
+                <div class="flex justify-between items-center pb-3 border-b border-slate-100">
+                    <h3 class="text-base sm:text-lg font-black text-slate-900">Giao Công Việc Phát Sinh</h3>
+                    <button onclick="closeAdhocTaskModal()" class="text-slate-400 hover:text-slate-600 p-1 rounded-xl">✕</button>
+                </div>
+                <div class="mt-4 space-y-3.5">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Tên công việc phát sinh *</label>
+                        <input type="text" id="scAdhocTitle" placeholder="VD: Dọn dẹp phòng họp đột xuất..." class="w-full px-3 py-2 text-xs sm:text-sm border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Nhân viên được giao (Có thể chọn nhiều nhân viên):</label>
+                        <div id="scAdhocStaffCheckboxes" class="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto p-1 border border-slate-100 rounded-xl">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Khu vực</label>
+                            <input type="text" id="scAdhocArea" placeholder="VD: Phòng A1.02..." class="w-full px-3 py-2 text-xs sm:text-sm border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Mức độ ưu tiên</label>
+                            <select id="scAdhocPriority" class="w-full px-3 py-2 text-xs sm:text-sm border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500">
+                                <option value="Bình thường">Bình thường 🟢</option>
+                                <option value="Cao">Ưu tiên Cao 🟠</option>
+                                <option value="Khẩn cấp">Khẩn cấp 🔴</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Hạn hoàn thành</label>
+                            <input type="date" id="scAdhocDate" class="w-full px-3 py-2 text-xs sm:text-sm border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Giờ hoàn thành</label>
+                            <input type="time" id="scAdhocDueTime" value="17:00" class="w-full px-3 py-2 text-xs sm:text-sm border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Nội dung yêu cầu chi tiết</label>
+                        <textarea id="scAdhocContent" rows="2" placeholder="Lau bàn ghế, xếp lại khăn trải bàn, kiểm tra hoa quả tiếp khách..." class="w-full p-2.5 text-xs border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500"></textarea>
+                    </div>
+                </div>
+                <div class="mt-5 pt-3 border-t border-slate-100 flex justify-end gap-2">
+                    <button onclick="closeAdhocTaskModal()" class="px-4 py-2 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl">Hủy</button>
+                    <button onclick="saveAdhocTaskFromModal()" class="px-5 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-sm">Giao Việc</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Xem Chi Tiết Kiểm Tra -->
+    <div id="scInspectionDetailModal" class="fixed inset-0 z-[80] hidden overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen p-4 text-center">
+            <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeInspectionDetailModal()"></div>
+            <div class="inline-block w-full max-w-2xl p-6 my-8 overflow-hidden text-left align-middle bg-white rounded-3xl shadow-2xl relative z-10 border border-slate-100">
+                <div class="flex justify-between items-center pb-3 border-b border-slate-100">
+                    <div>
+                        <span class="text-[10px] font-bold text-emerald-600 uppercase">Chi Tiết Đợt Kiểm Tra</span>
+                        <h3 id="scInspDetailStaff" class="text-base sm:text-lg font-black text-slate-900 mt-0.5">Nhân Viên</h3>
+                    </div>
+                    <button onclick="closeInspectionDetailModal()" class="text-slate-400 hover:text-slate-600 p-1 rounded-xl">✕</button>
+                </div>
+
+                <div class="mt-3 grid grid-cols-3 gap-3 p-3 bg-slate-50 rounded-2xl text-xs">
+                    <div>
+                        <span class="text-slate-400 block text-[10px]">Thời gian kiểm tra:</span>
+                        <strong id="scInspDetailDate" class="text-slate-800"></strong>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 block text-[10px]">Người kiểm tra:</span>
+                        <strong id="scInspDetailInspector" class="text-slate-800"></strong>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 block text-[10px]">Kết quả:</span>
+                        <strong id="scInspDetailRate" class="text-emerald-700"></strong>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <span class="text-xs font-bold text-slate-700 block mb-2">Checklist công việc:</span>
+                    <div id="scInspDetailItems" class="space-y-2 max-h-60 overflow-y-auto pr-1">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+
+                <div class="mt-4 p-3 bg-slate-50 rounded-2xl border border-slate-100 text-xs">
+                    <span class="text-slate-400 block text-[10px]">Ý kiến người kiểm tra:</span>
+                    <p id="scInspDetailComment" class="italic text-slate-700 mt-0.5"></p>
+                </div>
+
+                <div class="mt-3">
+                    <span class="text-xs font-bold text-slate-700 block mb-1">Ảnh minh chứng:</span>
+                    <div id="scInspDetailImages" class="flex items-center gap-2 overflow-x-auto">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+
+                <div class="mt-5 pt-3 border-t border-slate-100 flex justify-end">
+                    <button onclick="closeInspectionDetailModal()" class="px-5 py-2 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl">Đóng</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Điều Chỉnh KPI Tháng -->
+    <div id="scKpiModal" class="fixed inset-0 z-[80] hidden overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen p-4 text-center">
+            <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeKpiModal()"></div>
+            <div class="inline-block w-full max-w-md p-6 my-8 overflow-hidden text-left align-middle bg-white rounded-3xl shadow-2xl relative z-10 border border-slate-100">
+                <div class="flex justify-between items-center pb-3 border-b border-slate-100">
+                    <div>
+                        <span class="text-[10px] font-bold text-emerald-600 uppercase">Điều Chỉnh Điểm KPI</span>
+                        <h3 id="scKpiModalStaffName" class="text-base font-black text-slate-900 mt-0.5">Nhân viên</h3>
+                    </div>
+                    <span id="scKpiModalMonth" class="text-xs font-bold text-slate-500">Tháng</span>
+                </div>
+                <input type="hidden" id="scKpiStaffId">
+                <input type="hidden" id="scKpiMonthYear">
+                <div class="mt-4 space-y-3 text-xs">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">Hoàn thành việc (40%)</label>
+                            <input type="number" id="scKpiScoreCompletion" min="0" max="100" class="w-full px-3 py-2 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">Chất lượng (40%)</label>
+                            <input type="number" id="scKpiScoreQuality" min="0" max="100" class="w-full px-3 py-2 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">Kỷ luật & thời gian (10%)</label>
+                            <input type="number" id="scKpiScoreDiscipline" min="0" max="100" class="w-full px-3 py-2 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">An toàn quy trình (10%)</label>
+                            <input type="number" id="scKpiScoreSafety" min="0" max="100" class="w-full px-3 py-2 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Lý do điều chỉnh (Bắt buộc lưu nhật ký) *</label>
+                        <textarea id="scKpiReason" rows="2" placeholder="Ghi rõ lý do thưởng/phạt hoặc điều chỉnh điểm..." class="w-full p-2.5 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500"></textarea>
+                    </div>
+                </div>
+                <div class="mt-5 pt-3 border-t border-slate-100 flex justify-end gap-2">
+                    <button onclick="closeKpiModal()" class="px-4 py-2 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl">Hủy</button>
+                    <button onclick="saveKpiAdjustmentFromModal()" class="px-5 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-sm">Lưu Điều Chỉnh</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
     <!-- ==================== FIREBASE & JAVASCRIPT ==================== -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, collection, onSnapshot, query, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { initSmartCleanModule, renderSmartCleanUI, SmartCleanState } from "./js/smartclean.js";
+        window.initSmartCleanModule = initSmartCleanModule;
+        window.renderSmartCleanUI = renderSmartCleanUI;
+        window.SmartCleanState = SmartCleanState;
 
         // Cấu hình Firebase gốc của bạn
         const firebaseConfig = {
@@ -1075,7 +1713,7 @@
 
         // Navigation Tabs (Mobile & Desktop)
         window.switchTab = (tabName) => {
-            const views = ['dashboard', 'tasks', 'analytics', 'users'];
+            const views = ['dashboard', 'tasks', 'analytics', 'users', 'smartclean'];
             views.forEach(v => {
                 document.getElementById(`view-${v}`)?.classList.add('hidden');
                 
@@ -1095,6 +1733,7 @@
             });
 
             document.getElementById(`view-${tabName}`)?.classList.remove('hidden');
+            if (tabName === 'smartclean') renderSmartCleanUI();
 
             const activeDTab = document.getElementById(`tab-${tabName}`);
             if (activeDTab) {
@@ -1259,22 +1898,39 @@
             const tabUsers = document.getElementById('tab-users');
             const mTabUsers = document.getElementById('mTab-users');
 
-            if (role === 'admin' || role === 'truongphong' || role === 'phophong') {
-                btnCreate.classList.remove('hidden');
-                btnCreateQuick.classList.remove('hidden');
+                        const tabSmartClean = document.getElementById('tab-smartclean');
+            const mTabSmartClean = document.getElementById('mTab-smartclean');
+            const isManager = (role === 'admin' || role === 'truongphong' || role === 'phophong');
+
+            if (isManager) {
+                btnCreate?.classList.remove('hidden');
+                btnCreateQuick?.classList.remove('hidden');
+                tabSmartClean?.classList.remove('hidden');
+                mTabSmartClean?.classList.remove('hidden');
+                if (typeof initSmartCleanModule === 'function') {
+                    initSmartCleanModule(currentUserData, db, auth);
+                }
                 if (role === 'admin') {
-                    tabUsers.classList.remove('hidden');
-                    mTabUsers.classList.remove('hidden');
+                    tabUsers?.classList.remove('hidden');
+                    mTabUsers?.classList.remove('hidden');
                 } else {
-                    tabUsers.classList.add('hidden');
-                    mTabUsers.classList.add('hidden');
+                    tabUsers?.classList.add('hidden');
+                    mTabUsers?.classList.add('hidden');
                 }
             } else {
-                btnCreate.classList.add('hidden');
-                btnCreateQuick.classList.add('hidden');
-                tabUsers.classList.add('hidden');
-                mTabUsers.classList.add('hidden');
+                btnCreate?.classList.add('hidden');
+                btnCreateQuick?.classList.add('hidden');
+                tabSmartClean?.classList.add('hidden');
+                mTabSmartClean?.classList.add('hidden');
+                tabUsers?.classList.add('hidden');
+                mTabUsers?.classList.add('hidden');
+
+                const viewSmartClean = document.getElementById('view-smartclean');
+                if (viewSmartClean && !viewSmartClean.classList.contains('hidden')) {
+                    switchTab('dashboard');
+                }
             }
+
         };
 
         // Realtime Data Sync

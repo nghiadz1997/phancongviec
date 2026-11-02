@@ -57,11 +57,48 @@ service cloud.firestore {
       allow delete: if isAuthenticated() && isAdmin();
     }
 
-    // 3. Quản lý phiếu kiểm tra vệ sinh / tạp vụ (cleaning_checks)
+    // 3. Quản lý phiếu kiểm tra vệ sinh / tạp vụ cũ (cleaning_checks)
     match /cleaning_checks/{checkId} {
       allow read: if true;
       allow create, update: if true;
       allow delete: if isAuthenticated() && (isManager() || isAdmin());
+    }
+
+    // 4. MODULE NSG SMART CLEAN (Chỉ Ban Quản Lý: Admin, Trưởng Phòng, Phó Phòng)
+    // 4.1. Hồ sơ nhân viên vệ sinh
+    match /clean_staff/{staffId} {
+      allow read: if isAuthenticated() && isManager();
+      allow write: if isAuthenticated() && isManager();
+    }
+
+    // 4.2. Danh mục công việc cố định
+    match /clean_recurring_tasks/{taskId} {
+      allow read: if isAuthenticated() && isManager();
+      allow write: if isAuthenticated() && isManager();
+    }
+
+    // 4.3. Công việc phát sinh
+    match /clean_adhoc_tasks/{taskId} {
+      allow read: if isAuthenticated() && isManager();
+      allow write: if isAuthenticated() && isManager();
+    }
+
+    // 4.4. Lịch sử kiểm tra thực tế và checklist
+    match /clean_inspections/{inspId} {
+      allow read: if isAuthenticated() && isManager();
+      allow write: if isAuthenticated() && isManager();
+    }
+
+    // 4.5. Đánh giá KPI nhân viên hàng tháng
+    match /clean_kpi_monthly/{kpiId} {
+      allow read: if isAuthenticated() && isManager();
+      allow write: if isAuthenticated() && isManager();
+    }
+
+    // 4.6. Cấu hình trọng số và cài đặt hệ thống Smart Clean (Chỉ Admin điều chỉnh)
+    match /clean_settings/{settingId} {
+      allow read: if isAuthenticated() && isManager();
+      allow write: if isAuthenticated() && isAdmin();
     }
   }
 }
